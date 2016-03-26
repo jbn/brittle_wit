@@ -1,0 +1,4 @@
+*.ipynb
+*.iml
+.idea/
+*.pyc
