@@ -11,6 +11,7 @@ from brittle_wit.oauth import (_generate_nonce,
                                _generate_sig_base_string,
                                _generate_signing_key,
                                _generate_signature,
+                               _quote,
                                generate_authorization_header)
 
 
@@ -21,6 +22,9 @@ class TestOAuth(unittest.TestCase):
 
     See: https://dev.twitter.com/oauth/overview
     """
+    def test_quote(self):
+        self.assertEqual(_quote(1), "1")
+        self.assertEqual(_quote(1.0), "1.0")
 
     def test_generate_nonce(self):
         self.assertEqual(len(_generate_nonce(100)), 100)
@@ -71,12 +75,14 @@ class TestOAuth(unittest.TestCase):
 
         app = AppCredentials(oauth_params['oauth_consumer_key'],
                              "kAcSOqF21Fu85e7zjz7ZN2U4ZRhfV3WpwPAoE3Z7kBw")
-        client = ClientCredentials(oauth_params['oauth_token'],
+        client = ClientCredentials(1,
+                                   oauth_params['oauth_token'],
                                    "LswwdoUaIvS8ltyTt5jkRh4J50vUPVVHtR2YPi5kE")
 
         status = "Hello Ladies + Gentlemen, a signed OAuth request!"
         req = TwitterRequest("POST",
                              "https://api.twitter.com/1/statuses/update.json",
+                             'statuses',
                              {'include_entities': 'true',
                               'status': status})
         expected = load_fixture_expectation("header_string.txt")
