@@ -11,6 +11,7 @@ import hmac
 import random
 import time
 
+from functools import total_ordering
 from urllib.parse import quote as urllib_quote
 
 
@@ -20,6 +21,11 @@ ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 def _quote(s):
     if type(s) is int or type(s) is float:
         s = str(s)
+    elif s is True:
+        s = 'true'
+    elif s is False:
+        s = 'false'
+
     return urllib_quote(s, safe='')
 
 
@@ -83,8 +89,8 @@ def _generate_signature(sig_base_string, signing_key):
     return binascii.b2a_base64(digest)[:-1]  # Strip newline
 
 
-def generate_authorization_header(twitter_req, app_cred, client_cred,
-                                  **overrides):
+def generate_auth_header(twitter_req, app_cred, client_cred,
+                         **overrides):
     """
     Generate the 'Authorization' HTTP-header field as a dict.
 
@@ -112,3 +118,78 @@ def generate_authorization_header(twitter_req, app_cred, client_cred,
     oauth_d['oauth_signature'] = _generate_signature(sig_base_string,
                                                      signing_key)
     return {'Authorization': _generate_header_string(oauth_d)}
+
+
+class AppCredentials:
+    """
+    An Immutable set of application credentials.
+    """
+    def __init__(self, key, secret):
+        self._key, self._secret = key, secret
+
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def secret(self):
+        return self._secret
+
+    def __str__(self):
+        s = "AppCredentials({}, {})"
+        return s.format(self._key, "*" * len(self._secret))
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash((self._key, self._secret))
+
+    def __eq__(self, other):
+        return self.key == self.key and self.secret == other.secret
+
+    def __ne__(self, other):
+        return not self == other
+
+@total_ordering
+class ClientCredentials:
+    """
+    An Immutable set of client credentials.
+    """
+    def __init__(self, user_id, token, secret):
+        self._user_id, self._token, self._secret = user_id, token, secret
+
+    @property
+    def token(self):
+        return self._token
+
+    @property
+    def secret(self):
+        return self._secret
+
+    @property
+    def user_id(self):
+        return self._user_id
+
+    def __str__(self):
+        s = "ClientCredentials({}, {}, {})"
+        return s.format(self.user_id, self._token, "*" * len(self._secret))
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __hash__(self):
+        return hash((self._user_id, self._token, self._secret))
+
+    def __eq__(self, other):
+        return (self.user_id == other.user_id and
+                self.token == other.token and
+                self.secret == other.secret)
+
+    def __ne__(self, other):
+        return not self == other
+
+    def __lt__(self, other):
+        # Because the client_credentials may partially-determine ordering
+        # in a priority queue.
+        return (self.user_id, self.token) < (other.user_id, other.token)

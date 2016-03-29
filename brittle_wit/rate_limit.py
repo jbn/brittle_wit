@@ -50,7 +50,7 @@ class RateLimit:
         object.
         """
         if self.is_exhausted:
-            now = time.time()
+            now = time.time()  # Is time.time() blocking?
             if now < self._reset_time:
                 await asyncio.sleep(self._reset_time - now)
             self._remaining = self._limit

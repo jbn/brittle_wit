@@ -1,17 +1,7 @@
 import time
 import unittest
-import asyncio
-from collections import namedtuple
 from brittle_wit.rate_limit import RateLimit
-
-
-MockResp = namedtuple("MockResp", "headers")
-
-
-def drive_coro_once(coro):
-    # XXX: Make this prettier. Create a new loop or something.
-    loop = asyncio.get_event_loop()
-    return loop.run_until_complete(coro)
+from test.helpers import *
 
 
 class TestOAuth(unittest.TestCase):
@@ -59,7 +49,7 @@ class TestOAuth(unittest.TestCase):
 
         rate_limit.update(MockResp({'X-RATE-LIMIT-LIMIT': 100,
                                     'X-RATE-LIMIT-REMAINING': 0,
-                                    'X-RATE-LIMIT-RESET': time.time() + 2}))
+                                    'X-RATE-LIMIT-RESET': time.time() + 0.1}))
         self.assertTrue(rate_limit.is_exhausted)
         drive_coro_once(rate_limit.comply())
         self.assertFalse(rate_limit.is_exhausted)

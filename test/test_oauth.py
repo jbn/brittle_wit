@@ -12,7 +12,8 @@ from brittle_wit.oauth import (_generate_nonce,
                                _generate_signing_key,
                                _generate_signature,
                                _quote,
-                               generate_authorization_header)
+                               generate_auth_header,
+                               AppCredentials)
 
 
 class TestOAuth(unittest.TestCase):
@@ -25,6 +26,8 @@ class TestOAuth(unittest.TestCase):
     def test_quote(self):
         self.assertEqual(_quote(1), "1")
         self.assertEqual(_quote(1.0), "1.0")
+        self.assertEqual(_quote(True), "true")
+        self.assertEqual(_quote(False), "false")
 
     def test_generate_nonce(self):
         self.assertEqual(len(_generate_nonce(100)), 100)
@@ -83,17 +86,52 @@ class TestOAuth(unittest.TestCase):
         req = TwitterRequest("POST",
                              "https://api.twitter.com/1/statuses/update.json",
                              'statuses',
-                             {'include_entities': 'true',
-                              'status': status})
+                             include_entities='true',
+                             status=status)
         expected = load_fixture_expectation("header_string.txt")
 
         overrides = {k: oauth_params[k]
                      for k in ['oauth_nonce', 'oauth_timestamp']}
 
-        auth = generate_authorization_header(req, app, client, **overrides)
+        auth = generate_auth_header(req, app, client, **overrides)
         self.assertEqual(set(auth.keys()), {'Authorization'})
         self.assertEqual(auth['Authorization'], expected)
 
+
+class TestAppCredentials(unittest.TestCase):
+    def test_app_credentials(self):
+        app_1 = AppCredentials("app_1", "secret")
+        self.assertEqual(app_1, AppCredentials("app_1", "secret"))
+
+        app_2 = AppCredentials("app_2", "password")
+        self.assertNotEqual(app_1, app_2)
+
+        self.assertEqual(len({app_1, app_2}), 2)
+        self.assertEqual(str(app_1), "AppCredentials(app_1, ******)")
+        self.assertEqual(repr(app_1), "AppCredentials(app_1, ******)")
+
+        with self.assertRaises(AttributeError):
+            app_1.key = 10  # Immutable(ish)
+
+
+class TestClientCredentials(unittest.TestCase):
+    def test_client_credentials(self):
+        client_1 = ClientCredentials(1, "token_1", "secret")
+        self.assertEqual(client_1, ClientCredentials(1, "token_1", "secret"))
+
+        client_2 = ClientCredentials(2, "token_2", "secret")
+        self.assertNotEqual(client_1, client_2)
+
+        self.assertEqual(len({client_1, client_2}), 2)
+        self.assertEqual(str(client_1),
+                         "ClientCredentials(1, token_1, ******)")
+        self.assertEqual(repr(client_1),
+                         "ClientCredentials(1, token_1, ******)")
+
+        with self.assertRaises(AttributeError):
+            client_1.token = 10  # Immutable(ish)
+
+        self.assertTrue(client_2 > client_1)
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
