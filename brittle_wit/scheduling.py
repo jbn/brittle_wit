@@ -6,7 +6,7 @@ from contextlib import contextmanager
 from collections import namedtuple, defaultdict
 from brittle_wit import TwitterResponse
 from brittle_wit.rate_limit import RateLimit
-from brittle_wit.oauth import generate_auth_header
+from brittle_wit.oauth import generate_req_headers
 
 
 AnyCredentials = None
@@ -223,7 +223,7 @@ class ResourceFamily:
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
-    headers = generate_auth_header(twitter_req, app_cred, client_cred)
+    headers = generate_req_headers(twitter_req, app_cred, client_cred)
     return session.request(twitter_req.method,
                            twitter_req.url,
                            params=twitter_req.params,
@@ -303,7 +303,7 @@ def debug_request(app_cred, client_cred, twitter_req):
 
     :return: a requests.Response
     """
-    headers = generate_auth_header(twitter_req, app_cred, client_cred)
+    headers = generate_req_headers(twitter_req, app_cred, client_cred)
     return _request(twitter_req.method,
                     twitter_req.url,
                     params=twitter_req.params,

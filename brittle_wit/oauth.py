@@ -11,11 +11,14 @@ import hmac
 import random
 import time
 
+from brittle_wit import __version__
+
 from functools import total_ordering
 from urllib.parse import quote as urllib_quote
 
 
 ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+USER_AGENT = 'BrittleWit/' + __version__
 
 
 def _quote(s):
@@ -89,10 +92,9 @@ def _generate_signature(sig_base_string, signing_key):
     return binascii.b2a_base64(digest)[:-1]  # Strip newline
 
 
-def generate_auth_header(twitter_req, app_cred, client_cred,
-                         **overrides):
+def generate_req_headers(twitter_req, app_cred, client_cred, **overrides):
     """
-    Generate the 'Authorization' HTTP-header field as a dict.
+    Generate the 'Authorization' and 'User-Agent' headers.
 
     :param twitter_req: A TwitterRequest object
     :param app_cred: an AppCredentials object
@@ -117,7 +119,9 @@ def generate_auth_header(twitter_req, app_cred, client_cred,
     signing_key = _generate_signing_key(app_cred.secret, client_cred.secret)
     oauth_d['oauth_signature'] = _generate_signature(sig_base_string,
                                                      signing_key)
-    return {'Authorization': _generate_header_string(oauth_d)}
+
+    return {'Authorization': _generate_header_string(oauth_d),
+            'User-Agent': USER_AGENT}
 
 
 class AppCredentials:

@@ -12,7 +12,7 @@ from brittle_wit.oauth import (_generate_nonce,
                                _generate_signing_key,
                                _generate_signature,
                                _quote,
-                               generate_auth_header,
+                               generate_req_headers,
                                AppCredentials)
 
 
@@ -71,9 +71,7 @@ class TestOAuth(unittest.TestCase):
         self.assertEqual(_generate_signature(sig_base_string, signing_key),
                          expected)
 
-    def test_generate_authorization(self):
-        # Given the way generate_authorization works, this is almost an
-        # integration test.
+    def test_generate_req_headers(self):
         oauth_params = _load_oauth_params()
 
         app = AppCredentials(oauth_params['oauth_consumer_key'],
@@ -93,8 +91,8 @@ class TestOAuth(unittest.TestCase):
         overrides = {k: oauth_params[k]
                      for k in ['oauth_nonce', 'oauth_timestamp']}
 
-        auth = generate_auth_header(req, app, client, **overrides)
-        self.assertEqual(set(auth.keys()), {'Authorization'})
+        auth = generate_req_headers(req, app, client, **overrides)
+        self.assertIn('Authorization', auth.keys())
         self.assertEqual(auth['Authorization'], expected)
 
 
