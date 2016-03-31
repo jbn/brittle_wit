@@ -1,10 +1,23 @@
 import json
 import textwrap
+import re
 
+from collections import OrderedDict, defaultdict
 from inspect import Parameter, Signature
 from brittle_wit.twitter_request import TwitterRequest
+from itertools import tee, chain
 
 
+SLUGS_RE = re.compile(r":[A-Za-z_0-9]+")
+SLUG_POSTFIX_RE = re.compile(r"^.*?(:[A-Za-z_0-9]+)$")
+SLUG_INFIX_RE = re.compile(r"""^(?:[A-Za-z]*/)?
+                               ([A-Za-z0-9_]+)/
+                               (\:[A-Za-z_0-9]+)/
+                               (.*)$""",
+                           re.X)
+
+# Python cannot represent all Twitter API parameter names. They have invalid
+# symbols. The following two dictionaries remap these names.
 NAME_TO_PY_NAME = {"attribute:street_address": "attribute_street_address",
                    "media[]": "media_arr"}
 PY_NAME_TO_NAME = {v: k for k, v in NAME_TO_PY_NAME.items()}
@@ -18,10 +31,6 @@ class NSSentinel:
 NOT_SPECIFIED = NSSentinel()
 
 
-def _param_key_f(p):
-    return 0 if p[1][0] == 'REQUIRED' else 1
-
-
 def generate_signature(api_def):
     """
     Generate a Python function signature from an api definition.
@@ -33,15 +42,10 @@ def generate_signature(api_def):
     and B as optional. If you don't specify one of them, Twitter will balk.
     But, it's reasonably obvious when this occurs, so it's not worth the
     added library complexity.
-
-    Note: As a Hack,
     """
     params = []
 
-    # Ensure required params come first.
-    param_defs = sorted(api_def['params'].items(), key=_param_key_f)
-
-    for name, (optionality, _) in param_defs:
+    for name, (optionality, _) in api_def['params'].items():
         name = NAME_TO_PY_NAME.get(name, name)
 
         if optionality == 'REQUIRED':
@@ -54,29 +58,19 @@ def generate_signature(api_def):
     return Signature(params)
 
 
-def supports_cursor(api_def):
+def generate_doc_str(api_def, line_width=70, indent_width=4):
+    lines = textwrap.wrap(api_def['desc'], line_width) + [""]
 
-    for param in api_def['params']:
-        if param == 'cursor':
-            return True
-    return False
-
-
-def generate_doc_str(api_def):
-    lines = textwrap.wrap(api_def['desc'], 70) + [""]
-
-    # Ensure required params come first.
-    param_defs = sorted(api_def['params'].items(), key=_param_key_f)
-    for k, (optionality, desc) in param_defs:
+    for k, (optionality, desc) in api_def['params'].items():
         lines.append(k + ":\n")
 
-        body = '({}) {}'.format(optionality, desc)
+        body = "({}) {}".format(optionality, desc)
         for paragraph in body.splitlines():
             wrapped = textwrap.wrap(paragraph,
-                                    70 - 4,
+                                    line_width - indent_width,
                                     replace_whitespace=False)
             for line in wrapped:
-                lines.append("    " + line)
+                lines.append(" "*indent_width + line)
             lines.append("")
 
         lines.append('')
@@ -84,48 +78,150 @@ def generate_doc_str(api_def):
     return "\n".join(lines) + "\n"
 
 
-class RestFamily:
-    def __init__(self, name):
-        self._name = name
+def _update_params_ordering_required_first(api_def):
+    """
+    Updates the api_def IN PLACE, ensuring required params come first.
 
-    def _add(self, definition):
-        f_name = definition['url'].split("1.1/")[-1]
-        f_name = f_name.replace("/", "_").replace(".json", "")
-        f_name = f_name.replace(definition['family'] + '_', '')
-
-        if hasattr(self, f_name):
-            print(f_name)
-
-        def f(*args, **kwargs):
-            # MAGIC WARNING
-            binding = {PY_NAME_TO_NAME.get(k, k): v
-                       for k, v in sig.bind(*args, **kwargs).arguments.items()
-                       if v is not NOT_SPECIFIED}
-            return TwitterRequest(definition['method'],
-                                  definition['url'],
-                                  definition['family'],
-                                  supports_cursor=supports_cursor(definition),
-                                  **binding)
-        f.__name__ = f_name
-        f.__doc__ = generate_doc_str(definition)
-        f.__signature__ = sig = generate_signature(definition)
-
-        self.__dict__[f_name] = f
+    The order of each parameter in `rest_api.json` is significant, matching
+    the order in the API documentation. However, I can see a situation in
+    which a required parameter comes after an optional one. That's fine for
+    the documentation, but it's not okay for a Python signature.
+    """
+    t1, t2 = tee(api_def['params'].items())
+    kv_pairs = chain((p for p in t1 if p[1][0] == 'REQUIRED'),
+                     (p for p in t2 if p[1][0] != 'REQUIRED'))
+    api_def['params'] = OrderedDict(kv_pairs)
 
 
-class RestAPI:
-    def __init__(self, definitions):
-        for d in definitions:
-            family_name = d['family']
-            if not hasattr(self, family_name):
-                self.__dict__[family_name] = RestFamily(family_name)
+def _bind_sig(signature, *args, **kwargs):
+    return {PY_NAME_TO_NAME.get(k, k): v
+            for k, v in signature.bind(*args, **kwargs).arguments.items()
+               if v is not NOT_SPECIFIED}
 
-            self.__dict__[family_name]._add(d)
+
+def _slugged_pythonic_string(url):
+    """
+    Process a slugged URL
+
+    :param url: the raw API endpoint
+    :return: None if this is not a slugged url, otherwise a tuple of the
+        python string for format-based interpolation and the slug parameter
+        names
+    """
+    slugged_str = ""
+
+    matches = list(SLUGS_RE.finditer(url))
+    if not matches:
+        return None
+
+    last_idx = 0
+    slug_params = []
+    for m in matches:
+        j, k = m.start(), m.end()
+        slugged_str += url[last_idx:j]
+        last_idx = k
+
+        slug_param = m.group(0)[1:]
+        slugged_str += "{" + slug_param + "}"
+        slug_params.append(slug_param)
+
+    return slugged_str, slug_params
+
+
+def _generate_slugger(slugged_str, slug_params):
+    """
+    Create function that pops the slug_params and injects them into the URL.
+
+    Note: The transform function takes the params dictionary, not the expanded
+        **kwargs. The params dictionary is modified in place via pop!
+    """
+    def _slug_transform(params):
+        slug_dict = {k: params.pop(k) for k in slug_params}
+        return slugged_str.format(**slug_dict)
+    return _slug_transform
+
+
+def _url_to_func_name(service, family, method):
+    # Special cases first.
+    if service == "account/settings" and method == 'POST':
+        return "update_settings"  # There is a 'GET' version
+
+    m = SLUG_POSTFIX_RE.match(service)
+    if m:
+        postfix = m.group(1)
+        service = service.replace(postfix, "by_" + postfix[1:])
+    else:
+        m = SLUG_INFIX_RE.match(service)
+        if m:
+            service = m.group(3) + "_by_" + m.group(1) + '_' + m.group(2)[1:]
+
+    f_name = service.replace("/", "_")
+    f_name = f_name.replace(family + '_', '')
+
+    return f_name
+
+
+def generate_api_request_builder_func(api_def):
+    _update_params_ordering_required_first(api_def)
+
+    f_name = _url_to_func_name(api_def['service'],
+                               api_def['family'],
+                               api_def['method'])
+
+    signature = generate_signature(api_def)
+
+    def f(*args, **kwargs):
+        # MAGIC WARNING
+        binding = _bind_sig(signature, *args, **kwargs)
+        return TwitterRequest(api_def['method'],
+                              api_def['url'],
+                              api_def['family'],
+                              **binding)
+    f.__name__ = f_name
+    f.__doc__ = generate_doc_str(api_def)
+    f.__signature__ = signature
+
+    return f
+
+
+class TwitterAPI:
+    def __init__(self, api_defs, update_twitter_request_doc_urls=True):
+
+        if update_twitter_request_doc_urls:
+            DOC_URLS = TwitterRequest.DOC_URLS
+
+        # Each API function belongs to a family.
+        families = defaultdict(dict)
+
+        # Build each API function, adding it to its family's dictionary.
+        for api_def in api_defs:
+            if 'deprecated' in api_def['service']:
+                continue  # Nudge!
+
+            f = generate_api_request_builder_func(api_def)
+            if f.__name__ in families[api_def['family']]:
+                print("CONFLICT!", api_def['reference_url'])
+            if not f.__name__.isidentifier():
+                print("INVALID NAME", f.__name__, api_def['reference_url'])
+            families[api_def['family']][f.__name__] = f
+
+            if update_twitter_request_doc_urls:
+                DOC_URLS[api_def['url']] = api_def['reference_url']
+
+        # Make each family dictionary of api functions accessible via dot
+        # accessor. That is, mock module-style access, without modules. There
+        # are lots of ways to do this. But, I think creating a new type for
+        # each family is the simplest. The str and repr encodings are easy to
+        # grok from the REPL. And, the user is free to add end remove methods
+        # to each family at will.
+        for family_name, obj_dict in families.items():
+            self.__dict__[family_name] = type(family_name, (object,), obj_dict)
 
 
 def build_api(json_file):
+    # The parameter ordering has meaning. It's copied from Twitter's API docs.
+    decorder = json.JSONDecoder(object_pairs_hook=OrderedDict)
     with open(json_file) as fp:
-        defs = json.load(fp)
-    return RestAPI(defs)
-
+        defs = decorder.decode(fp.read())
+    return TwitterAPI(defs)
 

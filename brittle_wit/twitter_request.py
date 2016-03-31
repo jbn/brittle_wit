@@ -1,15 +1,18 @@
 class TwitterRequest:
+    # This is a static mapping from the request url to the Twitter API
+    # documentation URL. `brittle_wit.twitter_request.build_api` populates it,
+    # but there is no reason values cannot be overwritten.
+    DOC_URLS = {}
+
     """
     An Immutable (mostly) Twitter Request
     """
 
-    def __init__(self, method, url, family, *,
-                 parse_as='json', supports_cursor=False, **params):
+    def __init__(self, method, url, family, *, parse_as='json', **params):
         self._method = method.upper()
         self._url = url
         self._family = family.lower()
         self._parse_as = parse_as
-        self._supports_cursor = supports_cursor
         self._params = params
 
     @property
@@ -33,10 +36,6 @@ class TwitterRequest:
         self._parse_as = parse_format
 
     @property
-    def supports_cursor(self):
-        return self._supports_cursor
-
-    @property
     def params(self):
         return self._params
 
@@ -47,8 +46,7 @@ class TwitterRequest:
         snippets = ["<table>"]
         snippets.append("<tr><th>Field</th><th>Value</th></tr>")
 
-        fields = ['_method', '_url', '_family', '_parse_as',
-                  '_supports_cursor']
+        fields = ['_method', '_url', '_family', '_parse_as']
         row_s = "<tr><td>{}</td><td>{}</td></tr>"
         for k in fields:
             snippets.append(row_s.format(k[1:], self.__dict__[k]))
@@ -60,11 +58,12 @@ class TwitterRequest:
 
         snippets.append("</table></td></tr>")
 
-        api_url = ("https://dev.twitter.com/rest/reference/" +
-                   self._method.lower() + "/" +
-                   self._url.split("1.1/")[-1])
-        api_link = "<a href='{}' target='_new'>{}</a>".format(api_url, api_url)
-        snippets.append(row_s.format("docs", api_link.replace(".json", "")))
+        api_url = TwitterRequest.DOC_URLS.get(self._url, None)
+        if api_url:
+            api_link = "<a href='{}' target='_new'>{}</a>".format(api_url,
+                                                                  api_url)
+            snippets.append(row_s.format("docs",
+                                         api_link.replace(".json", "")))
 
         snippets.append("</table>")
 

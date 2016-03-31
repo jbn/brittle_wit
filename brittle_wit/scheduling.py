@@ -222,6 +222,14 @@ class ResourceFamily:
             self._status[next_item.credentials] = 'ready'
 
 
+def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
+    headers = generate_auth_header(twitter_req, app_cred, client_cred)
+    return session.request(twitter_req.method,
+                           twitter_req.url,
+                           params=twitter_req.params,
+                           headers=headers)
+
+
 class RequestProcessor:
     FAMILY_NAMES = ['application', 'favorites', 'followers', 'friends',
                     'friendships', 'help', 'lists', 'search',
@@ -259,14 +267,10 @@ class RequestProcessor:
     async def execute(self, session, twitter_req, *, uid=AnyCredentials):
         # XXX: `with await` is unconventional, therefore confusing.
         with await self._get_requestor(twitter_req.family, uid) as requestor:
-            headers = generate_auth_header(twitter_req,
-                                           self._app_cred,
-                                           await requestor.use_credentials())
-
-            req = session.request(twitter_req.method,
-                                  twitter_req.url,
-                                  params=twitter_req.params,
-                                  headers=headers)
+            req = twitter_req_to_http_req(session,
+                                          self._app_cred,
+                                          await requestor.use_credentials(),
+                                          twitter_req)
             async with req as resp:
                 requestor.update_limits_from_response(resp)
                 body = None
@@ -276,3 +280,31 @@ class RequestProcessor:
                     body = await resp.read()
 
                 return TwitterResponse(twitter_req, resp, body)
+
+
+# I don't want to require requests as a dependency. And, I really don't want
+# to encourage the use of a blocking function, especially outside the system
+# of rate limit management. But, when debugging, it's terribly useful to have
+# a the following function.
+try:
+    from requests import request as _request
+except ImportError:
+    def _request(*args, **kwargs):
+        raise ImportError("This function requires the `requests` package.")
+
+
+def debug_request(app_cred, client_cred, twitter_req):
+    """
+    Fulfill a request using requests (for humans).
+
+    :param app_cred: the AppCredentials
+    :param client_cred: the ClientCredentials
+    :param twitter_req: The TwitterRequest
+
+    :return: a requests.Response
+    """
+    headers = generate_auth_header(twitter_req, app_cred, client_cred)
+    return _request(twitter_req.method,
+                    twitter_req.url,
+                    params=twitter_req.params,
+                    headers=headers)
