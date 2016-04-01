@@ -2,7 +2,7 @@ import json
 import aiohttp
 import asyncio
 
-from brittle_wit.scheduling import twitter_req_to_http_req
+from brittle_wit.execution import twitter_req_to_http_req
 
 
 async def save_stream(session, app_cred, client_cred, twitter_req,

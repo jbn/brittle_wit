@@ -31,7 +31,7 @@ class NSSentinel:
 NOT_SPECIFIED = NSSentinel()
 
 
-def generate_signature(api_def):
+def _generate_signature(api_def):
     """
     Generate a Python function signature from an api definition.
 
@@ -58,7 +58,7 @@ def generate_signature(api_def):
     return Signature(params)
 
 
-def generate_doc_str(api_def, line_width=70, indent_width=4):
+def _generate_doc_str(api_def, line_width=70, indent_width=4):
     lines = textwrap.wrap(api_def['desc'], line_width) + [""]
 
     for k, (optionality, desc) in api_def['params'].items():
@@ -96,7 +96,7 @@ def _update_params_ordering_required_first(api_def):
 def _bind_sig(signature, *args, **kwargs):
     return {PY_NAME_TO_NAME.get(k, k): v
             for k, v in signature.bind(*args, **kwargs).arguments.items()
-               if v is not NOT_SPECIFIED}
+            if v is not NOT_SPECIFIED}
 
 
 def _slugged_pythonic_string(url):
@@ -168,7 +168,7 @@ def generate_api_request_builder_func(api_def):
                                api_def['family'],
                                api_def['method'])
 
-    signature = generate_signature(api_def)
+    signature = _generate_signature(api_def)
 
     def f(*args, **kwargs):
         # MAGIC WARNING
@@ -178,7 +178,7 @@ def generate_api_request_builder_func(api_def):
                               api_def['family'],
                               **binding)
     f.__name__ = f_name
-    f.__doc__ = generate_doc_str(api_def)
+    f.__doc__ = _generate_doc_str(api_def)
     f.__signature__ = signature
 
     return f
@@ -224,4 +224,3 @@ def build_api(json_file):
     with open(json_file) as fp:
         defs = decorder.decode(fp.read())
     return TwitterAPI(defs)
-

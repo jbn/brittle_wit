@@ -11,10 +11,10 @@ import hmac
 import random
 import time
 
-from brittle_wit import __version__
-
 from functools import total_ordering
 from urllib.parse import quote as urllib_quote
+
+from brittle_wit import __version__
 
 
 ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
@@ -154,6 +154,7 @@ class AppCredentials:
 
     def __ne__(self, other):
         return not self == other
+
 
 @total_ordering
 class ClientCredentials:

@@ -4,8 +4,8 @@ import unittest
 from brittle_wit import ClientCredentials
 from brittle_wit.oauth import AppCredentials
 from brittle_wit.rate_limit import RateLimit
-from brittle_wit.scheduling import (Requestor, ResourceFamily, AnyCredentials,
-                                    RequestProcessor)
+from brittle_wit.execution import (Requestor, ResourceFamily, AnyCredentials,
+                                   RequestProcessor)
 from test.helpers import *
 
 

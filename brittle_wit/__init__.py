@@ -6,11 +6,16 @@ from collections import namedtuple
 from brittle_wit.twitter_request import TwitterRequest
 TwitterResponse = namedtuple('TwitterResponse', 'request response body')
 
-from brittle_wit.scheduling import RequestProcessor
+from brittle_wit.execution import RequestProcessor
 from brittle_wit.parsing import parse_date
 from brittle_wit.oauth import AppCredentials, ClientCredentials
 from brittle_wit.rest_api import build_api
 
+
+# By default, build each API endpoint into a function. Access the endpoints by
+# dot-accessing the family. For example, `api.statuses.home_timeline()`. To
+# disable API building -- mostly, if you are just issuing custom requests --
+# set the API_BUILD environmental variable to 'SKIP'.
 if os.environ.get('API_BUILD', '') != 'SKIP':
     api = build_api(os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                  "rest_api.json"))
