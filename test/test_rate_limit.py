@@ -1,10 +1,40 @@
 import time
 import unittest
-from brittle_wit.rate_limit import RateLimit
+from brittle_wit.oauth import ClientCredentials, AppCredentials
+from brittle_wit.rate_limit import RateLimit, RateLimitError
+from brittle_wit.twitter_request import TwitterRequest
 from test.helpers import *
 
 
-class TestOAuth(unittest.TestCase):
+class TestRateLimitError(unittest.TestCase):
+
+    def test_rate_limit_error_for_client_cred(self):
+        client_cred = ClientCredentials(1, "token", "secret")
+        twitter_req = TwitterRequest('POST', "REQ-URL", "FAM")
+
+        err = RateLimitError(client_cred, twitter_req, {}, "response")
+        expected = "RateLimitError(user_id=1, url=REQ-URL, msg=response)"
+        self.assertEqual(str(err), expected)
+        self.assertEqual(str(err), repr(err))
+        
+        self.assertTrue(err.is_client_cred)
+        self.assertFalse(err.is_app_cred)
+
+    def test_rate_limit_error_for_app_cred(self):
+        client_cred = AppCredentials("token", "secret")
+        twitter_req = TwitterRequest('POST', "REQ-URL", "FAM")
+
+        err = RateLimitError(client_cred, twitter_req, {}, "response")
+        expected = "RateLimitError(app_key=token, url=REQ-URL, msg=response)"
+        self.assertEqual(str(err), expected)
+        self.assertEqual(str(err), repr(err))
+
+        self.assertFalse(err.is_client_cred)
+        self.assertTrue(err.is_app_cred)
+
+
+
+class TestRateLimit(unittest.TestCase):
 
     def test_from_ignorance(self):
         rate_limit = RateLimit.from_ignorance()

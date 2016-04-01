@@ -1,6 +1,38 @@
 import asyncio
 import time
 from datetime import datetime
+from brittle_wit.oauth import ClientCredentials, AppCredentials
+
+
+class RateLimitError(Exception):
+    def __init__(self, credentials, twitter_req, resp_headers, resp_body):
+        self.credentials = credentials
+        self.twitter_req = twitter_req
+        self.resp_headers = resp_headers
+        self.resp_body = resp_body
+
+    @property
+    def is_client_cred(self):
+        return type(self.credentials) is ClientCredentials
+
+    @property
+    def is_app_cred(self):
+        return type(self.credentials) is AppCredentials
+
+    def __str__(self):
+        if self.is_client_cred:
+            credentials_id = "user_id=" + str(self.credentials.user_id)
+        elif self.is_app_cred:
+            credentials_id = "app_key=" + str(self.credentials.key)
+        else:
+            credentials_id = 'cred=' + str(self.credentials)
+
+        msg = "RateLimitError({}, url={}, msg={})"
+        return msg.format(credentials_id, self.twitter_req.url, self.resp_body)
+
+    def __repr__(self):
+        return self.__str__()
+
 
 
 class RateLimit:
