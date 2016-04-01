@@ -8,10 +8,12 @@ class TwitterRequest:
     An Immutable (mostly) Twitter Request
     """
 
-    def __init__(self, method, url, family, *, parse_as='json', **params):
-        self._method = method.upper()
+    def __init__(self, method, url, family, service,
+                 *, parse_as='json', **params):
+        self._method = method
         self._url = url
-        self._family = family.lower()
+        self._family = family
+        self._service = service.upper()
         self._parse_as = parse_as
         self._params = params
 
@@ -26,6 +28,10 @@ class TwitterRequest:
     @property
     def family(self):
         return self._family
+
+    @property
+    def service(self):
+        return self._service
 
     @property
     def parse_as(self):
@@ -46,7 +52,7 @@ class TwitterRequest:
         snippets = ["<table>"]
         snippets.append("<tr><th>Field</th><th>Value</th></tr>")
 
-        fields = ['_method', '_url', '_family', '_parse_as']
+        fields = ['_method', '_url', '_family', '_service', '_parse_as']
         row_s = "<tr><td>{}</td><td>{}</td></tr>"
         for k in fields:
             snippets.append(row_s.format(k[1:], self.__dict__[k]))

@@ -11,7 +11,7 @@ class TestRestAPI(unittest.TestCase):
         # Note attribute_street_address -> attribute:street_address
         req = bw.api.geo.search(attribute_street_address="sullivan street")
         self.assertEqual(req.method, "GET")
-        self.assertEqual(req.family, "geo")
+        self.assertEqual(req.family, "GEO")
         self.assertEqual(req.url,
                          "https://api.twitter.com/1.1/geo/search.json")
         self.assertIn("attribute:street_address", req.params)

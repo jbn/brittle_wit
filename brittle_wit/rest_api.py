@@ -173,9 +173,10 @@ def generate_api_request_builder_func(api_def):
     def f(*args, **kwargs):
         # MAGIC WARNING
         binding = _bind_sig(signature, *args, **kwargs)
-        return TwitterRequest(api_def['method'],
+        return TwitterRequest(api_def['method'].upper(),
                               api_def['url'],
-                              api_def['family'],
+                              api_def['family'].upper(),
+                              api_def['service'].upper(),
                               **binding)
     f.__name__ = f_name
     f.__doc__ = _generate_doc_str(api_def)

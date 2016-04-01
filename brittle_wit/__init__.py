@@ -6,7 +6,7 @@ from collections import namedtuple
 from brittle_wit.twitter_request import TwitterRequest
 TwitterResponse = namedtuple('TwitterResponse', 'request response body')
 
-from brittle_wit.execution import RequestProcessor
+from brittle_wit.executors import RequestProcessor
 from brittle_wit.parsing import parse_date
 from brittle_wit.oauth import AppCredentials, ClientCredentials
 from brittle_wit.rest_api import build_api
