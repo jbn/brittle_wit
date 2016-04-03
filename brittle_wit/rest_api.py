@@ -1,11 +1,13 @@
 import json
-import textwrap
 import re
+import textwrap
 
 from collections import OrderedDict, defaultdict
 from inspect import Parameter, Signature
-from brittle_wit.twitter_request import TwitterRequest
 from itertools import tee, chain
+
+from brittle_wit.rate_limit import RateLimit
+from brittle_wit.twitter_request import TwitterRequest
 
 
 SLUGS_RE = re.compile(r":[A-Za-z_0-9]+")
@@ -186,10 +188,16 @@ def generate_api_request_builder_func(api_def):
 
 
 class TwitterAPI:
-    def __init__(self, api_defs, update_twitter_request_doc_urls=True):
+    def __init__(self, api_defs,
+                 update_twitter_request_doc_urls=True,
+                 update_rate_limit_defaults=True):
 
         if update_twitter_request_doc_urls:
             DOC_URLS = TwitterRequest.DOC_URLS
+
+        if update_rate_limit_defaults:
+            CLIENT_LIMITS = RateLimit.CLIENT_LIMITS
+            APP_LIMITS = RateLimit.APP_LIMITS
 
         # Each API function belongs to a family.
         families = defaultdict(dict)
@@ -208,6 +216,14 @@ class TwitterAPI:
 
             if update_twitter_request_doc_urls:
                 DOC_URLS[api_def['url']] = api_def['reference_url']
+
+            if update_rate_limit_defaults and api_def['rate_limited']:
+                limits = api_def.get('limits')
+                if limits:
+                    if 'app' in limits:
+                        APP_LIMITS[api_def['service']] = int(limits['app'])
+                    if 'user' in limits:
+                        CLIENT_LIMITS[api_def['service']] = int(limits['user'])
 
         # Make each family dictionary of api functions accessible via dot
         # accessor. That is, mock module-style access, without modules. There

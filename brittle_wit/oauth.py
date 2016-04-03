@@ -16,6 +16,7 @@ from urllib.parse import quote as urllib_quote
 
 from brittle_wit import __version__
 
+ANY_CREDENTIALS = None
 
 ALPHANUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
 USER_AGENT = 'BrittleWit/' + __version__
@@ -128,6 +129,9 @@ class AppCredentials:
     """
     An Immutable set of application credentials.
     """
+
+    __slots__ = '_key', '_secret'
+
     def __init__(self, key, secret):
         self._key, self._secret = key, secret
 
@@ -160,7 +164,12 @@ class AppCredentials:
 class ClientCredentials:
     """
     An Immutable set of client credentials.
+
+    Note: Equality testing and hashing is a function of the user_id alone!
     """
+
+    __slots__ = '_user_id', '_token', '_secret'
+
     def __init__(self, user_id, token, secret):
         self._user_id, self._token, self._secret = user_id, token, secret
 
@@ -184,12 +193,10 @@ class ClientCredentials:
         return self.__str__()
 
     def __hash__(self):
-        return hash((self._user_id, self._token, self._secret))
+        return hash(self._user_id)
 
     def __eq__(self, other):
-        return (self.user_id == other.user_id and
-                self.token == other.token and
-                self.secret == other.secret)
+        return self.user_id == other.user_id
 
     def __ne__(self, other):
         return not self == other
@@ -197,4 +204,4 @@ class ClientCredentials:
     def __lt__(self, other):
         # Because the client_credentials may partially-determine ordering
         # in a priority queue.
-        return (self.user_id, self.token) < (other.user_id, other.token)
+        return self.user_id < other.user_id

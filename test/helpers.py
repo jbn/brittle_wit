@@ -6,19 +6,21 @@ from functools import wraps
 MockResp = namedtuple("MockResp", "headers")
 
 
-def prestine_looped(f):
+def pristine_looped(f):
     @wraps(f)
     def _f():
         old_loop = asyncio.get_event_loop()
+        new_loop = asyncio.new_event_loop()
         try:
-            asyncio.set_event_loop(asyncio.new_event_loop())
+            asyncio.set_event_loop(new_loop)
             f()
         finally:
+            new_loop.close()
             asyncio.set_event_loop(old_loop)
     return f
 
 
-@prestine_looped
+@pristine_looped
 def drive_coro_once(coro, timeout=None, swallow_timeout_error=True):
     # XXX: Make this prettier. Create a new loop or something.
     loop = asyncio.get_event_loop()
@@ -28,7 +30,7 @@ def drive_coro_once(coro, timeout=None, swallow_timeout_error=True):
         if not swallow_timeout_error:
             raise e
 
-@prestine_looped
+@pristine_looped
 def drive_all(coros, timeout=None, swallow_timeout_error=True, interval=0.01):
     loop = asyncio.get_event_loop()
 

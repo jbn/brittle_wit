@@ -1,14 +1,18 @@
 __version__ = "0.0.1"
 
 import os
-from collections import namedtuple
+
+FIFTEEN_MINUTES = 15 * 60
 
 from brittle_wit.twitter_request import TwitterRequest
-TwitterResponse = namedtuple('TwitterResponse', 'request response body')
+from brittle_wit.twitter_response import TwitterResponse
+from brittle_wit.oauth import (AppCredentials, ClientCredentials,
+                               ANY_CREDENTIALS)
+from brittle_wit.brittle_wit_error import BrittleWitError
+from brittle_wit.executors import (ClientRequestProcessor,
+                                   ManagedClientRequestProcessors)
 
-from brittle_wit.executors import RequestProcessor
 from brittle_wit.parsing import parse_date
-from brittle_wit.oauth import AppCredentials, ClientCredentials
 from brittle_wit.rest_api import build_api
 
 

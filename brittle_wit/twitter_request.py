@@ -1,12 +1,17 @@
+
+
 class TwitterRequest:
+    """
+    An Immutable (mostly) Twitter Request
+    """
+
     # This is a static mapping from the request url to the Twitter API
     # documentation URL. `brittle_wit.twitter_request.build_api` populates it,
     # but there is no reason values cannot be overwritten.
     DOC_URLS = {}
 
-    """
-    An Immutable (mostly) Twitter Request
-    """
+    __slots__ = ('_method', '_url', '_family',
+                 '_service', '_parse_as', '_params')
 
     def __init__(self, method, url, family, service,
                  *, parse_as='json', **params):
@@ -55,7 +60,7 @@ class TwitterRequest:
         fields = ['_method', '_url', '_family', '_service', '_parse_as']
         row_s = "<tr><td>{}</td><td>{}</td></tr>"
         for k in fields:
-            snippets.append(row_s.format(k[1:], self.__dict__[k]))
+            snippets.append(row_s.format(k[1:], getattr(self, k)))
 
         snippets.append("<tr><td>params</td><td><table>")
         snippets.append("<tr><th>Field</th><th>Value</th></tr>")

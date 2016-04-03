@@ -1,22 +1,199 @@
-from collections import defaultdict
-from brittle_wit import TwitterResponse
-from brittle_wit.rate_limit import RateLimitEnforcer
-from brittle_wit import oauth
+import asyncio
+import aiohttp
+import time
 
-
-AnyCredentials = None
+from brittle_wit import FIFTEEN_MINUTES
+from brittle_wit.brittle_wit_error import TwitterError, WrappedException
+from brittle_wit.oauth import generate_req_headers, ANY_CREDENTIALS
+from brittle_wit.rate_limit import RateLimit
+from brittle_wit.ticketing import TicketMaster
+from brittle_wit.twitter_response import TwitterResponse
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
-    headers = oauth.generate_req_headers(twitter_req, app_cred, client_cred)
+    headers = generate_req_headers(twitter_req, app_cred, client_cred)
     return session.request(twitter_req.method,
                            twitter_req.url,
                            params=twitter_req.params,
                            headers=headers)
 
 
-class AnyCredentialsQueue:
+async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
     """
+    Execute a request with no exception handling.
+
+    :param credentials: the credentials used to build the http_req
+    :param twitter_req: the original TwitterRequest
+    :param http_req: the HttpRequest with encoded authentication information
+    :param rate_limit: the RateLimit object associated with the endpoint and
+        credentials
+    :param timeout: the time, in seconds, to wait before an exception is
+        thrown
+    :return: a TwitterResponse
+    """
+    try:
+        with aiohttp.Timeout(timeout):
+
+            # Send request over the wire.
+            async with http_req as resp:
+
+                # Update rate limits ASAP. Note: The prior call to comply
+                # decremented the rate limits already. If the context manager
+                # threw an exception on entry, it is still in compliance.
+                rate_limit.update(resp)
+
+                # An error occurred.
+                if resp.status != 200:
+                    raise TwitterError(credentials,
+                                       twitter_req,
+                                       resp,
+                                       await resp.json())
+
+                # The status code indicates a good response.
+                if twitter_req.parse_as == 'json':
+                    body = await resp.json()
+                else:
+                    body = await resp.text()
+
+                return TwitterResponse(twitter_req, resp, body)
+    except TwitterError:
+        raise
+    except Exception as e:
+        raise WrappedException(e)
+
+
+async def never_retry_strategy(f, *args, **kwargs):
+    return await f(*args, **kwargs)
+
+async def default_retry_strategy(f, *args, **kwargs):
+    while True:
+        try:
+            return await f(*args, **kwargs)
+        except aiohttp.errors.ClientConnectionError:
+            # restart connection?
+            pass
+        except aiohttp.errors.TimeoutError:
+            # retry?
+            pass
+
+
+class ClientRequestProcessor:
+    """
+    The ClientRequestProcessor manages rate limits while executing requests.
+
+    When the caller issues a request for execution, the request processor
+    enforces rate limitations. Such enforcement occurs in the context of the
+    given credentials and for a given service. If multiple callers request
+    execution at the same time (for a given set of credentials and service),
+    the requests execute FIFO.
+    """
+
+    def __init__(self, client_credentials):
+        """
+        :param client_credentials: the ClientCredentials to manage
+        """
+        self._client_credentials = client_credentials
+        self._ticket_master = TicketMaster()
+        self._rate_limits = {}
+
+    def _rate_limit_for(self, service):
+        """
+        Get existing or create new RateLimit for the given service.
+
+        :param service: API endpoint service
+        :return: the RateLimit object associated with the service
+        """
+        limit = self._rate_limits.get(service)
+
+        if limit is not None:
+            return limit
+        else:
+            max_requests = RateLimit.CLIENT_LIMITS[service]
+            limit = RateLimit(max_requests,
+                              max_requests,
+                              time.time() + FIFTEEN_MINUTES)
+            self._rate_limits[service] = limit
+            return limit
+
+    def cleanup(self, now=None):
+        """
+        Remove all rate limits which have expired.
+
+        :param now: the current time as per time.time()
+        """
+        rate_limits = self._rate_limits
+
+        # Abort quickly if possible.
+        if not rate_limits:
+            return
+
+        now = now or time.time()
+
+        remove_ks = []
+        for service, rate_limit in rate_limits.items():
+            # If the reset time is in the past, remove it.
+            if rate_limit.reset_time < now:
+                remove_ks.append(service)
+
+        for k in remove_ks:
+            del rate_limits[k]
+
+    def is_removable(self):
+        """
+        :return: True if this executor is not in use and is monitoring no
+            rate limits
+        """
+        return self.is_not_processing() and not self._rate_limits
+
+    def is_not_processing(self):
+        """
+        :return: True if no caller is using this processors' credentials for
+            any endpoint otherwise True
+        """
+        return self._ticket_master.all_lines_empty()
+
+    def is_immediately_available_for(self, service):
+        """
+        :param service: the API service name, as per the Twitter docs
+        :return: True if no caller is using this objects associated credentials
+            for the given service AND that service is not rate limited
+        """
+        if self._ticket_master.is_line_empty(service):
+            if service not in self._rate_limits:
+                return True
+            else:
+                return not self._rate_limits[service].is_exhausted
+        return False
+
+    async def execute(self, session, app_cred, twitter_req,
+                      timeout=120, retry_strategy=None):
+        service = twitter_req.service
+
+        async with self._ticket_master.take_ticket(service):
+            # The caller is now in charge of this service.
+            rate_limit = self._rate_limit_for(service)
+
+            # Block request execution until not rate limited.
+            await rate_limit.comply()
+
+            http_req = twitter_req_to_http_req(session,
+                                               app_cred,
+                                               self._client_credentials,
+                                               twitter_req)
+
+            # This coroutine will raise an exception for non-200 statuses.
+            return await execute_req(self._client_credentials,
+                                     twitter_req,
+                                     http_req,
+                                     rate_limit,
+                                     timeout)
+
+
+class ManagedClientRequestProcessors:
+    """
+
+    = Any Credential Management
+
     For many tasks, you don't need specific credentials, you just need some
     credentials. For example, if you and your social network analyst friends
     wanted to analyze the followers of Bernie Sanders, you need to collect all
@@ -31,9 +208,9 @@ class AnyCredentialsQueue:
     I rely on probability. (That is, until I think more and find a better
     solution.)
 
-    The AnyCredentialsQueue maintains a circular FIFO queue for each set of
-    credentials. When a client asks for AnyCredentials, the queue takes the
-    pops a token off the top. When it asks again, it pushes that initial item
+    The any_cred_queue maintains a circular buffer for each set of
+    credentials. When a client asks for AnyCredentials, the queue pops
+    credentials off the top. When it asks again, it pushes that initial item
     to the end of the queue, and pops the head again.
 
     This is far from perfect. For example, this could select a token that is
@@ -42,101 +219,69 @@ class AnyCredentialsQueue:
     should perform better as the number of managed users rises. (I'll think
     more about it; then, pen an arXiv article.)
     """
-    def __init__(self, credentials_iter=None):
-        self._queue = []
-        self._managed = set()
-        if credentials_iter:
-            for credentials in reversed(credentials_iter):
-                self.add_credentials(credentials)
+    def __init__(self):
+        self._credentials = {}
+        self._any_cred_queue = []
 
-    def add_credentials(self, credentials):
-        """
-        Add a new set of credentials to the front of the queue.
-        """
-        assert credentials not in self._managed
-        self._queue.insert(0, credentials)
-        self._managed.add(credentials)
+    def is_managed(self, cred):
+        return cred in self._credentials
 
-    def remove_credentials(self, credentials):
-        """
-        Remove a set of credentials from the queue.
-        """
-        self._queue.remove(credentials)
-        self._managed.remove(credentials)
+    def add(self, cred):
+        assert not self.is_managed(cred)
 
-    def __iter__(self):
-        return self
+        client_req_processor = ClientRequestProcessor(cred)
+        self._credentials[cred] = client_req_processor
 
-    def __next__(self):
-        """
-        Get the next item on the queue.
-        """
-        credentials = self._queue.pop(0)
-        self._queue.append(credentials)
+        # Add a new set of credentials to the front of the queue.
+        self._any_cred_queue.insert(0, cred)
 
-        return credentials
+        return client_req_processor
+
+    def remove(self, cred):
+        del self._credentials[cred]
+        self._any_cred_queue.remove(cred)
+
+    def __getitem__(self, cred):
+        if cred is ANY_CREDENTIALS:
+            credentials = self._any_cred_queue.pop(0)
+            self._any_cred_queue.append(credentials)
+            return self[credentials]
+        else:
+            managed = self._credentials.get(cred)
+
+            if not managed:
+                managed = self.add(cred)
+
+            return managed
+
+    def maintain(self, cull_interval=FIFTEEN_MINUTES):
+        now = time.time()
+
+        # Collect
+        removal_keys = []
+        for k, req_processor in self._credentials.items():
+            req_processor.cleanup(now)  # Remove disused rate limits
+
+            if req_processor.is_removable():
+                removal_keys.append(k)
+
+        # Remove
+        for k in removal_keys:
+            self.remove(k)
 
 
-class RequestProcessor:
-    # What about app credentials?
+async def repeating(interval, f, *args, **kwargs):
+    """
+    Call f(**args, **kwargs) every interval seconds.
 
-    def __init__(self, app_cred):
-        self._app_cred = app_cred
-        self._client_creds = {}
-        self._enforcers = defaultdict(lambda: RateLimitEnforcer())
-        self._any_queue = iter(AnyCredentialsQueue())
-
-    def add_enforcer(self, service, enforcer):
-        self._enforcers[service] = enforcer
-
-    def delete_enforcer(self):
-        pass # Close all process loops?
-
-    def add_credentials(self, credentials):
-        self._client_creds[credentials.user_id] = credentials
-        self._any_queue.add_credentials(credentials)
-
-    def remove_credentials(self, credentials):
-        pass
-
-    def swap_credentials(self, user_id, new_credentials):
-        pass
-
-    def _get_credentials(self, user_id):
-        # Having client_cred hanging around is error prone in methods
-        # which use the requestor. This is isolating, which is why
-        # I like it.
-        #client_cred = AnyCredentials
-        #if uid is not AnyCredentials:
-        return self._client_creds[uid]  # LookupError is good?
-
-    async def _get_ctx(self, service, credentials):
-        if credentials is AnyCredentials:
-            credentials = next(self._any_queue)
-
-        return await self._enforcers[service].acquire(credentials)
-
-    async def execute(self, session, twitter_req, credentials=AnyCredentials):
-        # XXX: `with await` is unconventional, therefore confusing.
-        # DO NOT USE CREDENTIALS raw
-
-        with await self._get_ctx(twitter_req.service, credentials) as ctx:
-            req = twitter_req_to_http_req(session,
-                                          self._app_cred,
-                                          await ctx.use_credentials(),
-                                          twitter_req)
-            async with req as resp:
-                ctx.update_limits_from_response(resp)
-                # check for rate limiting.
-                # Raise exception.
-                body = None
-                if twitter_req.parse_as == 'json':
-                    body = await resp.json()
-                else:
-                    body = await resp.read()
-
-                return TwitterResponse(twitter_req, resp, body)
-
+    :param interval: the interval in seconds
+    :param f: a function
+    :param args: positional arguments
+    :param kwargs: keyword arguments
+    """
+    while True:
+        f(*args, **kwargs)  # Do test for coro?
+        await asyncio.sleep(interval)
 
 # I don't want to require requests as a dependency. And, I really don't want
 # to encourage the use of a blocking function, especially outside the system
