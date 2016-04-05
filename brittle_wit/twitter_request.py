@@ -53,29 +53,3 @@ class TwitterRequest:
     def __str__(self):
         return "TwitterRequest(url={})".format(self._url)
 
-    def _repr_html_(self):
-        snippets = ["<table>"]
-        snippets.append("<tr><th>Field</th><th>Value</th></tr>")
-
-        fields = ['_method', '_url', '_family', '_service', '_parse_as']
-        row_s = "<tr><td>{}</td><td>{}</td></tr>"
-        for k in fields:
-            snippets.append(row_s.format(k[1:], getattr(self, k)))
-
-        snippets.append("<tr><td>params</td><td><table>")
-        snippets.append("<tr><th>Field</th><th>Value</th></tr>")
-        for k in self._params:
-            snippets.append(row_s.format(k, self._params[k]))
-
-        snippets.append("</table></td></tr>")
-
-        api_url = TwitterRequest.DOC_URLS.get(self._url, None)
-        if api_url:
-            api_link = "<a href='{}' target='_new'>{}</a>".format(api_url,
-                                                                  api_url)
-            snippets.append(row_s.format("docs",
-                                         api_link.replace(".json", "")))
-
-        snippets.append("</table>")
-
-        return "\n".join(snippets)
