@@ -12,7 +12,7 @@ from brittle_wit.brittle_wit_error import BrittleWitError
 from brittle_wit.executors import (ClientRequestProcessor,
                                    ManagedClientRequestProcessors)
 
-from brittle_wit.parsing import parse_date
+from brittle_wit.helpers import parse_date
 from brittle_wit.rest_api import build_api
 
 
