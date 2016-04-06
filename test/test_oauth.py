@@ -3,6 +3,7 @@ import unittest
 from functools import lru_cache
 
 from brittle_wit import *
+from brittle_wit import TwitterRequest
 from brittle_wit.oauth import (_generate_nonce,
                                _generate_timestamp,
                                _generate_header_string,
@@ -130,6 +131,14 @@ class TestClientCredentials(unittest.TestCase):
             client_1.token = 10  # Immutable(ish)
 
         self.assertTrue(client_2 > client_1)
+
+    def test_dict_serialization(self):
+        client_1 = ClientCredentials(1, "token_1", "secret")
+        client_2 = ClientCredentials.from_dict(client_1.as_dict)
+
+        self.assertEqual(client_1.user_id, client_2.user_id)
+        self.assertEqual(client_1.secret, client_2.secret)
+        self.assertEqual(client_1.token, client_2.token)
 
 
 FIXTURES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),

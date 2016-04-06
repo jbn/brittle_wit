@@ -1,14 +1,14 @@
 import json
 import re
 import textwrap
+import warnings
 
 from collections import OrderedDict, defaultdict
 from inspect import Parameter, Signature
 from itertools import tee, chain
 
 from brittle_wit.rate_limit import RateLimit
-from brittle_wit.twitter_request import TwitterRequest
-
+from brittle_wit import TwitterRequest
 
 SLUGS_RE = re.compile(r":[A-Za-z_0-9]+")
 SLUG_POSTFIX_RE = re.compile(r"^.*?(:[A-Za-z_0-9]+)$")
@@ -209,9 +209,10 @@ class TwitterAPI:
 
             f = generate_api_request_builder_func(api_def)
             if f.__name__ in families[api_def['family']]:
-                print("CONFLICT!", api_def['reference_url'])
+                warnings.warn("Conflicting on: " + api_def['reference_url'])
             if not f.__name__.isidentifier():
-                print("INVALID NAME", f.__name__, api_def['reference_url'])
+                fmt = "Bad Name: {} for {}"
+                warnings.warn(fmt.format(f.__name__, api_def['reference_url']))
             families[api_def['family']][f.__name__] = f
 
             if update_twitter_request_doc_urls:

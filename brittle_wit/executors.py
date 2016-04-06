@@ -2,12 +2,12 @@ import asyncio
 import aiohttp
 import time
 
-from brittle_wit import FIFTEEN_MINUTES
-from brittle_wit.brittle_wit_error import TwitterError, WrappedException
+from brittle_wit.constants import FIFTEEN_MINUTES, LOGGER
 from brittle_wit.oauth import generate_req_headers, ANY_CREDENTIALS
 from brittle_wit.rate_limit import RateLimit
 from brittle_wit.ticketing import TicketMaster
-from brittle_wit.twitter_response import TwitterResponse
+from brittle_wit.messages import (TwitterResponse, TwitterError,
+                                  WrappedException, BrittleWitError)
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
@@ -31,6 +31,8 @@ async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
         thrown
     :return: a TwitterResponse
     """
+    LOGGER.info("Executing %s request (%s) for %s",
+                credentials.user_id, id(twitter_req), twitter_req.service)
     try:
         with aiohttp.Timeout(timeout):
 
@@ -56,25 +58,19 @@ async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
                     body = await resp.text()
 
                 return TwitterResponse(twitter_req, resp, body)
-    except TwitterError:
-        raise
+    except TwitterError as e:
+        LOGGER.exception("Failed %s request (%s) for %s with %s",
+                         credentials.user_id,
+                         twitter_req.service,
+                         id(twitter_req),
+                         e.status_code)
+        raise e
     except Exception as e:
+        LOGGER.exception("Failed %s request (%s) for %s",
+                         credentials.user_id,
+                         twitter_req.service,
+                         id(twitter_req))
         raise WrappedException(e)
-
-
-async def never_retry_strategy(f, *args, **kwargs):
-    return await f(*args, **kwargs)
-
-async def default_retry_strategy(f, *args, **kwargs):
-    while True:
-        try:
-            return await f(*args, **kwargs)
-        except aiohttp.errors.ClientConnectionError:
-            # restart connection?
-            pass
-        except aiohttp.errors.TimeoutError:
-            # retry?
-            pass
 
 
 class ClientRequestProcessor:
@@ -95,6 +91,10 @@ class ClientRequestProcessor:
         self._client_credentials = client_credentials
         self._ticket_master = TicketMaster()
         self._rate_limits = {}
+
+    @property
+    def user_id(self):
+        return self._client_credentials.user_id
 
     def _rate_limit_for(self, service):
         """
@@ -165,10 +165,13 @@ class ClientRequestProcessor:
                 return not self._rate_limits[service].is_exhausted
         return False
 
-    async def execute(self, session, app_cred, twitter_req,
-                      timeout=120, retry_strategy=None):
+    async def _execute(self, session, app_cred, twitter_req, timeout=120):
         service = twitter_req.service
 
+        LOGGER.debug("Waiting for ticket on %s request (%s) for %s",
+                     self._client_credentials.user_id,
+                     id(twitter_req),
+                     twitter_req.service)
         async with self._ticket_master.take_ticket(service):
             # The caller is now in charge of this service.
             rate_limit = self._rate_limit_for(service)
@@ -187,6 +190,37 @@ class ClientRequestProcessor:
                                      http_req,
                                      rate_limit,
                                      timeout)
+
+    async def execute(self, session, app_cred, twitter_req, timeout=120,
+                      n_retries=5):
+        tries = 0
+        while True:
+            try:
+                return await self._execute(session, app_cred,
+                                           twitter_req, timeout)
+            except BrittleWitError as e:
+                tries += 1
+                if not e.is_retryable or tries >= n_retries:
+                    raise e
+                else:
+                    await asyncio.sleep(60 * tries)  # Sleep progressively
+
+
+class ContextualizedProcessor:
+    def __init__(self, session, app_cred, client_processor):
+        self._session = session
+        self._app_cred = app_cred
+        self._client_processor = client_processor
+
+    @property
+    def user_id(self):
+        return self._client_processor.user_id
+
+    def __call__(self, twitter_req, timeout=60):
+        return self._client_processor.execute(self._session,
+                                              self._app_cred,
+                                              twitter_req,
+                                              timeout)
 
 
 class ManagedClientRequestProcessors:
@@ -307,7 +341,7 @@ def debug_blocking_request(app_cred, client_cred, twitter_req):
 
     :return: a requests.Response
     """
-    headers = oauth.generate_req_headers(twitter_req, app_cred, client_cred)
+    headers = generate_req_headers(twitter_req, app_cred, client_cred)
     return _request(twitter_req.method,
                     twitter_req.url,
                     params=twitter_req.params,

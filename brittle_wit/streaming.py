@@ -1,9 +1,12 @@
-import json
 import asyncio
-import aiohttp
+import json
 
+import aiohttp
+from aiohttp import web
+
+from brittle_wit.constants import LOGGER
 from brittle_wit.executors import twitter_req_to_http_req
-from brittle_wit.brittle_wit_error import *
+from brittle_wit.messages import TwitterError, BrittleWitError
 
 
 class EntryProcessor:
@@ -98,23 +101,9 @@ def json_entry_parser(entry):
     return json.loads(entry.decode('ascii'))
 
 
-def noop_entry_parser(entry):
-    """
-    :return: the entry string without further processing.
-    """
-    return entry
-
-
-def json_entry_parser(entry):
-    """
-    :return: the entry parsed as a JSON object
-    """
-    return json.loads(entry.decode('ascii'))
-
-
 class TwitterStream:
     def __init__(self, session, app_cred, client_cred, twitter_req,
-                 parser=json_entry_parser, chunk_size=4096):
+                 parser=noop_entry_parser, chunk_size=4096):
         """
         Initialize a Twitter stream.
 
@@ -206,10 +195,10 @@ class TwitterStream:
         # I hate the next line. Is there a decontextualize pattern?
         self._resp = await self._http_req.__aenter__()
         if self._resp.status != 200:
-            raise TwitterError(self._credentials,
+            raise TwitterError(self._client_cred,
                                self._twitter_req,
                                self._resp,
-                               await self._resp.json())
+                               await self._resp.text())
 
         return self
 
@@ -218,15 +207,149 @@ class TwitterStream:
         while not self._entry_processor:
             chunk = await self._resp.content.read(self._chunk_size)
             if not chunk:
+                LOGGER.error("Read zero bytes on a stream.")
                 break
             self._entry_processor.process(chunk)
 
         # If there are no messages ready, the stream closed!
         if not self._entry_processor:
+            LOGGER.error("Stream Closing (non-explicit)")
             raise StopAsyncIteration
 
         # Take one message.
         return self._parser(self._entry_processor.take_one())
+
+
+class StreamProcessor:
+    def __init__(self, twitter_stream):
+        self._twitter_stream = twitter_stream
+        self._subscribers = {}
+        self._requires_json = False
+
+    def subscribe(self, handler, as_json=False):
+        handler_id = id(handler)
+
+        if handler_id in self._subscribers:
+            raise RuntimeError("Already subscribed!")
+
+        if not hasattr(handler, "send"):
+            raise RuntimeError("Handler must implement send(msg)")
+
+        if as_json:
+            self._requires_json = True
+
+        self._subscribers[handler_id] = (handler, as_json)
+        return handler_id
+
+    def unsubscribe(self, handler):
+        handler_id = id(handler)
+
+        if handler_id not in self._subscribers:
+            msg = "Either never subscribed or already unsubscribed!"
+            raise RuntimeError(msg)
+
+        required_json = self._subscribers[handler_id][1]
+
+        del self._subscribers[handler_id]
+
+        if required_json and not any(p[1] for p in self._subscribers.values()):
+            self._requires_json = False
+
+    def _send_to_all(self, message):
+        # JSON parsing is expensive. If the application only pipes the
+        # Twitter Stream to HTTP clients, it's dead time. The pattern
+        # would be: BYTES -> JSON -> BYTES
+        if self._requires_json:
+            json_message = json_entry_parser(message)
+
+        for subscriber, as_json in self._subscribers.values():
+            subscriber.send(json_message if as_json else message)
+
+    async def run(self):
+        # Retry Strategy: https://dev.twitter.com/streaming/overview/connecting
+        # TODO: More compliant!
+        failures, failed = 0, False
+        while True:
+            try:
+                if failed:
+                    failures += 1
+                    self._twitter_stream.reconnect(force_close_if_open=True)
+                async for message in self._twitter_stream:
+                    self._send_to_all(message)
+                    failed = False  # TODO: FIX: This is such a waste!
+            except TwitterError as e:
+                # The docs only say 420. But, I suspect 429 codes, too.
+                if e.status_code == 420 or e.status_code == 429:
+                    sleep_time = 60 * 2**failures
+                    msg = "Stream 420'd waiting {} seconds (failure {})"
+                    LOGGER.error(msg.format(sleep_time, failures))
+                    await asyncio.sleep(sleep_time)
+                else:
+                    sleep_time = min(5 * 2**failures, 320)
+                    msg = "Stream {}'d waiting {} seconds (failure {})"
+                    LOGGER.error(msg.format(e.status_code, sleep_time,
+                                            failures))
+
+                failed = True
+                await asyncio.sleep(sleep_time)
+            except BrittleWitError as e:
+                if e.is_retryable:  # TODO FIX as is network error.
+                    sleep_time = min(0.25 * failures, 16)
+                    msg = "Stream {}'d waiting {} seconds (failure {})"
+                    LOGGER.error(msg.format(repr(e), sleep_time, failures))
+                    failed = True
+                    await asyncio.sleep(sleep_time)
+
+
+class StreamingHTTPPipe:
+    DEFAULT_HEADERS = {'Content-Type': 'application/json'}
+
+    def __init__(self, **resp_headers):
+        # The _clients dict maps a unique identifier -- via id(obj) -- to a
+        # pair of (StreamResponse, Event).
+        self._clients = {}
+
+        self._headers = {**StreamingHTTPPipe.DEFAULT_HEADERS, **resp_headers}
+
+    async def handle(self, req):
+        caller_id = id(req)
+        resp = web.StreamResponse(status=200, headers=self._headers)
+
+        try:
+            # Start the FSM.
+            await resp.prepare(req)
+
+            # The send method signals handle when it processing finishes.
+            finished_flag = asyncio.Event()
+            self._clients[caller_id] = (resp, finished_flag)
+            await finished_flag.wait()
+
+        except asyncio.CancelledError:
+            # Generally, this means the client disconnected.
+            if caller_id in self._clients:
+                del self._clients[caller_id]
+
+        return resp
+
+    def send(self, message):
+        removal_set = []
+
+        for caller_id, (resp, finished_flag) in self._clients.items():
+            try:
+                resp.write(message)  # I don't think draining is nessessary.
+            except Exception as e:
+                # This is a sloppy catch all for now. I'm not sure if
+                # asyncio guarantees a cancel to handle prior to a
+                # possible write. But, I do know it would be quite
+                # wrong for a write to one client to cause failures
+                # in other clients.
+                print("Send", repr(e))
+                finished_flag.set()
+                removal_set.append(caller_id)
+                raise e
+
+        for k in removal_set:
+            del self._clients[k]
 
 
 async def save_raw_stream(session, app_cred, client_cred, twitter_req,

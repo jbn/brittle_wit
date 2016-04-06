@@ -185,6 +185,16 @@ class ClientCredentials:
     def user_id(self):
         return self._user_id
 
+    @property
+    def as_dict(self):
+        return {'user_id': self._user_id,
+                'token': self._token,
+                'secret': self._secret}
+
+    @staticmethod
+    def from_dict(d):
+        return ClientCredentials(d['user_id'], d['token'], d['secret'])
+
     def __str__(self):
         s = "ClientCredentials({}, {}, {})"
         return s.format(self.user_id, self._token, "*" * len(self._secret))

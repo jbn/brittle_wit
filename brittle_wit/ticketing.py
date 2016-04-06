@@ -50,19 +50,11 @@ class Ticket:
         self._ticket_master.notify_finished(self)
 
     async def __aenter__(self):
-        import sys
-        print("ACQUIRING...")
-        sys.stdout.flush()
         await self.acquire()
-        print("ACQUIRED...")
-        sys.stdout.flush()
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.release()
 
-        import sys
-        print("RELEASED")
-        sys.stdout.flush()
 
 
 
