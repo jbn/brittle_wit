@@ -3,6 +3,7 @@ import asyncio
 import aiohttp
 
 from brittle_wit.executors import twitter_req_to_http_req
+from brittle_wit.brittle_wit_error import *
 
 
 class EntryProcessor:
@@ -204,6 +205,11 @@ class TwitterStream:
         """
         # I hate the next line. Is there a decontextualize pattern?
         self._resp = await self._http_req.__aenter__()
+        if self._resp.status != 200:
+            raise TwitterError(self._credentials,
+                               self._twitter_req,
+                               self._resp,
+                               await self._resp.json())
 
         return self
 
@@ -217,7 +223,6 @@ class TwitterStream:
 
         # If there are no messages ready, the stream closed!
         if not self._entry_processor:
-            self.close()
             raise StopAsyncIteration
 
         # Take one message.
