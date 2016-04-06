@@ -6,51 +6,106 @@ from brittle_wit.executors import twitter_req_to_http_req
 
 
 class EntryProcessor:
+    """
+    Splits a stream of bytes into CRLF-separated messages.
+    """
+
     def __init__(self):
         self._buf = b""  # Use a more efficient buffer
-        self._messages = []
+        self._mailbox = []
 
-    def append(self, text):
-        self._buf += text
+    def process(self, chunk):
+        """
+        Translate received bytes into messages in a mailbox.
+
+        :param chunk: a chunk of bytes received from the HTTP connection
+        """
+        self._buf += chunk
 
         # Streams are `\r\n`-separated JSON messages.
         raw_lines = self._buf.split(b"\r\n")
 
-        if raw_lines and raw_lines[0]:
-            raw_lines, self._buf = raw_lines[:-1], raw_lines[-1]
-        else:
-            self._buf = b""
+        # If only one element in the split, then there wasn't a CRLF.
+        if len(raw_lines) > 1:
+            # The last element may be a b'', which is perfectly fine.
+            self._buf = raw_lines[-1]
 
-        # Blank lines are keep-alive messages.
-        lines = (l for l in raw_lines if l.strip())
-        self._messages += [json.loads(line.decode('ascii')) for line in lines]
+            # Blank lines are keep-alive messages.
+            self._mailbox.extend(l for l in raw_lines[:-1] if l.strip())
 
-    @property
     def messages(self):
-        msgs = self._messages
-        self._messages = []
+        """
+        Return the messages then reset the mailbox
+
+        :return: the enqueued messages
+        """
+        msgs = self._mailbox
+        self._mailbox = []
         return msgs
 
-    def take_one(self):
-        return self._messages.pop(0)
-
-    def purge(self):
-        self._messages = []
-
     def __bool__(self):
-        return bool(self._messages)
+        """
+        :return: True if there are any messages available
+        """
+        return bool(self._mailbox)
+
+    def take_one(self):
+        """
+        :return: the first message removed from the mailbox
+        """
+        return self._mailbox.pop(0)
+
+    def purge_buffer(self):
+        """
+        Reset the internal buffer.
+
+        This is useful when restarting a stream. When the old stream
+        terminates, the buffer is incomplete. Appending to it will produce a
+        corrupt entry.
+        """
+        self._buf = b''
+
+    def purge_mailbox(self):
+        """
+        Resets the mailbox so there are no messages
+        """
+        self._mailbox = []
 
     def __iter__(self):
-        return self.messages()
+        """
+        :return: an iterator which pops messages of the mailbox until fully
+            consumed
+        """
+        return self._entry_consumer()
+
+    def _entry_consumer(self):
+        while self._mailbox:
+            yield self.take_one()
+
+
+def noop_entry_parser(entry):
+    """
+    :return: the entry string without further processing.
+    """
+    return entry
+
+
+def json_entry_parser(entry):
+    """
+    :return: the entry parsed as a JSON object
+    """
+    return json.loads(entry.decode('ascii'))
 
 
 class SimpleStream:
-    def __init__(self, session, app_cred, client_cred, twitter_req):
+    def __init__(self, session, app_cred, client_cred, twitter_req,
+                 parser=json_entry_parser):
         self._entry_processor = EntryProcessor()
         self._http_req = twitter_req_to_http_req(session,
                                                  app_cred,
                                                  client_cred,
                                                  twitter_req)
+        self._parser = parser
 
     async def __aiter__(self):
         self._resp = await self._http_req.__aenter__()  # I hate this.
@@ -63,7 +118,7 @@ class SimpleStream:
             chunk = await self._resp.content.read(4096)
             if not chunk:
                 break
-            self._entry_processor.append(chunk)
+            self._entry_processor.process(chunk)
 
         # If there are no messages ready, the stream closed!
         if not self._entry_processor:
@@ -71,9 +126,10 @@ class SimpleStream:
             raise StopAsyncIteration
 
         # Take one message.
-        return self._entry_processor.take_one()
+        return self._parser(self._entry_processor.take_one())
 
     def close(self):
+        # Signal end.
         self._resp.close()
 
 
