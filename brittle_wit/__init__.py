@@ -14,6 +14,7 @@ from brittle_wit.executors import (ClientRequestProcessor,
 
 from brittle_wit.helpers import parse_date
 from brittle_wit.rest_api import build_api
+from brittle_wit.streaming import TwitterStream
 
 
 # By default, build each API endpoint into a function. Access the endpoints by

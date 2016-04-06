@@ -97,25 +97,120 @@ def json_entry_parser(entry):
     return json.loads(entry.decode('ascii'))
 
 
-class SimpleStream:
+def noop_entry_parser(entry):
+    """
+    :return: the entry string without further processing.
+    """
+    return entry
+
+
+def json_entry_parser(entry):
+    """
+    :return: the entry parsed as a JSON object
+    """
+    return json.loads(entry.decode('ascii'))
+
+
+class TwitterStream:
     def __init__(self, session, app_cred, client_cred, twitter_req,
-                 parser=json_entry_parser):
-        self._entry_processor = EntryProcessor()
-        self._http_req = twitter_req_to_http_req(session,
-                                                 app_cred,
-                                                 client_cred,
-                                                 twitter_req)
+                 parser=json_entry_parser, chunk_size=4096):
+        """
+        Initialize a Twitter stream.
+
+        This connects to Twitter's servers but doesn't start reading until a
+        call to __iter__.
+
+        :param session: the aiohttp.ClientSession object
+        :param app_cred: the AppCredentials
+        :param client_cred: the ClientCredentials
+        :param twitter_req: the TwitterRequest to initiate streaming
+        :param parser: a parser which takes a byte-entry and translates it
+            into a message.
+        :param chunk_size: the number of bytes to asynchronously read from
+            Twitter at a time
+        """
+        self._session = session
+        self._app_cred = app_cred
+        self._client_cred = client_cred
+        self._twitter_req = twitter_req
         self._parser = parser
+        self._chunk_size = chunk_size
+
+        self._entry_processor = EntryProcessor()
+        self._http_req = None
+
+        self._connect()
+
+    def _connect(self):
+        """
+        Connect to Twitter's servers.
+        """
+        # There may only be one set of credentials connected to a
+        # streaming endpoint at a time. Preempting an existing
+        # connection is error-prone. Complain loudly when a connection
+        # already exists.
+        if self.is_open:
+            raise RuntimeError("Already connected. Call close() first!")
+
+        self._http_req = twitter_req_to_http_req(self._session,
+                                                 self._app_cred,
+                                                 self._client_cred,
+                                                 self._twitter_req)
+
+    @property
+    def is_open(self):
+        """
+        :return: True if their is an active connection to Twitter's servers.
+        """
+        return self._http_req is not None and not self._resp.connection.closed
+
+    def reconnect(self, force_close_if_open=False, clear_prior_messages=False):
+        """
+        Reconnect to Twitter's servers.
+
+        :param force_close_if_open: if True, close the prior connection, if it
+            exists
+        :param clear_prior_messages: if True, purges all (correct) messages
+            waiting for consumption on the internal EntryProcessor from the
+            prior connection
+        """
+        # Explicitly acknowledge that forced closure is okay.
+        if force_close_if_open and self.is_open:
+            self.disconnect()
+
+        # The initiating request does not change between connection resets,
+        # so old messages are consumable.
+        if clear_prior_messages:
+            self._entry_processor.purge_mailbox()
+
+        # The buffer underling the entry processor should always be in
+        # an initially pristine state. A broken connection virtually
+        # ensures corruption.
+        self._entry_processor.purge_buffer()
+
+        self._connect()
+
+    def disconnect(self):
+        """
+        Disconnect the stream from Twitter's servers.
+        """
+        if self._http_req is not None:
+            self._http_req.close()
+            self._http_req = None
 
     async def __aiter__(self):
-        self._resp = await self._http_req.__aenter__()  # I hate this.
+        """
+        Commence streaming, returning this object as an iterator.
+        """
+        # I hate the next line. Is there a decontextualize pattern?
+        self._resp = await self._http_req.__aenter__()
 
         return self
 
     async def __anext__(self):
         # If there are no messages ready, read from the stream.
         while not self._entry_processor:
-            chunk = await self._resp.content.read(4096)
+            chunk = await self._resp.content.read(self._chunk_size)
             if not chunk:
                 break
             self._entry_processor.process(chunk)
@@ -128,13 +223,9 @@ class SimpleStream:
         # Take one message.
         return self._parser(self._entry_processor.take_one())
 
-    def close(self):
-        # Signal end.
-        self._resp.close()
 
-
-async def save_stream(session, app_cred, client_cred, twitter_req,
-                      output_path, chunk_size=4096, timeout=30):
+async def save_raw_stream(session, app_cred, client_cred, twitter_req,
+                          output_path, chunk_size=4096, timeout=30):
     """
     Save response headers and timeout seconds of response for a streaming req.
 
