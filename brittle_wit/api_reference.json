@@ -71,6 +71,38 @@
     }, 
     {
         "method": "GET", 
+        "url": "https://curator.twitter.com/broadcast/1/projects", 
+        "service": "projects", 
+        "family": "projects", 
+        "resp_format": [
+            "JSON", 
+            "XML"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "YES", 
+        "limits": {
+            "app": 900, 
+            "user": 900
+        }, 
+        "desc": "This endpoint requires special permission to access and is only available for TV broadcast use cases. To request access please visit curator.twitter.com .", 
+        "params": {
+            "limit": [
+                "OPTIONAL", 
+                "The number of elements to return. Defaults to 500 if not specified."
+            ], 
+            "format": [
+                "OPTIONAL", 
+                "The output format request. This param can be either json or xml . It will default to json ."
+            ], 
+            "auth": [
+                "REQUIRED", 
+                "Auth token for user."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/rest/reference/get/projects"
+    }, 
+    {
+        "method": "GET", 
         "url": "https://api.twitter.com/1.1/account/settings.json", 
         "service": "account/settings", 
         "family": "account", 
@@ -1152,6 +1184,57 @@
             ]
         }, 
         "reference_url": "https://dev.twitter.com/rest/reference/get/lists/statuses"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://api.twitter.com/1.1/lists/subscribers.json", 
+        "service": "lists/subscribers", 
+        "family": "lists", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "YES", 
+        "limits": {
+            "app": 15, 
+            "user": 180
+        }, 
+        "desc": "Returns the subscribers of the specified list. Private list subscribers will only be shown if the authenticated user owns the specified list.", 
+        "params": {
+            "list_id": [
+                "REQUIRED", 
+                "The numerical id of the list."
+            ], 
+            "slug": [
+                "REQUIRED", 
+                "You can identify a list by its slug instead of its numerical id. If you decide to do so, note that you\u2019ll also have to specify the list owner using the owner_id or owner_screen_name parameters."
+            ], 
+            "owner_screen_name": [
+                "OPTIONAL", 
+                "The screen name of the user who owns the list being requested by a slug ."
+            ], 
+            "owner_id": [
+                "OPTIONAL", 
+                "The user ID of the user who owns the list being requested by a slug ."
+            ], 
+            "count": [
+                "OPTIONAL", 
+                "Specifies the number of results to return per page (see cursor below). The default is 20, with a maximum of 5,000."
+            ], 
+            "cursor": [
+                "OPTIONAL", 
+                "Breaks the results into pages. A single page contains 20 lists. Provide a value of -1 to begin paging. Provide values as returned in the response body\u2019s next_cursor and previous_cursor attributes to page back and forth in the list. See Using cursors to navigate collections for more information."
+            ], 
+            "include_entities": [
+                "OPTIONAL", 
+                "When set to either true , t or 1 , each tweet will include a node called \u201centities\u201d. This node offers a variety of metadata about the tweet in a discreet structure, including: user_mentions, urls, and hashtags. While entities are opt-in on timelines at present, they will be made a default component of output in the future. See Tweet Entities for more details."
+            ], 
+            "skip_status": [
+                "OPTIONAL", 
+                "When set to either true , t or 1 statuses will not be included in the returned user objects."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/rest/reference/get/lists/subscribers"
     }, 
     {
         "method": "GET", 
@@ -2371,6 +2454,33 @@
     }, 
     {
         "method": "GET", 
+        "url": "https://api.twitter.com/1.1/users/suggestions/:slug.json", 
+        "service": "users/suggestions/:slug", 
+        "family": "users", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "YES", 
+        "limits": {
+            "app": 15, 
+            "user": 15
+        }, 
+        "desc": "Access the users in a given category of the Twitter suggested user list.", 
+        "params": {
+            "slug": [
+                "REQUIRED", 
+                "The short name of list or a category\n\nExample Values : twitter"
+            ], 
+            "lang": [
+                "OPTIONAL", 
+                "Restricts the suggested categories to the requested language. The language must be specified by the appropriate two letter ISO 639-1 representation. Currently supported languages are provided by the GET help / languages API request. Unsupported language codes will receive English (en) results. If you use lang in this request, ensure you also include it when requesting the GET users / suggestions / :slug list."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/rest/reference/get/users/suggestions/:slug"
+    }, 
+    {
+        "method": "GET", 
         "url": "https://api.twitter.com/1.1/users/suggestions/:slug/members.json", 
         "service": "users/suggestions/:slug/members", 
         "family": "users", 
@@ -3405,7 +3515,7 @@
     {
         "method": "POST", 
         "url": "https://upload.twitter.com/1.1/media/upload.json", 
-        "service": "media/upload(chunked)", 
+        "service": "media/upload(INIT)", 
         "family": "media", 
         "resp_format": [
             "JSON"
@@ -3413,11 +3523,11 @@
         "rate_limited": true, 
         "authentication_required": "USER_ONLY", 
         "limits": {}, 
-        "desc": "Upload videos or chunked images to Twitter for use in a Tweet or Twitter-hosted Card. For uploading images in a single call, see our POST media/upload endpoint.", 
+        "desc": "The INIT command request is used to initiate a file upload session. It returns a media_id which should be used to execute all subsequent requests. The next step after a successful return from INIT command is APPEND command .", 
         "params": {
             "command": [
                 "REQUIRED", 
-                "The type of operation to take. Possible values are INIT , APPEND and FINALIZE . Always required.\n\nExample: INIT ."
+                "Must be set to INIT (case sensitive)"
             ], 
             "total_bytes": [
                 "REQUIRED", 
@@ -3425,34 +3535,54 @@
             ], 
             "media_type": [
                 "REQUIRED", 
-                "The MIME type of the media being uploaded.\n\nExample: video/mp4 ."
+                "The MIME type of the media being uploaded.\n\nExamples: video/mp4 , video/mp4 ."
+            ], 
+            "media_category": [
+                "REQUIRED", 
+                "A string enum value which identifies a media usecase. This identifier is used to enforce usecase specific constraints (e.g. filesize, video duration) and enable advance features."
             ], 
             "additional_owners": [
                 "OPTIONAL", 
                 "A comma-separated string of user IDs to set as additional owners who are allowed to use the returned media_id in Tweets or Cards. A maximum of 100 additional owners may be specified."
-            ], 
-            "media_id": [
-                "REQUIRED", 
-                "The media_id returned from the INIT query. Required after an INIT on subsequent calls until the upload has completed."
-            ], 
-            "media_data": [
-                "REQUIRED", 
-                "The base64-encoded file content being uploaded. Cannot be used with media ."
-            ], 
-            "media": [
-                "REQUIRED", 
-                "The raw binary file content being uploaded. Cannot be used with media_data ."
-            ], 
-            "segment_index": [
-                "REQUIRED", 
-                "Required after an INIT , an index number starting at zero indicating the order of the uploaded chunks. The chunk of the upload for a single media, from 0-999, inclusive. The first segment_index is 0 , the second segment uploaded is 1 , etc."
-            ], 
-            "media_category": [
-                "OPTIONAL", 
-                "Identifies category the current media upload should be associated with.\n\nNote: this is currently only applicable for video uploads for Ads API developers who should include a value of amplify_video for this parameter."
             ]
         }, 
         "reference_url": "https://dev.twitter.com/rest/reference/post/media/upload-chunked"
+    }, 
+    {
+        "method": "POST", 
+        "url": "https://upload.twitter.com/1.1/media/upload.json", 
+        "service": "media/upload(INIT)", 
+        "family": "media", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "The INIT command request is used to initiate a file upload session. It returns a media_id which should be used to execute all subsequent requests. The next step after a successful return from INIT command is APPEND command .", 
+        "params": {
+            "command": [
+                "REQUIRED", 
+                "Must be set to INIT (case sensitive)"
+            ], 
+            "total_bytes": [
+                "REQUIRED", 
+                "The size of the media being uploaded in bytes."
+            ], 
+            "media_type": [
+                "REQUIRED", 
+                "The MIME type of the media being uploaded.\n\nExamples: video/mp4 , video/mp4 ."
+            ], 
+            "media_category": [
+                "REQUIRED", 
+                "A string enum value which identifies a media usecase. This identifier is used to enforce usecase specific constraints (e.g. filesize, video duration) and enable advance features."
+            ], 
+            "additional_owners": [
+                "OPTIONAL", 
+                "A comma-separated string of user IDs to set as additional owners who are allowed to use the returned media_id in Tweets or Cards. A maximum of 100 additional owners may be specified."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/rest/reference/post/media/upload-init"
     }, 
     {
         "method": "POST", 
@@ -3465,7 +3595,7 @@
         "rate_limited": true, 
         "authentication_required": "USER_ONLY", 
         "limits": {}, 
-        "desc": "Upload media (images) to Twitter for use in a Tweet or Twitter-hosted Card. For uploading videos or for chunked image uploads (useful for lower bandwidth connections), see our chunked POST media/upload endpoint.", 
+        "desc": "Use this endpoint to upload images to Twitter. It returns a media_id which can be used in most Twitter endpoints that accept images. For example, you can use returned media_id to create a Tweet with photo using STATUS update endpoint.", 
         "params": {
             "media": [
                 "REQUIRED", 
@@ -3481,6 +3611,21 @@
             ]
         }, 
         "reference_url": "https://dev.twitter.com/rest/reference/post/media/upload"
+    }, 
+    {
+        "method": "POST", 
+        "url": "https://upload.twitter.com/1.1/media/metadata/create.json", 
+        "service": "media/metadata/create", 
+        "family": "media", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "This endpoint should be used to provide additional information about the uploaded media_id. This feature is only supported for Tweet images and GIFs currently. The request flow should be:", 
+        "params": {}, 
+        "reference_url": "https://dev.twitter.com/rest/reference/post/media/metadata/create"
     }, 
     {
         "method": "POST", 
@@ -3765,5 +3910,192 @@
             ]
         }, 
         "reference_url": "https://dev.twitter.com/rest/reference/post/users/report_spam"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://sitestream.twitter.com/1.1/site.json", 
+        "service": "site", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "Streams messages for a set of users, as described in Site streams .", 
+        "params": {
+            "follow": [
+                "REQUIRED", 
+                "A comma separated list of user IDs, indicating the users to return statuses for in the stream. See follow for more information."
+            ], 
+            "delimited": [
+                "OPTIONAL", 
+                "Specifies whether messages should be length-delimited. See delimited for more information."
+            ], 
+            "stall_warnings": [
+                "OPTIONAL", 
+                "Specifies whether stall warnings should be delivered. See stall_warnings for more information."
+            ], 
+            "with": [
+                "OPTIONAL", 
+                "Specifies whether to return information for just the users specified in the follow parameter, or include messages from accounts they follow. See with"
+            ], 
+            "replies": [
+                "OPTIONAL", 
+                "Specifies whether to return additional @replies. See replies for more information."
+            ], 
+            "stringify_friend_ids": [
+                "OPTIONAL", 
+                "Specifies whether to send the friends lists preamble as an array of integers or an array of strings. See stringify_friend_id for more information."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/get/site"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://userstream.twitter.com/1.1/user.json", 
+        "service": "user", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "Streams messages for a single user, as described in User streams .", 
+        "params": {
+            "delimited": [
+                "OPTIONAL", 
+                "Specifies whether messages should be length-delimited. See delimited for more information."
+            ], 
+            "stall_warnings": [
+                "OPTIONAL", 
+                "Specifies whether stall warnings should be delivered. See stall_warnings for more information."
+            ], 
+            "with": [
+                "OPTIONAL", 
+                "Specifies whether to return information for just the authenticating user, or include messages from accounts the user follows. See with the with parameter documentation for more information."
+            ], 
+            "replies": [
+                "OPTIONAL", 
+                "Specifies whether to return additional @replies. See replies for more information."
+            ], 
+            "track": [
+                "OPTIONAL", 
+                "Includes additional Tweets matching the specified keywords. Phrases of keywords are specified by a comma-separated list. See track the track parameter documentation for more information."
+            ], 
+            "locations": [
+                "OPTIONAL", 
+                "Includes additional Tweets falling within the specified bounding boxes. See locations for more information."
+            ], 
+            "stringify_friend_ids": [
+                "OPTIONAL", 
+                "Specifies whether to send the Friend List preamble as an array of integers or an array of strings. See stringify_friends_id for more information."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/get/user"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://sitestream.twitter.com/2b/site/c/01_225167_334389048B872A533002B34D73F8C29FD09EFC50/info.json", 
+        "service": "c/:stream_id/info", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "YES", 
+        "limits": {}, 
+        "desc": "Retrieves information about the established stream represented by the stream_handle_identifier , which is among the first streamed events when connecting to a stream that supports Control Streams.", 
+        "params": {}, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/get/c/stream_id/info"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://stream.twitter.com/1.1/statuses/firehose.json", 
+        "service": "statuses/firehose", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "This endpoint requires special permission to access.", 
+        "params": {
+            "count": [
+                "OPTIONAL", 
+                "The number of messages to backfill. See count for more information."
+            ], 
+            "delimited": [
+                "OPTIONAL", 
+                "Specifies whether messages should be length-delimited. See delimited for more information."
+            ], 
+            "stall_warnings": [
+                "OPTIONAL", 
+                "Specifies whether stall warnings should be delivered. See stall_warnings for more information."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/get/statuses/firehose"
+    }, 
+    {
+        "method": "GET", 
+        "url": "https://stream.twitter.com/1.1/statuses/sample.json", 
+        "service": "statuses/sample", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "Returns a small random sample of all public statuses. The Tweets returned by the default access level are the same, so if two different clients connect to this endpoint, they will see the same Tweets.", 
+        "params": {
+            "delimited": [
+                "OPTIONAL", 
+                "Specifies whether messages should be length-delimited. See delimited or more information."
+            ], 
+            "stall_warnings": [
+                "OPTIONAL", 
+                "Specifies whether stall warnings should be delivered. See stall_warnings for more information."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/get/statuses/sample"
+    }, 
+    {
+        "method": "POST", 
+        "url": "https://stream.twitter.com/1.1/statuses/filter.json", 
+        "service": "statuses/filter", 
+        "family": "streaming", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {}, 
+        "desc": "Returns public statuses that match one or more filter predicates. Multiple parameters may be specified which allows most clients to use a single connection to the Streaming API. Both GET and POST requests are supported, but GET requests with too many parameters may cause the request to be rejected for excessive URL length. Use a POST request to avoid long URLs.", 
+        "params": {
+            "follow": [
+                "OPTIONAL", 
+                "A comma separated list of user IDs, indicating the users to return statuses for in the stream. See follow for more information."
+            ], 
+            "track": [
+                "OPTIONAL", 
+                "Keywords to track. Phrases of keywords are specified by a comma-separated list. See track for more information."
+            ], 
+            "locations": [
+                "OPTIONAL", 
+                "Specifies a set of bounding boxes to track. See locations for more information."
+            ], 
+            "delimited": [
+                "OPTIONAL", 
+                "Specifies whether messages should be length-delimited. See delimited for more information."
+            ], 
+            "stall_warnings": [
+                "OPTIONAL", 
+                "Specifies whether stall warnings should be delivered. See stall_warnings for more information."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/streaming/reference/post/statuses/filter"
     }
 ]

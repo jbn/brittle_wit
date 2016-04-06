@@ -23,5 +23,5 @@ from brittle_wit.streaming import TwitterStream
 # set the API_BUILD environmental variable to 'SKIP'.
 if os.environ.get('API_BUILD', '') != 'SKIP':
     api = build_api(os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                 "rest_api.json"))
+                                 "api_reference.json"))
 
