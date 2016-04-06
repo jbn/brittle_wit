@@ -1,6 +1,6 @@
 import time
 import unittest
-from brittle_wit.rate_limit import RateLimit
+from brittle_wit.rate_limit import RateLimit, TimingRateLimiter
 from test.helpers import *
 
 
@@ -80,3 +80,11 @@ class TestRateLimit(unittest.TestCase):
         self.assertFalse(rate_limit.is_exhausted)
 
 
+class TestTimingRateLimiter(unittest.TestCase):
+    def test_timing_rate_limiter(self):
+        limiter = TimingRateLimiter(60)
+        self.assertTrue(limiter.can_proceed())
+        self.assertFalse(limiter.can_proceed())
+
+        limiter._start_time -= 61
+        self.assertTrue(limiter.can_proceed())

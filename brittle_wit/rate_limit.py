@@ -134,3 +134,41 @@ class RateLimit:
 
     def __repr__(self):
         return self.__str__()
+
+
+class TimingRateLimiter:
+    """
+    Enforces a maximum number of operations per second.
+
+    This class does not enforce Twitter's API rate limits. Instead, it's a soft
+    limiter for social interactions. For example, if you are writing something
+    ike a feed consolidator bot, you would not want to retweet more than an
+    *average* of one status every hour. To do so, create a TimingRateLimiter
+    with the minimum number of seconds between each operation.  Immediately
+    prior to each possible operation, call bool(timing_rate_limiter). If it
+    returns False, do not take the action. If it returns True, take the action.
+    Implicitly, if it returns True, it assumes you did take the action.
+    """
+    def __init__(self, min_secs_per_op):
+        """
+        :param min_secs_per_op: the minimum average number of seconds which
+            must pass between each operation
+        """
+        self._n = 0
+        self._min_secs_per_op = min_secs_per_op
+        self._start_time = time.time()
+
+    @property
+    def is_rate_limited(self):
+        rate = (time.time() - self._start_time) / self._n
+        return rate < self._min_secs_per_op
+
+    def can_proceed(self):
+        """
+        :return: True if the operation is not limited.
+        """
+        if self._n == 0 or not self.is_rate_limited:
+            self._n += 1
+            return True
+        else:
+            return False
