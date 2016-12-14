@@ -22,5 +22,5 @@ Developer, beware.
 From a Python 3.5 environment,
 
 ```bash
-pip install brittlewit
+pip install brittle_wit
 ```

@@ -1,7 +1,7 @@
 from distutils.core import setup
 
 setup(
-    name="BrittleWit",
+    name="brittle_wit",
     version="0.0.1",
     packages=["brittle_wit",],
     license="MIT",
