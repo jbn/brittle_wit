@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name="BrittleWit",
-    version="0.1dev",
+    version="0.0.1",
     packages=["brittle_wit",],
     license="MIT",
     long_description=open("README.md").read(),
