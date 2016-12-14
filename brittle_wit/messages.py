@@ -1,5 +1,6 @@
 from collections import namedtuple
 from aiohttp.errors import ClientOSError, TimeoutError, ContentEncodingError
+import asyncio
 
 RETRYABLE_CODES = {500,  # INTERNAL SERVER ERROR
                    502,  # BAD GATEWAY
@@ -7,7 +8,8 @@ RETRYABLE_CODES = {500,  # INTERNAL SERVER ERROR
                    504}  # GATEWAY TIMEOUT
 
 
-RETRYABLE_EXCEPTIONS = {ContentEncodingError, ClientOSError, TimeoutError}
+RETRYABLE_EXCEPTIONS = {ContentEncodingError, ClientOSError, TimeoutError, 
+                        asyncio.TimeoutError}
 
 
 class TwitterRequest:

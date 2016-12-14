@@ -5,14 +5,16 @@ from datetime import datetime
 from collections import defaultdict
 
 
+FIFTEEN_MIN = 15 * 60 + 2 # Add two seconds.
+
 class RateLimit:
     """
     Captures and enforces rate limiting.
 
     See: https://dev.twitter.com/rest/public/rate-limiting
     """
-    CLIENT_LIMITS = defaultdict(lambda: 15*60)
-    APP_LIMITS = defaultdict(lambda: 15*60)
+    CLIENT_LIMITS = defaultdict(lambda: FIFTEEN_MIN)
+    APP_LIMITS = defaultdict(lambda: FIFTEEN_MIN)
 
     @staticmethod
     def from_ignorance():
@@ -23,7 +25,7 @@ class RateLimit:
         However, to make sure it is clear to the caller, ignorance is part of
         the name.
         """
-        return RateLimit(1, 1, int(time.time() + 15*60))  # 15 minutes from now
+        return RateLimit(1, 1, int(time.time() + FIFTEEN_MIN))  # 15 minutes from now
 
     @staticmethod
     def from_response(resp):
@@ -39,7 +41,7 @@ class RateLimit:
         """
         return RateLimit(initial_limit,
                          initial_limit,             # All remaining
-                         int(time.time() + 15*60))  # 15 minutes from now
+                         int(time.time() + FIFTEEN_MIN))  # 15 minutes from now
 
     __slots__ = '_limit', '_remaining', '_reset_time'
 
@@ -67,7 +69,8 @@ class RateLimit:
         if self.is_exhausted:
             now = time.time()  # Is time.time() blocking?
             if now < self._reset_time:
-                await asyncio.sleep(self._reset_time - now)
+                # Time sync issue so always add 5 seconds?
+                await asyncio.sleep(self._reset_time - now + 5)
             self._remaining = self._limit
 
         self._remaining -= 1

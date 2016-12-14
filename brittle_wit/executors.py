@@ -12,10 +12,17 @@ from brittle_wit.messages import (TwitterResponse, TwitterError,
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
-    return session.request(twitter_req.method,
-                           twitter_req.url,
-                           params=twitter_req.params,
-                           headers=headers)
+    
+    if twitter_req.method == 'POST':
+        return session.request(twitter_req.method,
+                               twitter_req.url,
+                               data=twitter_req.params,
+                               headers=headers)
+    else:
+        return session.request(twitter_req.method,
+                               twitter_req.url,
+                               params=twitter_req.params,
+                               headers=headers)
 
 
 async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):

@@ -289,6 +289,7 @@ class StreamProcessor:
                     msg = "Stream {}'d waiting {} seconds (failure {})"
                     LOGGER.error(msg.format(e.status_code, sleep_time,
                                             failures))
+                    print(e._http_resp)  # FIX: XXX: HACK: FUCK
 
                 failed = True
                 await asyncio.sleep(sleep_time)
@@ -299,6 +300,15 @@ class StreamProcessor:
                     LOGGER.error(msg.format(repr(e), sleep_time, failures))
                     failed = True
                     await asyncio.sleep(sleep_time)
+            except KeyboardInterrupt:
+                raise
+            except Exception as e:
+                print(e)
+                sleep_time = min(0.25 * failures, 16)
+                msg = "Stream {}'d waiting {} seconds (failure {})"
+                LOGGER.error(msg.format(repr(e), sleep_time, failures))
+                failed = True
+                await asyncio.sleep(sleep_time)
 
 
 class StreamingHTTPPipe:
