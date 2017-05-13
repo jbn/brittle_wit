@@ -1,8 +1,8 @@
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name="brittle_wit",
-    version="0.0.2",
+    version="0.0.3",
     author="John Bjorn Nelson",
     author_email="jbn@pathdependent.com",
     packages=["brittle_wit",],

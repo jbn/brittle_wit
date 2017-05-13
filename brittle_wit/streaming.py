@@ -140,12 +140,15 @@ class TwitterStream:
         # connection is error-prone. Complain loudly when a connection
         # already exists.
         if self.is_open:
+            LOGGER.error("Already connected. Call close() first!")
             raise RuntimeError("Already connected. Call close() first!")
 
         self._http_req = twitter_req_to_http_req(self._session,
                                                  self._app_cred,
                                                  self._client_cred,
                                                  self._twitter_req)
+        LOGGER.error("Reconnect, complete...")
+
 
     @property
     def is_open(self):
@@ -164,28 +167,36 @@ class TwitterStream:
             waiting for consumption on the internal EntryProcessor from the
             prior connection
         """
+        print("ATTEMPTING TO RECONNECT")
+        LOGGER.error("ATTEMPTING TO RECONNECT")
         # Explicitly acknowledge that forced closure is okay.
         if force_close_if_open and self.is_open:
             self.disconnect()
 
+        LOGGER.error("CLEARING PRIOR")
         # The initiating request does not change between connection resets,
         # so old messages are consumable.
         if clear_prior_messages:
             self._entry_processor.purge_mailbox()
 
+        LOGGER.error("PREGING BUFFER")
         # The buffer underling the entry processor should always be in
         # an initially pristine state. A broken connection virtually
         # ensures corruption.
         self._entry_processor.purge_buffer()
 
+        LOGGER.error("CONNECTING")
         self._connect()
+        LOGGER.error("GO")
 
     def disconnect(self):
         """
         Disconnect the stream from Twitter's servers.
         """
         if self._http_req is not None:
-            self._http_req.close()
+            print("Called close!")
+            LOGGER.error("Closing!")
+            print(self._http_req.close())
             self._http_req = None
 
     async def __aiter__(self):
@@ -195,6 +206,7 @@ class TwitterStream:
         # I hate the next line. Is there a decontextualize pattern?
         self._resp = await self._http_req.__aenter__()
         if self._resp.status != 200:
+            LOGGER.error("Error on {}".format(self._resp.status))
             raise TwitterError(self._client_cred,
                                self._twitter_req,
                                self._resp,
@@ -225,6 +237,7 @@ class StreamProcessor:
         self._twitter_stream = twitter_stream
         self._subscribers = {}
         self._requires_json = False
+        LOGGER.info("STREAM READY")
 
     def subscribe(self, handler, as_json=False):
         handler_id = id(handler)
@@ -273,7 +286,10 @@ class StreamProcessor:
             try:
                 if failed:
                     failures += 1
+                    LOGGER.error("RECONNECTING")
                     self._twitter_stream.reconnect(force_close_if_open=True)
+                    LOGGER.error("AFTER RECONNECT, RESUMING STREAM")
+
                 async for message in self._twitter_stream:
                     self._send_to_all(message)
                     failed = False  # TODO: FIX: This is such a waste!
@@ -281,12 +297,12 @@ class StreamProcessor:
                 # The docs only say 420. But, I suspect 429 codes, too.
                 if e.status_code == 420 or e.status_code == 429:
                     sleep_time = 60 * 2**failures
-                    msg = "Stream 420'd waiting {} seconds (failure {})"
+                    msg = "Stream 420'd waiting a {} seconds (failure {})"
                     LOGGER.error(msg.format(sleep_time, failures))
                     await asyncio.sleep(sleep_time)
                 else:
                     sleep_time = min(5 * 2**failures, 320)
-                    msg = "Stream {}'d waiting {} seconds (failure {})"
+                    msg = "Stream {}'d waiting b {} seconds (failure {})"
                     LOGGER.error(msg.format(e.status_code, sleep_time,
                                             failures))
                     print(e._http_resp)  # FIX: XXX: HACK: FUCK
@@ -296,7 +312,7 @@ class StreamProcessor:
             except BrittleWitError as e:
                 if e.is_retryable:  # TODO FIX as is network error.
                     sleep_time = min(0.25 * failures, 16)
-                    msg = "Stream {}'d waiting {} seconds (failure {})"
+                    msg = "Stream {}'d waiting c {} seconds (failure {})"
                     LOGGER.error(msg.format(repr(e), sleep_time, failures))
                     failed = True
                     await asyncio.sleep(sleep_time)
@@ -305,7 +321,7 @@ class StreamProcessor:
             except Exception as e:
                 print(e)
                 sleep_time = min(0.25 * failures, 16)
-                msg = "Stream {}'d waiting {} seconds (failure {})"
+                msg = "Stream {}'d waiting {} d seconds (failure {})"
                 LOGGER.error(msg.format(repr(e), sleep_time, failures))
                 failed = True
                 await asyncio.sleep(sleep_time)
