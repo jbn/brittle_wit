@@ -1,0 +1,12 @@
+language: python
+python:
+    - nightly
+    - 3.6
+    - 3.5
+install:
+    - pip install -r requirements.txt
+    - pip install .
+    - pip install nose coveralls
+script: 
+    - coverage run --source=nbmerge setup.py nosetests
+after_success: coveralls

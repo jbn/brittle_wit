@@ -1,3 +1,4 @@
 include README.md
 include requirements.txt
 include LICENSE
+include brittle_wit/api_reference.json

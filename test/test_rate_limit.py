@@ -1,5 +1,6 @@
 import time
 import unittest
+from datetime import datetime
 from brittle_wit.rate_limit import RateLimit, TimingRateLimiter
 from test.helpers import *
 
@@ -19,11 +20,13 @@ class TestRateLimit(unittest.TestCase):
                          'X-RATE-LIMIT-REMAINING': 99,
                          'X-RATE-LIMIT-RESET': 9999})
         rate_limit = RateLimit.from_response(resp)
-        expected = "RateLimit(limit=100, remaining=99, reset_time=21:46:39)"
+        local_dt = datetime.fromtimestamp(9999).strftime("%H:%M:%S")
+        expected = "RateLimit(limit=100, remaining=99, reset_time={})"
+        expected = expected.format(local_dt)
 
-        self.assertEqual(str(rate_limit), expected)
-        self.assertEqual(rate_limit.__repr__(), expected)
         self.assertEqual(rate_limit.reset_time, 9999)
+        self.assertEqual(rate_limit.__repr__(), expected)
+        self.assertEqual(str(rate_limit), expected)
 
     def test_is_pristine(self):
         resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,

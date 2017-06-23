@@ -44,7 +44,7 @@ class TestTwitterError(unittest.TestCase):
 
 class TestWrappedException(unittest.TestCase):
     def test_client_os_error(self):
-        e = aiohttp.errors.ClientOSError()
+        e = aiohttp.ClientOSError()
         err = WrappedException(e)
         self.assertTrue(err.is_retryable)
         self.assertIs(err.underlying_exception, e)

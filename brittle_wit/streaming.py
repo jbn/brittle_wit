@@ -15,7 +15,7 @@ class EntryProcessor:
     """
 
     def __init__(self):
-        self._buf = b""  # Use a more efficient buffer
+        self._buf = b""  # XXX: Use a more efficient buffer
         self._mailbox = []
 
     def process(self, chunk):

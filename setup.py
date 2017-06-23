@@ -1,16 +1,66 @@
+import codecs
+import os
+import re
+
 from setuptools import setup, find_packages
 
-setup(
-    name="brittle_wit",
-    version="0.0.3",
-    author="John Bjorn Nelson",
-    author_email="jbn@pathdependent.com",
-    packages=["brittle_wit",],
-    keywords=["twitter"],
-    license="MIT",
-    description="An async Twitter library for Python.",
-    long_description=open("README.md").read(),
-    url="https://github.com/jbn/BrittleWit",
-    package_data={"brittle_wit": ["api_reference.json"]},
-    include_package_data=True,
-)
+###############################################################################
+
+NAME = 'brittle_wit'
+
+PACKAGES = find_packages(where=".")
+
+META_PATH = os.path.join("brittle_wit", "__init__.py")
+
+KEYWORDS = ["twitter", "twitter api", "social networks"]
+
+CLASSIFIERS = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: IPython",
+    "Topic :: Communications",
+    "Natural Language :: English",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.5",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+INSTALL_REQUIRES = ['aiohttp']
+
+###############################################################################
+
+SELF_DIR = os.path.abspath(os.path.dirname(__file__))
+
+def read_file_safely(*path_parts):
+    with codecs.open(os.path.join(SELF_DIR, *path_parts), "rb", "utf-8") as f:
+        return f.read()
+
+
+META_FILE = read_file_safely(META_PATH)
+
+META_VARS_RE = re.compile(r"^__([_a-zA-Z0-9]+)__ = ['\"]([^'\"]*)['\"]", re.M)
+
+META_VARS = dict(META_VARS_RE.findall(META_FILE))
+
+###############################################################################
+
+if __name__ == "__main__":
+    setup(
+        name=NAME,
+        description=META_VARS["description"],
+        license=META_VARS["license"],
+        url=META_VARS["uri"],
+        version=META_VARS["version"],
+        author=META_VARS["author"],
+        author_email=META_VARS["email"],
+        maintainer=META_VARS["author"],
+        maintainer_email=META_VARS["email"],
+        keywords=KEYWORDS,
+        long_description=read_file_safely("README.rst"),
+        packages=PACKAGES,
+        package_dir={"": "."},
+        package_data={"brittle_wit": ["api_reference.json"]},
+        include_package_data=True,
+        classifiers=CLASSIFIERS,
+        install_requires=INSTALL_REQUIRES,
+    )
