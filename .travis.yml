@@ -8,5 +8,5 @@ install:
     - pip install .
     - pip install nose coveralls
 script: 
-    - coverage run --source=nbmerge setup.py nosetests
+    - coverage run --source=brittle_wit setup.py nosetests
 after_success: coveralls
