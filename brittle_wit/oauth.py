@@ -4,7 +4,6 @@ minimally-compliant so as to conform to Twitter's requirements.
 
 See: https://dev.twitter.com/oauth/overview
 """
-
 import binascii
 import hashlib
 import hmac
@@ -212,6 +211,4 @@ class ClientCredentials:
         return not self == other
 
     def __lt__(self, other):
-        # Because the client_credentials may partially-determine ordering
-        # in a priority queue.
         return self.user_id < other.user_id

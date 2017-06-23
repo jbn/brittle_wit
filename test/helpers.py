@@ -1,7 +1,11 @@
 import asyncio
+import os
 from collections import namedtuple
 from functools import wraps
 
+
+SELF_DIR = os.path.dirname(os.path.realpath(__file__))
+FIXTURES_DIR = os.path.join(SELF_DIR, "fixtures")
 
 MockResp = namedtuple("MockResp", "headers")
 
@@ -22,13 +26,13 @@ def pristine_looped(f):
 
 @pristine_looped
 def drive_coro_once(coro, timeout=None, swallow_timeout_error=True):
-    # XXX: Make this prettier. Create a new loop or something.
     loop = asyncio.get_event_loop()
     try:
         return loop.run_until_complete(asyncio.wait_for(coro, timeout))
     except asyncio.TimeoutError as e:
         if not swallow_timeout_error:
             raise e
+
 
 @pristine_looped
 def drive_all(coros, timeout=None, swallow_timeout_error=True, interval=0.01):

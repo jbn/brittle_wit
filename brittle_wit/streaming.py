@@ -1,7 +1,7 @@
 import asyncio
 import json
-
 import aiohttp
+
 from aiohttp import web
 
 from brittle_wit.constants import LOGGER
@@ -15,7 +15,9 @@ class EntryProcessor:
     """
 
     def __init__(self):
-        self._buf = b""  # XXX: Use a more efficient buffer
+        # Note: I tried using a bytearray instead of a byte string but it
+        # ended up being slower and having greater jitter than byte strings.
+        self._buf = b""
         self._mailbox = []
 
     def process(self, chunk):
@@ -102,6 +104,7 @@ def json_entry_parser(entry):
 
 
 class TwitterStream:
+
     def __init__(self, session, app_cred, client_cred, twitter_req,
                  parser=noop_entry_parser, chunk_size=4096):
         """
@@ -148,7 +151,6 @@ class TwitterStream:
                                                  self._client_cred,
                                                  self._twitter_req)
         LOGGER.error("Reconnect, complete...")
-
 
     @property
     def is_open(self):
@@ -233,6 +235,7 @@ class TwitterStream:
 
 
 class StreamProcessor:
+
     def __init__(self, twitter_stream):
         self._twitter_stream = twitter_stream
         self._subscribers = {}
@@ -240,6 +243,15 @@ class StreamProcessor:
         LOGGER.info("STREAM READY")
 
     def subscribe(self, handler, as_json=False):
+        """
+        Subscribe a given handler to the stream.
+
+        :param handler: an object which implements ``send`` which receives
+            messages from the TwitterStream
+        :param as_json: json parsing is relatively expensive. if a subscriber
+            requires json, json parsing occurs, but only once for all the
+            subscribers requiring json. Otherwise, there is no json parsing
+        """
         handler_id = id(handler)
 
         if handler_id in self._subscribers:
@@ -255,6 +267,11 @@ class StreamProcessor:
         return handler_id
 
     def unsubscribe(self, handler):
+        """
+        Unsubscribe the given handler from stream processing.
+
+        :param handler: an already subscribed handler
+        """
         handler_id = id(handler)
 
         if handler_id not in self._subscribers:

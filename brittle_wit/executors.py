@@ -7,22 +7,17 @@ from brittle_wit.oauth import generate_req_headers, ANY_CREDENTIALS
 from brittle_wit.rate_limit import RateLimit
 from brittle_wit.ticketing import TicketMaster
 from brittle_wit.messages import (TwitterResponse, TwitterError,
-                                  WrappedException, BrittleWitError)
+                                  wrap_if_nessessary, BrittleWitError)
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
-    
-    if twitter_req.method == 'POST':
-        return session.request(twitter_req.method,
-                               twitter_req.url,
-                               data=twitter_req.params,
-                               headers=headers)
-    else:
-        return session.request(twitter_req.method,
-                               twitter_req.url,
-                               params=twitter_req.params,
-                               headers=headers)
+    payload_k = 'data' if twitter_req.method == 'POST' else 'params'
+    kwargs = {payload_k: twitter_req.params, 'headers': headers}
+
+    return session.request(twitter_req.method,
+                           twitter_req.url,
+                           **kwargs)
 
 
 async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
@@ -66,18 +61,14 @@ async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
 
                 return TwitterResponse(twitter_req, resp, body)
     except TwitterError as e:
+        code = e.status_code if isinstance(e, TwitterError) else None
+
         LOGGER.exception("Failed %s request (%s) for %s with %s",
                          credentials.user_id,
                          twitter_req.service,
                          id(twitter_req),
-                         e.status_code)
-        raise e
-    except Exception as e:
-        LOGGER.exception("Failed %s request (%s) for %s",
-                         credentials.user_id,
-                         twitter_req.service,
-                         id(twitter_req))
-        raise WrappedException(e)
+                         code)
+        raise wrap_if_nessessary(e)
 
 
 class ClientRequestProcessor:
@@ -128,22 +119,19 @@ class ClientRequestProcessor:
 
         :param now: the current time as per time.time()
         """
-        rate_limits = self._rate_limits
-
-        # Abort quickly if possible.
-        if not rate_limits:
+        if not self._rate_limits:
             return
 
         now = now or time.time()
 
         remove_ks = []
-        for service, rate_limit in rate_limits.items():
+        for service, rate_limit in self._rate_limits.items():
             # If the reset time is in the past, remove it.
             if rate_limit.reset_time < now:
                 remove_ks.append(service)
 
         for k in remove_ks:
-            del rate_limits[k]
+            del self._rate_limits[k]
 
     def is_removable(self):
         """
@@ -213,35 +201,20 @@ class ClientRequestProcessor:
                     await asyncio.sleep(60 * tries)  # Sleep progressively
 
 
-class ContextualizedProcessor:
-    def __init__(self, session, app_cred, client_processor):
-        self._session = session
-        self._app_cred = app_cred
-        self._client_processor = client_processor
-
-    @property
-    def user_id(self):
-        return self._client_processor.user_id
-
-    def __call__(self, twitter_req, timeout=60):
-        return self._client_processor.execute(self._session,
-                                              self._app_cred,
-                                              twitter_req,
-                                              timeout)
-
-
 class ManagedClientRequestProcessors:
     """
+    Manages client request processors
 
-    = Any Credential Management
+    Any Credential Management
+    -------------------------
 
     For many tasks, you don't need specific credentials, you just need some
     credentials. For example, if you and your social network analyst friends
-    wanted to analyze the followers of Bernie Sanders, you need to collect all
+    wanted to analyze the followers of Donald Trump, you need to collect all
     the user objects. Given that there are millions of them that could take
     time. But, if you already have the user id's you can partition the
     collection and run it in parallel. The specific credentials don't matter.
-    (Well, ignoring the case of a follower blocking that person.)
+    (Well, ignoring the case of a follower blocking that person's access.)
 
     Finding an unused set of credentials is non-trivial. Managing a ready-queue
     for each service is expensive in terms of space when there are many users.
@@ -260,45 +233,89 @@ class ManagedClientRequestProcessors:
     should perform better as the number of managed users rises. (I'll think
     more about it; then, pen an arXiv article.)
     """
+
     def __init__(self):
-        self._credentials = {}
-        self._any_cred_queue = []
+        self._credentials, self._any_cred_queue = {}, []
 
     def is_managed(self, cred):
         return cred in self._credentials
 
-    def add(self, cred):
-        assert not self.is_managed(cred)
+    def add(self, cred, any_cred_eligible=True):
+        """
+        Create and manage a request processor for the given credentials.
+
+        :param cred: the client's credentials
+        :param any_cred_eligible: if True, then an app may use this
+            client's credentials promiscuously; otherwise, only the
+            client can use it.
+        """
+        if self.is_managed(cred):
+            raise RuntimeError("Credential already managed.")
 
         client_req_processor = ClientRequestProcessor(cred)
         self._credentials[cred] = client_req_processor
 
-        # Add a new set of credentials to the front of the queue.
-        self._any_cred_queue.insert(0, cred)
+        if any_cred_eligible:
+            self._any_cred_queue.insert(0, cred)
 
-        return client_req_processor
+    def add_all(self, bulk_credentials, any_cred_eligible=True):
+        """
+        Add and manage client credentials in bulk.
+        """
+        for cred in bulk_credentials:
+            self.add(cred, any_cred_eligible=any_cred_eligible)
 
     def remove(self, cred):
+        """
+        Stop managing the processor associated with the given credentials
+        """
         del self._credentials[cred]
-        self._any_cred_queue.remove(cred)
+        try:
+            self._any_cred_queue.remove(cred)
+        except ValueError:
+            pass  # Was added with any_cred_eligible=False
 
     def __getitem__(self, cred):
+        """
+        Get the processor associated with the given credentials.
+
+        Client code should not store a reference to the processor. You
+        should call this method every time to avoid the possibility of
+        multiple processors for the same credentials. (The ``maintain``
+        method may deallocate some processors if not recently used.)
+
+        :param cred: the client's credentials, or ``ANY_CREDENTIALS`` to
+            make promiscuous requests.
+        :return: the client's processor or None if a ``ANY_CREDENTIALS``
+            request was made with no eligible processors
+        """
         if cred is ANY_CREDENTIALS:
-            credentials = self._any_cred_queue.pop(0)
-            self._any_cred_queue.append(credentials)
-            return self[credentials]
+            if self._any_cred_queue:
+                credentials = self._any_cred_queue.pop(0)
+                self._any_cred_queue.append(credentials)
+                return self[credentials]
+            else:
+                return None
         else:
             managed = self._credentials.get(cred)
 
-            if not managed:
-                managed = self.add(cred)
-
-            return managed
+            if managed is not None:
+                return managed
+            else:
+                self.add(cred)
+                return self._credentials[cred]
 
     def maintain(self, cull_interval=FIFTEEN_MINUTES):
+        """
+        Maintains the request processors.
+
+        Mostly, this means cleaning up request processors, allowing
+        garbage collection.
+        """
         now = time.time()
 
-        # Collect
+        # Cleanup all the request processors and identify those which
+        # can be removed.
         removal_keys = []
         for k, req_processor in self._credentials.items():
             req_processor.cleanup(now)  # Remove disused rate limits
@@ -306,33 +323,9 @@ class ManagedClientRequestProcessors:
             if req_processor.is_removable():
                 removal_keys.append(k)
 
-        # Remove
+        # Remove all those processors not in use or rate limited.
         for k in removal_keys:
             self.remove(k)
-
-
-async def repeating(interval, f, *args, **kwargs):
-    """
-    Call f(**args, **kwargs) every interval seconds.
-
-    :param interval: the interval in seconds
-    :param f: a function
-    :param args: positional arguments
-    :param kwargs: keyword arguments
-    """
-    while True:
-        f(*args, **kwargs)  # Do test for coro?
-        await asyncio.sleep(interval)
-
-# I don't want to require requests as a dependency. And, I really don't want
-# to encourage the use of a blocking function, especially outside the system
-# of rate limit management. But, when debugging, it's terribly useful to have
-# a the following function.
-try:
-    from requests import request as _request
-except ImportError:
-    def _request(*args, **kwargs):
-        raise ImportError("This function requires the `requests` package.")
 
 
 def debug_blocking_request(app_cred, client_cred, twitter_req):
@@ -348,6 +341,12 @@ def debug_blocking_request(app_cred, client_cred, twitter_req):
 
     :return: a requests.Response
     """
+    # I don't want to require requests as a dependency. And, I really don't
+    # want to encourage the use of a blocking function, especially outside
+    # the system of rate limit management. But, when debugging, it's terribly
+    # useful to have a the following function.
+    from requests import request as _request
+
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
     return _request(twitter_req.method,
                     twitter_req.url,

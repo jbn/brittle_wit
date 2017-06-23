@@ -9,6 +9,7 @@ from test.helpers import *
 
 
 class MockHTTPResp:
+
     def __init__(self, status, headers, body):
         self.status, self.headers, self.body = status, headers, body
 
@@ -20,6 +21,7 @@ class MockHTTPResp:
 
 
 class MockHTTPReq:
+
     def __init__(self, resp):
         self._resp = resp
 
@@ -31,17 +33,27 @@ class MockHTTPReq:
 
 
 class TestTwitterReqToHTTPRequest(unittest.TestCase):
+
     def test_twitter_req_to_http_req(self):
         # This is a dumb test but it should help prevent dumb regressions.
         app_cred = AppCredentials("key", "secret")
         client_cred = ClientCredentials(1, "token-alice", "****")
+
+        # Post case.
         tr = TwitterRequest("POST", "http://url.com/", "service", "family")
+        with aiohttp.ClientSession() as session:
+            req = twitter_req_to_http_req(session, app_cred, client_cred, tr)
+            self.assertEqual(type(req), aiohttp.client._RequestContextManager)
+
+        # Get case.
+        tr = TwitterRequest("GET", "http://url.com/", "service", "family")
         with aiohttp.ClientSession() as session:
             req = twitter_req_to_http_req(session, app_cred, client_cred, tr)
             self.assertEqual(type(req), aiohttp.client._RequestContextManager)
 
 
 class TestExecuteRequest(unittest.TestCase):
+
     def test_good_resp_and_json_body(self):
         cred = ClientCredentials(1, "token-alice", "****")
         twitter_req = TwitterRequest("method", "url", "family", "service")
@@ -78,21 +90,21 @@ class TestExecuteRequest(unittest.TestCase):
 
 
 class TestClientRequestProcessor(unittest.TestCase):
+
     def setUp(self):
         self.app_cred = AppCredentials("key", "secret")
-        self.credentials = [ClientCredentials(1, "token-alice", "****"),
-                            ClientCredentials(2, "token-bob", "****"),
-                            ClientCredentials(3, "token-carol", "****")]
+        self.credentials = ClientCredentials(2, "token-bob", "****")
         self.processor = ClientRequestProcessor(self.credentials)
 
     def test_init(self):
-       self.assertTrue(self.processor.is_not_processing())
+        self.assertTrue(self.processor.is_not_processing())
 
-       tm = MagicMock()
-       tm.all_lines_empty = lambda: False
-       self.processor._ticket_master = tm
+        tm = MagicMock()
+        tm.all_lines_empty = lambda: False
+        self.processor._ticket_master = tm
 
-       self.assertFalse(self.processor.is_not_processing())
+        self.assertFalse(self.processor.is_not_processing())
+        self.assertEqual(self.processor.user_id, 2)
 
     def test_rate_limit_for(self):
         limit = self.processor._rate_limit_for("direct_messages")
@@ -123,8 +135,8 @@ class TestClientRequestProcessor(unittest.TestCase):
         self.assertFalse(self.processor._rate_limits)
 
         now = time.time()
-        self.processor._rate_limits['future'] = RateLimit(1, 1, now+100)
-        self.processor._rate_limits['past'] = RateLimit(1, 1, now-100)
+        self.processor._rate_limits['future'] = RateLimit(1, 1, now + 100)
+        self.processor._rate_limits['past'] = RateLimit(1, 1, now - 100)
         self.assertEqual(set(self.processor._rate_limits), {'future', 'past'})
         self.processor.cleanup(now)
         self.assertFalse(self.processor.is_removable())
@@ -133,6 +145,7 @@ class TestClientRequestProcessor(unittest.TestCase):
 
 
 class TestManagedClientRequestProcessors(unittest.TestCase):
+
     def test_add_and_remove(self):
         alice = ClientCredentials(1, "alice", "secret")
         bob = ClientCredentials(2, "bob", "secret")
@@ -153,12 +166,18 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
         self.assertFalse(processors.is_managed(alice))
         self.assertTrue(processors.is_managed(bob))
 
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(RuntimeError):
             processors.add(bob)
+
+        processors.remove(bob)
+        processors.add(bob, any_cred_eligible=False)
+        self.assertTrue(processors.is_managed(bob))
+        processors.remove(bob)
 
     def test_get_item(self):
         alice = ClientCredentials(1, "alice", "secret")
         bob = ClientCredentials(2, "bob", "secret")
+
         processors = ManagedClientRequestProcessors()
 
         self.assertEqual(processors[alice]._client_credentials, alice)
@@ -172,10 +191,11 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
         alice = ClientCredentials(1, "alice", "secret")
         bob = ClientCredentials(2, "bob", "secret")
         processors = ManagedClientRequestProcessors()
+        processors.add_all([alice, bob])
 
         now = time.time()
-        processors[alice]._rate_limits['future'] = RateLimit(1, 1, now+100)
-        processors[bob]._rate_limits['passed'] = RateLimit(1, 1, now-100)
+        processors[alice]._rate_limits['future'] = RateLimit(1, 1, now + 100)
+        processors[bob]._rate_limits['passed'] = RateLimit(1, 1, now - 100)
 
         self.assertTrue(processors.is_managed(alice))
         self.assertTrue(processors.is_managed(bob))
@@ -184,4 +204,3 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
 
         self.assertTrue(processors.is_managed(alice))
         self.assertFalse(processors.is_managed(bob))
-

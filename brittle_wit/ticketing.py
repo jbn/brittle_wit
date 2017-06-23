@@ -56,9 +56,15 @@ class Ticket:
         self.release()
 
 
-
-
 class TicketMaster:
+    """
+    A set of named FIFO queues managed by tickets.
+
+    Think of this like a butcher shop extraction. When you want service,
+    you take a number (``Ticket``). Except, when it's your turn, you do
+    your activity, and then release your ticket. Once released, the next
+    person in line gets to go.
+    """
 
     __slots__ = '_lines'
 
@@ -87,6 +93,11 @@ class TicketMaster:
     def take_ticket(self, line, loop=None):
         """
         Take a ticket on a specific line
+
+        WARNING: Use this as ``async with ticket_master.take_ticket(line)``.
+                 Don't take a ticket; do other stuff; then use it. If your
+                 other stuff fails outside of the context, the enqueued
+                 ticket holders will wait forever!
 
         :param line: the requested line
         :param loop: the event loop

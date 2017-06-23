@@ -24,10 +24,11 @@ async def sim_ticket_master_usage(loop, n):
     for i in range(n):
         # The first ticketed coro waits the longest....
         # The second waits second longest...
-        busy_work = asyncio.sleep((n-1) * 0.02, loop=loop)
+        busy_work = asyncio.sleep((n - 1) * 0.02, loop=loop)
 
         coro = use_ticket(tm.take_ticket('test', loop), i, busy_work)
         tasks.append(loop.create_task(coro))
+
     results = []
 
     for task in asyncio.as_completed(tasks, loop=loop):
@@ -47,10 +48,11 @@ async def sim_ticket_master_usage_with_blowup(loop):
         if i == 3:
             busy_work = blow_up()
         else:
-            busy_work = asyncio.sleep((n-1) * 0.02, loop=loop)
+            busy_work = asyncio.sleep((n - 1) * 0.02, loop=loop)
 
         coro = use_ticket(tm.take_ticket('test', loop), i, busy_work)
         tasks.append(loop.create_task(coro))
+
     results = []
 
     for task in asyncio.as_completed(tasks, loop=loop):
@@ -63,6 +65,7 @@ async def sim_ticket_master_usage_with_blowup(loop):
 
 
 class TestTicketMaster(unittest.TestCase):
+
     def test_ticket_master(self):
         loop = asyncio.new_event_loop()
         n = 5
@@ -83,12 +86,12 @@ class TestTicketMaster(unittest.TestCase):
         tm = TicketMaster()
         self.assertTrue(tm.is_line_empty('main_line'))
         self.assertTrue(tm.is_line_empty('second_line'))
-        tm._lines['main_line'] = 'MOCK'
+        tm.take_ticket('main_line')
         self.assertFalse(tm.is_line_empty('main_line'))
         self.assertTrue(tm.is_line_empty('second_line'))
 
     def test_all_lines_empty(self):
         tm = TicketMaster()
         self.assertTrue(tm.all_lines_empty())
-        tm._lines['main_line'] = 'MOCK'
+        tm.take_ticket('main_line')
         self.assertFalse(tm.all_lines_empty())

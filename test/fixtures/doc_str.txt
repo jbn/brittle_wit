@@ -1,0 +1,17 @@
+A mock service
+
+auth:
+
+    (REQUIRED) Auth token for user.
+
+
+limit:
+
+    (OPTIONAL) The number of elements to return. Defaults to 500 if
+    not specified.
+
+
+format:
+
+    (OPTIONAL) The output format request. This param can be either
+    json or xml. It will default to json.

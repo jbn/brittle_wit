@@ -31,6 +31,7 @@ INSTALL_REQUIRES = ['aiohttp']
 
 SELF_DIR = os.path.abspath(os.path.dirname(__file__))
 
+
 def read_file_safely(*path_parts):
     with codecs.open(os.path.join(SELF_DIR, *path_parts), "rb", "utf-8") as f:
         return f.read()
@@ -59,7 +60,12 @@ if __name__ == "__main__":
         long_description=read_file_safely("README.rst"),
         packages=PACKAGES,
         package_dir={"": "."},
-        package_data={"brittle_wit": ["api_reference.json"]},
+        package_data={"brittle_wit": [
+            "rest_api.json",
+            "streaming_api.json",
+            "webhook_api.json",
+            "ads_api.json"
+        ]},
         include_package_data=True,
         classifiers=CLASSIFIERS,
         install_requires=INSTALL_REQUIRES,

@@ -1,6 +1,7 @@
+import asyncio
 from collections import namedtuple
 from aiohttp import ClientOSError
-import asyncio
+
 
 RETRYABLE_CODES = {500,  # INTERNAL SERVER ERROR
                    502,  # BAD GATEWAY
@@ -13,7 +14,7 @@ RETRYABLE_EXCEPTIONS = {ClientOSError, asyncio.TimeoutError}
 
 class TwitterRequest:
     """
-    An Immutable (mostly) Twitter Request
+    A (mostly) immutable twitter request
     """
 
     # This is a static mapping from the request url to the Twitter API
@@ -72,6 +73,12 @@ class TwitterRequest:
 
 
 class Cursor:
+    """
+    A cursor for navigating collections.
+
+    See: https://dev.twitter.com/overview/api/cursoring
+    """
+
     def __init__(self, twitter_req):
         self._req = twitter_req
         self._cursor = -1
@@ -106,12 +113,14 @@ TwitterResponse = namedtuple('TwitterResponse', 'req resp body')
 
 
 class BrittleWitError(Exception):
+
     @property
     def is_retryable(self):
         return False
 
 
 class TwitterError(BrittleWitError):
+
     def __init__(self, credentials, twitter_req, http_resp, message):
         self._credentials = credentials
         self._twitter_req = twitter_req
@@ -147,7 +156,15 @@ class TwitterError(BrittleWitError):
         return self.__str__()
 
 
+def wrap_if_nessessary(e):
+    if isinstance(e, BrittleWitError):
+        return e
+    else:
+        return WrappedException(e)
+
+
 class WrappedException(BrittleWitError):
+
     def __init__(self, underlying_exception):
         self._underlying_exception = underlying_exception
 

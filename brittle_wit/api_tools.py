@@ -22,13 +22,16 @@ SLUG_INFIX_RE = re.compile(r"""^(?:[A-Za-z]*/)?
 # symbols. The following two dictionaries remap these names.
 NAME_TO_PY_NAME = {"attribute:street_address": "attribute_street_address",
                    "media[]": "media_arr"}
+
 PY_NAME_TO_NAME = {v: k for k, v in NAME_TO_PY_NAME.items()}
 
 
 class NSSentinel:
+
     # XXX: There has to be an existing solution for this.
     def __repr__(self):
         return 'NOT_SPECIFIED'
+
 
 NOT_SPECIFIED = NSSentinel()
 
@@ -72,7 +75,7 @@ def _generate_doc_str(api_def, line_width=70, indent_width=4):
                                     line_width - indent_width,
                                     replace_whitespace=False)
             for line in wrapped:
-                lines.append(" "*indent_width + line)
+                lines.append(" " * indent_width + line)
             lines.append("")
 
         lines.append('')
@@ -95,7 +98,7 @@ def _update_params_ordering_required_first(api_def):
     api_def['params'] = OrderedDict(kv_pairs)
 
 
-def _bind_sig(signature, *args, **kwargs):
+def _bind_params_to_sig(signature, *args, **kwargs):
     return {PY_NAME_TO_NAME.get(k, k): v
             for k, v in signature.bind(*args, **kwargs).arguments.items()
             if v is not NOT_SPECIFIED}
@@ -143,10 +146,23 @@ def _generate_slugger(slugged_str, slug_params):
     return _slug_transform
 
 
-def _url_to_func_name(service, family, method):
+def _generate_func_name(service, family, method):
+    """
+    Derive a name from the service, family, method parts of a definition.
+
+    Example
+    -------
+    ``(mock/:id/content, mock, POST)`` => ``content_by_id``
+
+    The mock service prefix gets dropped from the name. The param adds a
+    ``by_id`` postfix. Given pseudo-modules, this means you get an api like
+    ``mock.content_by_id(id)``.
+    """
     # Special cases first.
     if service == "account/settings" and method == 'POST':
         return "update_settings"  # There is a 'GET' version
+    elif service == "media/upload(INIT)":
+        return "upload_init"
 
     m = SLUG_POSTFIX_RE.match(service)
     if m:
@@ -164,17 +180,26 @@ def _url_to_func_name(service, family, method):
 
 
 def generate_api_request_builder_func(api_def):
+    """
+    Generate a request builder function from a definition.
+
+    The resulting function is executable. Required parameters according to
+    the given spec are required function arguments; optional ones are
+    keyword only parameters.
+    """
+    # Required arguments must come first.
     _update_params_ordering_required_first(api_def)
 
-    f_name = _url_to_func_name(api_def['service'],
-                               api_def['family'],
-                               api_def['method'])
+    f_name = _generate_func_name(api_def['service'],
+                                 api_def['family'],
+                                 api_def['method'])
 
     signature = _generate_signature(api_def)
 
     def f(*args, **kwargs):
         # MAGIC WARNING
-        binding = _bind_sig(signature, *args, **kwargs)
+        # This gets called for every single request construction.
+        binding = _bind_params_to_sig(signature, *args, **kwargs)
         return TwitterRequest(api_def['method'].upper(),
                               api_def['url'],
                               api_def['family'].upper(),
@@ -188,16 +213,18 @@ def generate_api_request_builder_func(api_def):
 
 
 class TwitterAPI:
+
     def __init__(self, api_defs,
                  update_twitter_request_doc_urls=True,
                  update_rate_limit_defaults=True):
+        doc_urls, client_limits, app_limits = {}, {}, {}
 
         if update_twitter_request_doc_urls:
-            DOC_URLS = TwitterRequest.DOC_URLS
+            doc_urls = TwitterRequest.DOC_URLS
 
         if update_rate_limit_defaults:
-            CLIENT_LIMITS = RateLimit.CLIENT_LIMITS
-            APP_LIMITS = RateLimit.APP_LIMITS
+            client_limits = RateLimit.CLIENT_LIMITS
+            app_limits = RateLimit.APP_LIMITS
 
         # Each API function belongs to a family.
         families = defaultdict(dict)
@@ -208,23 +235,25 @@ class TwitterAPI:
                 continue  # Nudge!
 
             f = generate_api_request_builder_func(api_def)
+
             if f.__name__ in families[api_def['family']]:
                 warnings.warn("Conflicting on: " + api_def['reference_url'])
+
             if not f.__name__.isidentifier():
                 fmt = "Bad Name: {} for {}"
                 warnings.warn(fmt.format(f.__name__, api_def['reference_url']))
+
             families[api_def['family']][f.__name__] = f
 
-            if update_twitter_request_doc_urls:
-                DOC_URLS[api_def['url']] = api_def['reference_url']
+            doc_urls[api_def['url']] = api_def['reference_url']
 
-            if update_rate_limit_defaults and api_def['rate_limited']:
+            if api_def['rate_limited']:
                 limits = api_def.get('limits')
                 if limits:
                     if 'app' in limits:
-                        APP_LIMITS[api_def['service']] = int(limits['app'])
+                        app_limits[api_def['service']] = int(limits['app'])
                     if 'user' in limits:
-                        CLIENT_LIMITS[api_def['service']] = int(limits['user'])
+                        client_limits[api_def['service']] = int(limits['user'])
 
         # Make each family dictionary of api functions accessible via dot
         # accessor. That is, mock module-style access, without modules. There
@@ -237,6 +266,9 @@ class TwitterAPI:
 
 
 def build_api(json_file):
+    """
+    :return: a ``TwitterAPI`` object specified by the given json file
+    """
     # The parameter ordering has meaning. It's copied from Twitter's API docs.
     decorder = json.JSONDecoder(object_pairs_hook=OrderedDict)
     with open(json_file) as fp:

@@ -10,6 +10,7 @@ from brittle_wit.oauth import ClientCredentials
 
 
 class TestBrittleWitError(unittest.TestCase):
+
     def test_brittle_wit_error(self):
         self.assertFalse(BrittleWitError().is_retryable)
 
@@ -43,6 +44,7 @@ class TestTwitterError(unittest.TestCase):
 
 
 class TestWrappedException(unittest.TestCase):
+
     def test_client_os_error(self):
         e = aiohttp.ClientOSError()
         err = WrappedException(e)
@@ -56,6 +58,7 @@ class TestWrappedException(unittest.TestCase):
 
 
 class TestTwitterRequest(unittest.TestCase):
+
     def test_twitter_request(self):
         req = TwitterRequest("GET", "http://twitter.com/faux/service",
                              "faux", "faux/service", parse_as="json",
@@ -71,6 +74,7 @@ class TestTwitterRequest(unittest.TestCase):
 
 
 class TestCursor(unittest.TestCase):
+
     def test_cursor(self):
         req = TwitterRequest("GET", "http://twitter.com/f/s", "f", "f/s")
 

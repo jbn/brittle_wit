@@ -1,9 +1,12 @@
 import unittest
+import os
 from brittle_wit.streaming import *
 from brittle_wit.helpers import WrappingHandler
+from test.helpers import FIXTURES_DIR
 
 
 class TestEntryProcessor(unittest.TestCase):
+
     def test_entry_processor(self):
         ep = EntryProcessor()
         self.assertFalse(ep)
@@ -55,6 +58,7 @@ class TestEntryProcessor(unittest.TestCase):
 
 
 class TestParsers(unittest.TestCase):
+
     def test_noop_entry_parser(self):
         self.assertEqual(noop_entry_parser("hello"), "hello")
 
@@ -63,6 +67,7 @@ class TestParsers(unittest.TestCase):
 
 
 class TestStreamingProcessor(unittest.TestCase):
+
     def test_streaming_processor(self):
         sp = StreamProcessor(None)
         self.assertFalse(sp._requires_json)
@@ -92,3 +97,12 @@ class TestStreamingProcessor(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             sp.unsubscribe(json_handler)
+
+
+class TestSaveRawStream(unittest.TestCase):
+
+    def test_save_raw_stream(self):
+        output_path = os.path.join(FIXTURES_DIR, "raw_stream")
+
+        # coro = save_raw_stream(session, app_cred, client_cred, req, output_path)
+        # drive_coro_once(coro)

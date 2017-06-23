@@ -1,0 +1,40 @@
+[
+    {
+        "method": "GET", 
+        "url": "https://api.twitter.com/1.1/direct_messages.json", 
+        "service": "direct_messages", 
+        "family": "direct_messages", 
+        "resp_format": [
+            "JSON"
+        ], 
+        "rate_limited": true, 
+        "authentication_required": "USER_ONLY", 
+        "limits": {
+            "user": 15
+        }, 
+        "desc": "Returns the 20 most recent direct messages sent to the authenticating user. Includes detailed information about the sender and recipient user. You can request up to 200 direct messages per call, and only the most recent 200 DMs will be available using this endpoint.", 
+        "params": {
+            "since_id": [
+                "OPTIONAL", 
+                "Returns results with an ID greater than (that is, more recent than) the specified ID. There are limits to the number of Tweets which can be accessed through the API. If the limit of Tweets has occured since the since_id, the since_id will be forced to the oldest ID available.\n\nExample Values : 12345"
+            ], 
+            "max_id": [
+                "OPTIONAL", 
+                "Returns results with an ID less than (that is, older than) or equal to the specified ID.\n\nExample Values : 54321"
+            ], 
+            "count": [
+                "OPTIONAL", 
+                "Specifies the number of direct messages to try and retrieve, up to a maximum of 200. The value of count is best thought of as a limit to the number of Tweets to return because suspended or deleted content is removed after the count has been applied.\n\nExample Values : 5"
+            ], 
+            "include_entities": [
+                "OPTIONAL", 
+                "The entities node will not be included when set to false .\n\nExample Values : false"
+            ], 
+            "skip_status": [
+                "OPTIONAL", 
+                "When set to either true , t or 1 statuses will not be included in the returned user objects."
+            ]
+        }, 
+        "reference_url": "https://dev.twitter.com/rest/reference/get/direct_messages"
+    } 
+]
