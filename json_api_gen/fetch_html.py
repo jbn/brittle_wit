@@ -16,7 +16,7 @@ REFERENCE_ROOTS = {"rest": "https://dev.twitter.com/rest/reference",
 
 def fetch_endpoints_from(root_url):
     doc = fromstring(requests.get(root_url).content)
-    doc.make_links_absolute("https://dev.twitter.com/rest/reference")
+    doc.make_links_absolute(root_url)
 
     valid_methods = {'DELETE', 'GET', 'POST'}
 
@@ -33,6 +33,7 @@ def fetch_endpoints_from(root_url):
 
 
 def fetch_and_save_all(fp, group, reference_root_url):
+    already_fetched = set()
     endpoints = fetch_endpoints_from(reference_root_url)
 
     for d in endpoints:
@@ -40,7 +41,9 @@ def fetch_and_save_all(fp, group, reference_root_url):
         resp = requests.get(d['reference_url'])
         d['_raw_html'] = resp.content.decode(resp.encoding)
         d['group'] = group
-        fp.write(json.dumps(d) + "\n")
+        if d['reference_url'] not in already_fetched:
+            fp.write(json.dumps(d) + "\n")
+            already_fetched.add(d['reference_url'])
 
 
 if __name__ == '__main__':
