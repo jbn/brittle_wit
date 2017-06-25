@@ -1,137 +1,134 @@
 import os
+import shutil
 import unittest
-import brittle_wit as bw
 from test.helpers import FIXTURES_DIR
-from brittle_wit.api_tools import (NOT_SPECIFIED,
-                                   generate_api_request_builder_func,
-                                   _update_params_ordering_required_first,
-                                   _slugged_pythonic_string,
-                                   _generate_func_name,
-                                   _generate_doc_str,
-                                   _generate_slugger,
-                                   _generate_signature)
-from collections import OrderedDict
+from brittle_wit.api_tools import (generate_modules,
+                                   _generate_signature_str,
+                                   _generate_func_name)
 
 
-TEST_DEF = {"method": "POST",
-            "url": "https://brittle-wit.artifexdeus.com/api/mock/:id",
-            "service": "mock/:id/content",
-            "family": "mock",
-            "resp_format": [
-                "JSON"
-            ],
-            "rate_limited": True,
-            "authentication_required": "YES",
-            "limits": {
-                "app": 42,
-                "user": 42
-            },
-            "desc": "A mock service",
-            "params": OrderedDict([
-                ("auth", [
-                    "REQUIRED",
-                    "Auth token for user."
-                ]),
-                ("limit", [
-                    "OPTIONAL",
-                    "The number of elements to return. Defaults to 500 if not specified."
-                ]),
-                ("format", [
-                    "OPTIONAL",
-                    "The output format request. This param can be either json or xml. It will default to json."
-                ]),
-            ]),
-            "reference_url": "https://dev.twitter.com/rest/reference/get/example"}
+class TestAPITools(unittest.TestCase):
+
+    def test_generate_modules(self):
+        tmp_dir = os.path.join(FIXTURES_DIR, "skel")
+        if os.path.exists(tmp_dir):
+            shutil.rmtree(tmp_dir)
+
+        definitions = {'public': [{'family': 'x:dog'}, {'family': 'y:cat'}],
+                       'private': [{'family': 'y:octopus'}]}
+
+        generate_modules(tmp_dir, definitions, lambda defn: '')
+
+        expected_paths = [('public_api', '__init__.py'),
+                          ('public_api', 'dog.py'),
+                          ('public_api', 'cat.py'),
+                          ('private_api', 'octopus.py')]
+
+        for path in expected_paths:
+            self.assertTrue(os.path.exists(os.path.join(tmp_dir, *path)),
+                            path)
+
+        shutil.rmtree(tmp_dir)
+
+    def test_generate_signature_str(self):
+        example = {'params': [{'name': 'a', 'required': True},
+                              {'name': 'b', 'required': False},
+                              {'name': 'c', 'required': False},
+                              {'name': 'd', 'required': True}],
+                   'slugs': ['d']}
+
+        self.assertEquals(_generate_signature_str(example),
+                          "d, a, *, b=IGNORE, c=IGNORE")
 
 
-class TestRestAPI(unittest.TestCase):
+class TestsGenerateFuncName(unittest.TestCase):
 
-    def test_generate_signature(self):
-        sig = _generate_signature(TEST_DEF)
-        self.assertEqual(list(sig.parameters.keys()), ['auth', 'limit', 'format'])
+    def test_simple(self):
+        example = {'family': 'rest:blocks',
+                   'method': 'GET',
+                   'params': [{'name': 'stringify_ids', 'required': False},
+                              {'name': 'cursor', 'required': False}],
+                   'path': 'blocks/ids',
+                   'slugs': []}
 
-        auth, limit, format = list(sig.parameters.values())
-        self.assertEqual(auth.default, auth.empty)
-        self.assertEqual(limit.default, NOT_SPECIFIED)
-        self.assertEqual(format.default, NOT_SPECIFIED)
+        self.assertEqual(_generate_func_name(example), "ids")
+        self.assertEqual(_generate_func_name(example, True), "ids_via_get")
 
-    def test_generate_doc_str(self):
-        with open(os.path.join(FIXTURES_DIR, "doc_str.txt")) as fp:
-            expected = fp.read()
-        self.assertEqual(_generate_doc_str(TEST_DEF).strip(), expected.strip())
+    def test_long_simple(self):
+        example = {'family': 'rest:direct_messages',
+                   'method': 'GET',
+                   'params': [{'name': 'count', 'required': False},
+                              {'name': 'cursor', 'required': False}],
+                   'path': 'direct_messages/events/list',
+                   'slugs': []}
 
-    def test_update_params_ordering_required_first(self):
-        api_def = dict(params=OrderedDict([("a", ('REQUIRED', "desc")),
-                                           ("b", ('OPTIONAL', "desc")),
-                                           ("c", ('OPTIONAL', "desc")),
-                                           ("d", ('REQUIRED', "desc"))]))
+        self.assertEqual(_generate_func_name(example), "events_list")
+        self.assertEqual(_generate_func_name(example, True),
+                         "events_list_via_get")
 
-        _update_params_ordering_required_first(api_def)
-        keys = list(api_def['params'].keys())
-        self.assertEqual(set(keys[:2]), {"a", "d"})
-        self.assertEqual(set(keys[2:]), {"b", "c"})
+    def test_longer_simple(self):
+        example = {'family': 'rest:direct_messages',
+                   'method': 'GET',
+                   'params': [{'name': 'id', 'required': True}],
+                   'path': 'direct_messages/welcome_messages/rules/show',
+                   'slugs': []}
 
-    def test_slugged_pythonic_string(self):
-        examples = [("https://api.twitter.com/1.1/geo/id/:place_id.json",
-                     ('https://api.twitter.com/1.1/geo/id/{place_id}',
-                      ['place_id'])),
-                    ("https://api.twitter.com/1.1/:user_id/id/:place_id.json",
-                     ('https://api.twitter.com/1.1/{user_id}/id/{place_id}',
-                      ['user_id', 'place_id'])),
-                    ("https://api.twitter.com/1.1/geo/id/home",
-                     None)]
+        self.assertEqual(_generate_func_name(example),
+                         "welcome_messages_rules_show")
+        self.assertEqual(_generate_func_name(example, True),
+                         "welcome_messages_rules_show_via_get")
 
-        for url, expected in examples:
-            self.assertEqual(_slugged_pythonic_string(url),
-                             expected)
+    def test_slugged(self):
+        example = {'family': 'rest:saved_searches',
+                   'method': 'GET',
+                   'params': [{'name': 'id', 'required': True}],
+                   'path': 'saved_searches/show/:id',
+                   'slugs': ['id']}
 
-    def test_generate_slugger(self):
-        f = _generate_slugger('https://api.twitter.com/1.1/geo/id/{pid}',
-                              ['pid'])
-        params = dict(pid=100)
-        self.assertIn('pid', params)
-        self.assertEqual(f(params), "https://api.twitter.com/1.1/geo/id/100")
-        self.assertNotIn('pid', params)
+        self.assertEqual(_generate_func_name(example),
+                         "show_by_id")
+        self.assertEqual(_generate_func_name(example, True),
+                         "show_by_id_via_get")
 
-        f = _generate_slugger('https://api.twitter.com/1.1/{gid}/id/{pid}',
-                              ['gid', 'pid'])
-        params = dict(pid=100, gid=200)
-        self.assertIn('pid', params)
-        self.assertIn('gid', params)
-        self.assertEqual(f(params), "https://api.twitter.com/1.1/200/id/100")
-        self.assertNotIn('pid', params)
-        self.assertNotIn('gid', params)
+    def test_long_slugged(self):
+        example = {'family': 'rest:users',
+                   'method': 'GET',
+                   'params': [{'name': 'slug', 'required': True}],
+                   'path': 'users/suggestions/:slug/members',
+                   'slugs': ['slug']}
 
-    def test_generate_func_name(self):
-        s = _generate_func_name(TEST_DEF['service'],
-                                TEST_DEF['family'],
-                                TEST_DEF['method'])
-        self.assertEqual(s, "content_by_id")
+        self.assertEqual(_generate_func_name(example),
+                         "suggestions_members_by_slug")
+        self.assertEqual(_generate_func_name(example, True),
+                         "suggestions_members_by_slug_via_get")
 
-        # Special cases.
-        self.assertEqual(_generate_func_name("media/upload(INIT)", "", ""),
-                         "upload_init")
+    def test_longer_slugged(self):
+        example = {'family': 'ads:accounts',
+                   'method': 'GET',
+                   'params': [{'name': 'count', 'required': False},
+                              {'name': 'account_id', 'required': True},
+                              {'name': 'sort_by', 'required': False},
+                              {'name': 'cursor', 'required': False},
+                              {'name': 'with_deleted', 'required': False},
+                              {'name': 'account_media_ids', 'required': False},
+                              {'name': 'id', 'required': True}],
+                   'path': 'accounts/:account_id/account_media/:id',
+                   'slugs': ['account_id', 'id']}
 
-    def test_generate_api_request_builder_func(self):
-        f = generate_api_request_builder_func(TEST_DEF)
-        req = f("hello", limit=20, format='yoho')
-        self.assertEqual(req.method, 'POST')
-        self.assertEqual(req.url, TEST_DEF['url'])
-        self.assertEqual(req.family, 'MOCK')
-        self.assertEqual(req.service, 'MOCK/:ID/CONTENT')
-        self.assertEqual(req.parse_as, 'json')
-        self.assertEqual(req.params, {'auth': 'hello', 'format': 'yoho', 'limit': 20})
+        self.assertEqual(_generate_func_name(example),
+                         "account_media_by_id_and_account_id")
+        self.assertEqual(_generate_func_name(example, True),
+                         "account_media_by_id_and_account_id_via_get")
 
-    def test_geo_search(self):
-        if not hasattr(bw, 'rest_api'):
-            return
+    def test_longer_slugged_weird(self):
+        example = {'family': 'ads:stats',
+                   'method': 'DELETE',
+                   'params': [{'name': 'account_id', 'required': True},
+                              {'name': 'job_id', 'required': True}],
+                   'path': '1/stats/jobs/accounts/:account_id/:job_id',
+                   'slugs': ['account_id', 'job_id']}
 
-        # Note attribute_street_address -> attribute:street_address
-        req = bw.rest_api.geo.search(attribute_street_address="sullivan street")
-        self.assertEqual(req.method, "GET")
-        self.assertEqual(req.family, "GEO")
-        self.assertEqual(req.url,
-                         "https://api.twitter.com/1.1/geo/search.json")
-        self.assertIn("attribute:street_address", req.params)
-        self.assertEqual(req.params["attribute:street_address"],
-                         "sullivan street")
+        self.assertEqual(_generate_func_name(example),
+                         "jobs_accounts_by_job_id_and_account_id")
+        self.assertEqual(_generate_func_name(example, True),
+                         "jobs_accounts_by_job_id_and_account_id_via_delete")

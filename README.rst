@@ -26,6 +26,8 @@ About
 -  It scales well.
 -  It works as a library or a server.
 
+"Namespaces are one honking great idea -- let's do more of those!"
+
 Warning
 -------
 

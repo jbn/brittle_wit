@@ -22,12 +22,12 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(" ".join(messages), "hello. it's me.")
 
 
-class TestIPythonHelpers(unittest.TestCase):
+# class TestIPythonHelpers(unittest.TestCase):
 
-    def test_twitter_request_html_repr(self):
-        with open(os.path.join(FIXTURES_DIR, "ipython_html.html")) as fp:
-            expected = fp.read()
+#     def test_twitter_request_html_repr(self):
+#         with open(os.path.join(FIXTURES_DIR, "ipython_html.html")) as fp:
+#             expected = fp.read()
 
-        req = bw.rest_api.direct_messages.new("hello world")
-        self.assertEqual(twitter_request_html_repr(req).strip(),
-                         expected.strip())
+#         req = bw.rest_api.direct_messages.new("hello world")
+#         self.assertEqual(twitter_request_html_repr(req).strip(),
+#                          expected.strip())

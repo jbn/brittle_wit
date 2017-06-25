@@ -289,6 +289,38 @@ def extract_family(_, dst):
     assert sub_family
 
 
+def fix_path(_, dst):
+    if dst['path'].startswith('/'):
+        dst['path'] = dst['path'][1:]
+
+
+def update_for_slugs(_, dst):
+    dst['slugs'], path = [], dst['path']
+
+    if ':' not in path:
+        return
+
+    url = dst['url']
+
+    if 'params' not in dst:
+        dst['params'] = []
+    known_params = {param['name'] for param in dst['params']}
+
+    parts = path.split("/")
+    slugs = [s for s in parts if s.startswith(':')]
+
+    # Order so none can be a prefix of the next.
+    for _, slug in reversed(sorted((len(slug), slug) for slug in slugs)):
+        k = slug[1:]
+        url = url.replace(slug, "{" + k + "}")
+        dst['slugs'].append(k)
+
+        if k not in known_params:
+            dst['params'].append({'name': k, 'required': True})
+
+    dst['url'] = url
+
+
 VALID_GROUPS = {'ads', 'rest', 'streaming', 'webhooks'}
 
 VALID_FAMILES = {'ads:accounts',
