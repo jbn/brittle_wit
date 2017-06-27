@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def filter(*, follow=IGNORE, track=IGNORE, locations=IGNORE,
-           delimited=IGNORE, stall_warnings=IGNORE):
+def filter(*, follow=ELIDE, track=ELIDE, locations=ELIDE, delimited=ELIDE,
+           stall_warnings=ELIDE):
     """
     Returns public statuses that match one or more filter predicates. Multiple
     parameters may be specified which allows most clients to use a single
@@ -40,7 +40,7 @@ def filter(*, follow=IGNORE, track=IGNORE, locations=IGNORE,
                           binding)
 
 
-def sample(*, delimited=IGNORE, stall_warnings=IGNORE):
+def sample(*, delimited=ELIDE, stall_warnings=ELIDE):
     """
     Returns a small random sample of all public statuses. The Tweets returned
     by the default access level are the same, so if two different clients

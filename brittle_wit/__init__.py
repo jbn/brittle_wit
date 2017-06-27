@@ -12,7 +12,7 @@ import os
 
 from brittle_wit.constants import LOGGER, FIFTEEN_MINUTES
 from brittle_wit.messages import (TwitterRequest, Cursor, TwitterResponse,
-                                  BrittleWitError, IGNORE)
+                                  BrittleWitError, ELIDE)
 from brittle_wit.oauth import (AppCredentials, ClientCredentials,
                                ANY_CREDENTIALS)
 from brittle_wit.executors import (ClientRequestProcessor,

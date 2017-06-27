@@ -3,12 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def home_timeline(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
-                  trim_user=IGNORE, exclude_replies=IGNORE,
-                  include_entities=IGNORE):
+def home_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
+                  trim_user=ELIDE, exclude_replies=ELIDE,
+                  include_entities=ELIDE):
     """
     Returns a collection of the most recent
 
@@ -51,8 +51,8 @@ def home_timeline(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
                           binding)
 
 
-def lookup(id, *, include_entities=IGNORE, trim_user=IGNORE, map=IGNORE,
-           include_ext_alt_text=IGNORE):
+def lookup(id, *, include_entities=ELIDE, trim_user=ELIDE, map=ELIDE,
+           include_ext_alt_text=ELIDE):
     """
     Returns fully-hydrated
 
@@ -86,8 +86,8 @@ def lookup(id, *, include_entities=IGNORE, trim_user=IGNORE, map=IGNORE,
                           binding)
 
 
-def mentions_timeline(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
-                      trim_user=IGNORE, include_entities=IGNORE):
+def mentions_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
+                      trim_user=ELIDE, include_entities=ELIDE):
     """
     Returns the 20 most recent mentions (Tweets containing a users’s
     @screen_name) for the authenticating user.
@@ -125,9 +125,9 @@ def mentions_timeline(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
                           binding)
 
 
-def oembed(url, *, maxwidth=IGNORE, hide_media=IGNORE, hide_thread=IGNORE,
-           omit_script=IGNORE, align=IGNORE, related=IGNORE, lang=IGNORE,
-           theme=IGNORE, link_color=IGNORE, widget_type=IGNORE, dnt=IGNORE):
+def oembed(url, *, maxwidth=ELIDE, hide_media=ELIDE, hide_thread=ELIDE,
+           omit_script=ELIDE, align=ELIDE, related=ELIDE, lang=ELIDE,
+           theme=ELIDE, link_color=ELIDE, widget_type=ELIDE, dnt=ELIDE):
     """
     Returns a single Tweet, specified by either a Tweet web URL or the Tweet
     ID, in an
@@ -194,7 +194,7 @@ def oembed(url, *, maxwidth=IGNORE, hide_media=IGNORE, hide_thread=IGNORE,
                           binding)
 
 
-def retweeters_ids(id, *, cursor=IGNORE, stringify_ids=IGNORE):
+def retweeters_ids(id, *, cursor=ELIDE, stringify_ids=ELIDE):
     """
     Returns a collection of up to 100 user IDs belonging to users who have
     retweeted the Tweet specified by the
@@ -225,7 +225,7 @@ def retweeters_ids(id, *, cursor=IGNORE, stringify_ids=IGNORE):
                           binding)
 
 
-def retweets_by_id(id, *, count=IGNORE, trim_user=IGNORE):
+def retweets_by_id(id, *, count=ELIDE, trim_user=ELIDE):
     """
     Returns a collection of the 100 most recent retweets of the Tweet specified
     by the
@@ -249,9 +249,9 @@ def retweets_by_id(id, *, count=IGNORE, trim_user=IGNORE):
                           binding)
 
 
-def retweets_of_me(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
-                   trim_user=IGNORE, include_entities=IGNORE,
-                   include_user_entities=IGNORE):
+def retweets_of_me(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
+                   trim_user=ELIDE, include_entities=ELIDE,
+                   include_user_entities=ELIDE):
     """
     Returns the most recent Tweets authored by the authenticating user that
     have been retweeted by others. This timeline is a subset of the user’s
@@ -289,8 +289,8 @@ def retweets_of_me(*, count=IGNORE, since_id=IGNORE, max_id=IGNORE,
                           binding)
 
 
-def show_by_id(id, *, trim_user=IGNORE, include_my_retweet=IGNORE,
-               include_entities=IGNORE, include_ext_alt_text=IGNORE):
+def show_by_id(id, *, trim_user=ELIDE, include_my_retweet=ELIDE,
+               include_entities=ELIDE, include_ext_alt_text=ELIDE):
     """
     Returns a single
 
@@ -325,9 +325,9 @@ def show_by_id(id, *, trim_user=IGNORE, include_my_retweet=IGNORE,
                           binding)
 
 
-def user_timeline(*, user_id=IGNORE, screen_name=IGNORE, since_id=IGNORE,
-                  count=IGNORE, max_id=IGNORE, trim_user=IGNORE,
-                  exclude_replies=IGNORE, include_rts=IGNORE):
+def user_timeline(*, user_id=ELIDE, screen_name=ELIDE, since_id=ELIDE,
+                  count=ELIDE, max_id=ELIDE, trim_user=ELIDE,
+                  exclude_replies=ELIDE, include_rts=ELIDE):
     """
     Returns a collection of the most recent
 
@@ -379,7 +379,7 @@ def user_timeline(*, user_id=IGNORE, screen_name=IGNORE, since_id=IGNORE,
                           binding)
 
 
-def destroy_by_id(id, *, trim_user=IGNORE):
+def destroy_by_id(id, *, trim_user=ELIDE):
     """
     Destroys the status specified by the required ID parameter. The
     authenticating user must be the author of the specified status. Returns the
@@ -401,7 +401,7 @@ def destroy_by_id(id, *, trim_user=IGNORE):
                           binding)
 
 
-def retweet_by_id(id, *, trim_user=IGNORE):
+def retweet_by_id(id, *, trim_user=ELIDE):
     """
     Retweets a tweet. Returns the
 
@@ -421,7 +421,7 @@ def retweet_by_id(id, *, trim_user=IGNORE):
                           binding)
 
 
-def unretweet_by_id(id, *, trim_user=IGNORE):
+def unretweet_by_id(id, *, trim_user=ELIDE):
     """
     Untweets a retweeted status. Returns the
 
@@ -441,11 +441,10 @@ def unretweet_by_id(id, *, trim_user=IGNORE):
                           binding)
 
 
-def update(status, *, in_reply_to_status_id=IGNORE,
-           possibly_sensitive=IGNORE, lat=IGNORE, long=IGNORE,
-           place_id=IGNORE, display_coordinates=IGNORE, trim_user=IGNORE,
-           media_ids=IGNORE, enable_dm_commands=IGNORE,
-           fail_dm_commands=IGNORE):
+def update(status, *, in_reply_to_status_id=ELIDE, possibly_sensitive=ELIDE,
+           lat=ELIDE, long=ELIDE, place_id=ELIDE, display_coordinates=ELIDE,
+           trim_user=ELIDE, media_ids=ELIDE, enable_dm_commands=ELIDE,
+           fail_dm_commands=ELIDE):
     """
     Updates the authenticating user’s current status, also known as Tweeting.
 
@@ -518,12 +517,12 @@ def update(status, *, in_reply_to_status_id=IGNORE,
                           binding)
 
 
-def update_with_mediadeprecated(status, media, *, possibly_sensitive=IGNORE,
-                                in_reply_to_status_id=IGNORE, lat=IGNORE,
-                                long=IGNORE, place_id=IGNORE,
-                                display_coordinates=IGNORE,
-                                enable_dm_commands=IGNORE,
-                                fail_dm_commands=IGNORE):
+def update_with_mediadeprecated(status, media, *, possibly_sensitive=ELIDE,
+                                in_reply_to_status_id=ELIDE, lat=ELIDE,
+                                long=ELIDE, place_id=ELIDE,
+                                display_coordinates=ELIDE,
+                                enable_dm_commands=ELIDE,
+                                fail_dm_commands=ELIDE):
     """
 
 

@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def incoming(*, cursor=IGNORE, stringify_ids=IGNORE):
+def incoming(*, cursor=ELIDE, stringify_ids=ELIDE):
     """
     Returns a collection of numeric IDs for every user who has a pending
     request to follow the authenticating user.
@@ -33,7 +33,7 @@ def incoming(*, cursor=IGNORE, stringify_ids=IGNORE):
                           binding)
 
 
-def lookup(*, screen_name=IGNORE, user_id=IGNORE):
+def lookup(*, screen_name=ELIDE, user_id=ELIDE):
     """
     Returns the relationships of the authenticating user to the comma-separated
     list of up to 100 screen_names or user_ids provided. Values for
@@ -53,7 +53,7 @@ def lookup(*, screen_name=IGNORE, user_id=IGNORE):
                           binding)
 
 
-def no_retweets_ids(*, stringify_ids=IGNORE):
+def no_retweets_ids(*, stringify_ids=ELIDE):
     """
     Returns a collection of user_ids that the currently authenticated user does
     not want to receive retweets from.
@@ -72,7 +72,7 @@ def no_retweets_ids(*, stringify_ids=IGNORE):
                           binding)
 
 
-def outgoing(*, cursor=IGNORE, stringify_ids=IGNORE):
+def outgoing(*, cursor=ELIDE, stringify_ids=ELIDE):
     """
     Returns a collection of numeric IDs for every protected user for whom the
     authenticating user has a pending follow request.
@@ -99,8 +99,8 @@ def outgoing(*, cursor=IGNORE, stringify_ids=IGNORE):
                           binding)
 
 
-def show(*, source_id=IGNORE, source_screen_name=IGNORE, target_id=IGNORE,
-         target_screen_name=IGNORE):
+def show(*, source_id=ELIDE, source_screen_name=ELIDE, target_id=ELIDE,
+         target_screen_name=ELIDE):
     """
     Returns detailed information about the relationship between two arbitrary
     users.
@@ -124,7 +124,7 @@ def show(*, source_id=IGNORE, source_screen_name=IGNORE, target_id=IGNORE,
                           binding)
 
 
-def create(*, screen_name=IGNORE, user_id=IGNORE, follow=IGNORE):
+def create(*, screen_name=ELIDE, user_id=ELIDE, follow=ELIDE):
     """
     Allows the authenticating users to follow the user specified in the ID
     parameter.
@@ -145,7 +145,7 @@ def create(*, screen_name=IGNORE, user_id=IGNORE, follow=IGNORE):
                           binding)
 
 
-def destroy(*, screen_name=IGNORE, user_id=IGNORE):
+def destroy(*, screen_name=ELIDE, user_id=ELIDE):
     """
     Allows the authenticating user to unfollow the user specified in the ID
     parameter.
@@ -163,8 +163,7 @@ def destroy(*, screen_name=IGNORE, user_id=IGNORE):
                           binding)
 
 
-def update(*, screen_name=IGNORE, user_id=IGNORE, device=IGNORE,
-           retweets=IGNORE):
+def update(*, screen_name=ELIDE, user_id=ELIDE, device=ELIDE, retweets=ELIDE):
     """
     Allows one to enable or disable retweets and device notifications from the
     specified user.

@@ -3,12 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def user(*, delimited=IGNORE, stall_warnings=IGNORE, with_=IGNORE,
-         replies=IGNORE, track=IGNORE, locations=IGNORE,
-         stringify_friend_ids=IGNORE):
+def user(*, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
+         replies=ELIDE, track=ELIDE, locations=ELIDE,
+         stringify_friend_ids=ELIDE):
     """
     Streams messages for a single user, as described in
 

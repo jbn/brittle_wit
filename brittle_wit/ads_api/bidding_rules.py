@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def bidding_rules(*, currency=IGNORE):
+def bidding_rules(*, currency=ELIDE):
     """
     Retrieve the bidding rules for a specific or all currencies. The response
     will indicate the minimum and maximum CPE (cost-per-engagement) bids.

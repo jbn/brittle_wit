@@ -3,15 +3,15 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def conversion_attribution(hashed_device_id, app_id, os_type,
                            conversion_time, conversion_type, *,
-                           click_window=IGNORE, view_through_window=IGNORE,
-                           non_twitter_engagement_time=IGNORE,
-                           non_twitter_engagement_type=IGNORE,
-                           extra_device_ids=IGNORE):
+                           click_window=ELIDE, view_through_window=ELIDE,
+                           non_twitter_engagement_time=ELIDE,
+                           non_twitter_engagement_type=ELIDE,
+                           extra_device_ids=ELIDE):
     """
     Query Twitter to check on conversion attribution without writing a
     conversion event. Response will indicate Twitter attribution. Relates to

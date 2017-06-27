@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def list(*, user_id=IGNORE, screen_name=IGNORE, reverse=IGNORE):
+def list(*, user_id=ELIDE, screen_name=ELIDE, reverse=ELIDE):
     """
     Returns all lists the authenticating or specified user subscribes to,
     including their own. The user is specified using the
@@ -33,9 +33,9 @@ def list(*, user_id=IGNORE, screen_name=IGNORE, reverse=IGNORE):
                           binding)
 
 
-def members(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
-            count=IGNORE, cursor=IGNORE, include_entities=IGNORE,
-            skip_status=IGNORE):
+def members(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
+            count=ELIDE, cursor=ELIDE, include_entities=ELIDE,
+            skip_status=ELIDE):
     """
     Returns the members of the specified list. Private list members will only
     be shown if the authenticated user owns the specified list.
@@ -81,8 +81,8 @@ def members(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
 
 
 def members_show(list_id, slug, user_id, screen_name, *,
-                 owner_screen_name=IGNORE, owner_id=IGNORE,
-                 include_entities=IGNORE, skip_status=IGNORE):
+                 owner_screen_name=ELIDE, owner_id=ELIDE,
+                 include_entities=ELIDE, skip_status=ELIDE):
     """
     Check if the specified user is a member of the specified list.
 
@@ -127,8 +127,8 @@ def members_show(list_id, slug, user_id, screen_name, *,
                           binding)
 
 
-def memberships(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
-                cursor=IGNORE, filter_to_owned_lists=IGNORE):
+def memberships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
+                cursor=ELIDE, filter_to_owned_lists=ELIDE):
     """
     Returns the lists the specified user has been added to. If
 
@@ -163,8 +163,7 @@ def memberships(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
                           binding)
 
 
-def ownerships(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
-               cursor=IGNORE):
+def ownerships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Returns the lists owned by the specified Twitter user. Private lists will
     only be shown if the authenticated user is also the owner of the lists.
@@ -193,7 +192,7 @@ def ownerships(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
                           binding)
 
 
-def show(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE):
+def show(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Returns the specified list. Private lists will only be shown if the
     authenticated user owns the specified list.
@@ -220,9 +219,9 @@ def show(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE):
                           binding)
 
 
-def statuses(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
-             since_id=IGNORE, max_id=IGNORE, count=IGNORE,
-             include_entities=IGNORE, include_rts=IGNORE):
+def statuses(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
+             since_id=ELIDE, max_id=ELIDE, count=ELIDE,
+             include_entities=ELIDE, include_rts=ELIDE):
     """
     Returns a timeline of tweets authored by members of the specified list.
     Retweets are included by default. Use the
@@ -273,9 +272,9 @@ def statuses(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
                           binding)
 
 
-def subscribers(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
-                count=IGNORE, cursor=IGNORE, include_entities=IGNORE,
-                skip_status=IGNORE):
+def subscribers(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
+                count=ELIDE, cursor=ELIDE, include_entities=ELIDE,
+                skip_status=ELIDE):
     """
     Returns the subscribers of the specified list. Private list subscribers
     will only be shown if the authenticated user owns the specified list.
@@ -324,8 +323,8 @@ def subscribers(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE,
 
 
 def subscribers_show(list_id, slug, user_id, screen_name, *,
-                     owner_screen_name=IGNORE, owner_id=IGNORE,
-                     include_entities=IGNORE, skip_status=IGNORE):
+                     owner_screen_name=ELIDE, owner_id=ELIDE,
+                     include_entities=ELIDE, skip_status=ELIDE):
     """
     Check if the specified user is a subscriber of the specified list. Returns
     the user if they are subscriber.
@@ -371,8 +370,8 @@ def subscribers_show(list_id, slug, user_id, screen_name, *,
                           binding)
 
 
-def subscriptions(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
-                  cursor=IGNORE):
+def subscriptions(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
+                  cursor=ELIDE):
     """
     Obtain a collection of the lists the specified user is subscribed to, 20
     lists per page by default. Does not include the user’s own lists.
@@ -403,7 +402,7 @@ def subscriptions(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
                           binding)
 
 
-def create(name, *, mode=IGNORE, description=IGNORE):
+def create(name, *, mode=ELIDE, description=ELIDE):
     """
     Creates a new list for the authenticated user. Note that you can create up
     to 1000 lists per account.
@@ -426,7 +425,7 @@ def create(name, *, mode=IGNORE, description=IGNORE):
                           binding)
 
 
-def destroy(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE):
+def destroy(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Deletes the specified list. The authenticated user must own the list to be
     able to destroy it.
@@ -454,7 +453,7 @@ def destroy(list_id, slug, *, owner_screen_name=IGNORE, owner_id=IGNORE):
 
 
 def members_create(list_id, slug, user_id, screen_name, *,
-                   owner_screen_name=IGNORE, owner_id=IGNORE):
+                   owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Add a member to a list. The authenticated user must own the list to be able
     to add members to it. Note that lists cannot have more than 5,000 members.
@@ -489,8 +488,8 @@ def members_create(list_id, slug, user_id, screen_name, *,
                           binding)
 
 
-def members_create_all(list_id, slug, *, user_id=IGNORE, screen_name=IGNORE,
-                       owner_screen_name=IGNORE, owner_id=IGNORE):
+def members_create_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
+                       owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Adds multiple members to a list, by specifying a comma-separated list of
     member ids or screen names. The authenticated user must own the list to be
@@ -527,9 +526,9 @@ def members_create_all(list_id, slug, *, user_id=IGNORE, screen_name=IGNORE,
                           binding)
 
 
-def members_destroy(*, list_id=IGNORE, slug=IGNORE, user_id=IGNORE,
-                    screen_name=IGNORE, owner_screen_name=IGNORE,
-                    owner_id=IGNORE):
+def members_destroy(*, list_id=ELIDE, slug=ELIDE, user_id=ELIDE,
+                    screen_name=ELIDE, owner_screen_name=ELIDE,
+                    owner_id=ELIDE):
     """
     Removes the specified member from the list. The authenticated user must be
     the list’s owner to remove members from the list.
@@ -564,8 +563,8 @@ def members_destroy(*, list_id=IGNORE, slug=IGNORE, user_id=IGNORE,
                           binding)
 
 
-def members_destroy_all(list_id, slug, *, user_id=IGNORE, screen_name=IGNORE,
-                        owner_screen_name=IGNORE, owner_id=IGNORE):
+def members_destroy_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
+                        owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Removes multiple members from a list, by specifying a comma-separated list
     of member ids or screen names. The authenticated user must own the list to
@@ -602,8 +601,8 @@ def members_destroy_all(list_id, slug, *, user_id=IGNORE, screen_name=IGNORE,
                           binding)
 
 
-def subscribers_create(list_id, slug, *, owner_screen_name=IGNORE,
-                       owner_id=IGNORE):
+def subscribers_create(list_id, slug, *, owner_screen_name=ELIDE,
+                       owner_id=ELIDE):
     """
     Subscribes the authenticated user to the specified list.
 
@@ -629,8 +628,8 @@ def subscribers_create(list_id, slug, *, owner_screen_name=IGNORE,
                           binding)
 
 
-def subscribers_destroy(list_id, slug, *, owner_screen_name=IGNORE,
-                        owner_id=IGNORE):
+def subscribers_destroy(list_id, slug, *, owner_screen_name=ELIDE,
+                        owner_id=ELIDE):
     """
     Unsubscribes the authenticated user from the specified list.
 
@@ -656,8 +655,8 @@ def subscribers_destroy(list_id, slug, *, owner_screen_name=IGNORE,
                           binding)
 
 
-def update(list_id, slug, *, name=IGNORE, mode=IGNORE, description=IGNORE,
-           owner_screen_name=IGNORE, owner_id=IGNORE):
+def update(list_id, slug, *, name=ELIDE, mode=ELIDE, description=ELIDE,
+           owner_screen_name=ELIDE, owner_id=ELIDE):
     """
     Updates the specified list. The authenticated user must own the list to be
     able to update it.

@@ -12,16 +12,16 @@ RETRYABLE_CODES = {500,  # INTERNAL SERVER ERROR
 RETRYABLE_EXCEPTIONS = {ClientOSError, asyncio.TimeoutError}
 
 
-class _IGNORE:
+class _ELIDE:
 
     def __repr__(self):
-        return 'IGNORE'
+        return 'ELIDE'
 
     def __str__(self):
-        return 'IGNORE'
+        return 'ELIDE'
 
 
-IGNORE = _IGNORE()
+ELIDE = _ELIDE()
 
 
 class TwitterRequest:
@@ -45,7 +45,7 @@ class TwitterRequest:
         self._service = service.upper()
         self._parse_as = parse_as
         if params:
-            self._params = {k: v for k, v in params.items() if v is not IGNORE}
+            self._params = {k: v for k, v in params.items() if v is not ELIDE}
         else:
             self._params = {}
 

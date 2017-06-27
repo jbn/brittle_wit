@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def uploadSTATUS(command, media_id):
@@ -37,7 +37,7 @@ def metadata_create():
                           binding)
 
 
-def upload(media, media_data, *, additional_owners=IGNORE):
+def upload(media, media_data, *, additional_owners=ELIDE):
     """
     Use this endpoint to upload images to Twitter. It returns a
 
@@ -107,8 +107,8 @@ def uploadFINALIZE(command, media_id):
                           binding)
 
 
-def uploadINIT(command, total_bytes, media_type, *, media_category=IGNORE,
-               additional_owners=IGNORE):
+def uploadINIT(command, total_bytes, media_type, *, media_category=ELIDE,
+               additional_owners=ELIDE):
     """
     The
 

@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def lookup(*, screen_name=IGNORE, user_id=IGNORE, include_entities=IGNORE):
+def lookup(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE):
     """
     Returns fully-hydrated
 
@@ -31,7 +31,7 @@ def lookup(*, screen_name=IGNORE, user_id=IGNORE, include_entities=IGNORE):
                           binding)
 
 
-def profile_banner(*, user_id=IGNORE, screen_name=IGNORE):
+def profile_banner(*, user_id=ELIDE, screen_name=ELIDE):
     """
     Returns a map of the available size variations of the specified user’s
     profile banner. If the user has not uploaded a profile banner, a HTTP 404
@@ -53,7 +53,7 @@ def profile_banner(*, user_id=IGNORE, screen_name=IGNORE):
                           binding)
 
 
-def search(q, *, page=IGNORE, count=IGNORE, include_entities=IGNORE):
+def search(q, *, page=ELIDE, count=ELIDE, include_entities=ELIDE):
     """
     Provides a simple, relevance-based search interface to public user accounts
     on Twitter. Try querying by topical interest, full name, company name,
@@ -79,7 +79,7 @@ def search(q, *, page=IGNORE, count=IGNORE, include_entities=IGNORE):
                           binding)
 
 
-def show(user_id, screen_name, *, include_entities=IGNORE):
+def show(user_id, screen_name, *, include_entities=ELIDE):
     """
     Returns a
 
@@ -102,7 +102,7 @@ def show(user_id, screen_name, *, include_entities=IGNORE):
                           binding)
 
 
-def suggestions(*, lang=IGNORE):
+def suggestions(*, lang=ELIDE):
     """
     Access to Twitter’s suggested user list. This returns the list of suggested
     user categories. The category can be used in
@@ -123,7 +123,7 @@ def suggestions(*, lang=IGNORE):
                           binding)
 
 
-def suggestions_by_slug(slug, *, lang=IGNORE):
+def suggestions_by_slug(slug, *, lang=ELIDE):
     """
     Access the users in a given category of the Twitter suggested user list.
 
@@ -163,7 +163,7 @@ def suggestions_members_by_slug(slug):
                           binding)
 
 
-def report_spam(*, screen_name=IGNORE, user_id=IGNORE, perform_block=IGNORE):
+def report_spam(*, screen_name=ELIDE, user_id=ELIDE, perform_block=ELIDE):
     """
     Report the specified user as a spam account to Twitter. Additionally,
     optionally performs the equivalent of

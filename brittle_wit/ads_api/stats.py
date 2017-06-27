@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def accounts_reach_campaigns_by_account_id(account_id, campaign_ids,
-                                           start_time, *, end_time=IGNORE):
+                                           start_time, *, end_time=ELIDE):
     """
     Retrieve summary about reach and average frequency of specified campaigns
     during a specified time period.
@@ -40,7 +40,7 @@ def accounts_reach_campaigns_by_account_id(account_id, campaign_ids,
 def accounts_reach_funding_instruments_by_account_id(account_id,
                                                      funding_instrument_ids,
                                                      start_time, *,
-                                                     end_time=IGNORE):
+                                                     end_time=ELIDE):
     """
     Retrieve summary about reach and average frequency of specified funding
     instruments during a specified time period.
@@ -74,7 +74,7 @@ def accounts_reach_funding_instruments_by_account_id(account_id,
 
 def accounts_by_account_id(account_id, entity, entity_ids, start_time,
                            end_time, metric_groups, placement, *,
-                           granularity=IGNORE):
+                           granularity=ELIDE):
     """
     Retrieve synchronous summary analytics about any
 
@@ -121,8 +121,8 @@ def accounts_by_account_id(account_id, entity, entity_ids, start_time,
                           binding)
 
 
-def jobs_accounts_by_account_id(account_id, *, count=IGNORE, cursor=IGNORE,
-                                job_ids=IGNORE):
+def jobs_accounts_by_account_id(account_id, *, count=ELIDE, cursor=ELIDE,
+                                job_ids=ELIDE):
     """
     Retrieve details of asynchronous analytics query jobs.
 
@@ -154,9 +154,9 @@ def jobs_accounts_by_account_id(account_id, *, count=IGNORE, cursor=IGNORE,
 
 
 def jobs_accounts_by_account_id(placement, metric_groups, start_time, entity,
-                                end_time, granularity, *, account_id=IGNORE,
-                                country=IGNORE, platform=IGNORE,
-                                entity_ids=IGNORE, segmentation_type=IGNORE):
+                                end_time, granularity, *, account_id=ELIDE,
+                                country=ELIDE, platform=ELIDE,
+                                entity_ids=ELIDE, segmentation_type=ELIDE):
     """
     Create an asynchronous analytics job for a given ads account. A
 

@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def accounts_campaigns_by_account_id(account_id):
@@ -40,10 +40,10 @@ def accounts_tailored_audiences_by_account_id(account_id, operation_type,
                                               boolean_operatorsometimes,
                                               tailored_audience_idsometimes,
                                               lookback_windowsometimes, *,
-                                              segments=IGNORE,
-                                              frequency=IGNORE,
-                                              frequency_comparator=IGNORE,
-                                              negate=IGNORE):
+                                              segments=ELIDE,
+                                              frequency=ELIDE,
+                                              frequency_comparator=ELIDE,
+                                              negate=ELIDE):
     """
     Allows for batch creation of tailored audiences. See the
 

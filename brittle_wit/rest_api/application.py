@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def rate_limit_status(*, resources=IGNORE):
+def rate_limit_status(*, resources=ELIDE):
     """
     Returns the current rate limits for methods belonging to the specified
     resource families.

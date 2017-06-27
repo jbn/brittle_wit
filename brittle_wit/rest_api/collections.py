@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def entries(id, *, count=IGNORE, max_position=IGNORE, min_position=IGNORE):
+def entries(id, *, count=ELIDE, max_position=ELIDE, min_position=ELIDE):
     """
     Retrieve the identified Collection, presented as a list of the Tweets
     curated within.
@@ -33,8 +33,7 @@ def entries(id, *, count=IGNORE, max_position=IGNORE, min_position=IGNORE):
                           binding)
 
 
-def list(user_id, screen_name, *, tweet_id=IGNORE, count=IGNORE,
-         cursor=IGNORE):
+def list(user_id, screen_name, *, tweet_id=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Find Collections created by a specific user or containing a specific
     curated Tweet.
@@ -81,7 +80,7 @@ def show(id):
                           binding)
 
 
-def create(name, *, description=IGNORE, url=IGNORE, timeline_order=IGNORE):
+def create(name, *, description=ELIDE, url=ELIDE, timeline_order=ELIDE):
     """
     Create a Collection owned by the currently authenticated user.
 
@@ -123,7 +122,7 @@ def destroy(id):
                           binding)
 
 
-def entries_add(id, tweet_id, *, relative_to=IGNORE, above=IGNORE):
+def entries_add(id, tweet_id, *, relative_to=ELIDE, above=ELIDE):
     """
     Add a specified Tweet to a Collection.
 
@@ -161,7 +160,7 @@ def entries_curate():
                           binding)
 
 
-def entries_move(id, tweet_id, relative_to, *, above=IGNORE):
+def entries_move(id, tweet_id, relative_to, *, above=ELIDE):
     """
     Move a specified Tweet to a new position in a
 
@@ -202,7 +201,7 @@ def entries_remove(id, tweet_id):
                           binding)
 
 
-def update(id, *, name=IGNORE, description=IGNORE, url=IGNORE):
+def update(id, *, name=ELIDE, description=ELIDE, url=ELIDE):
     """
     Update information concerning a Collection owned by the currently
     authenticated user.

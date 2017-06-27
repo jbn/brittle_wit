@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def list(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
-         since_id=IGNORE, max_id=IGNORE, include_entities=IGNORE):
+def list(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, since_id=ELIDE,
+         max_id=ELIDE, include_entities=ELIDE):
     """
     Returns the 20 most recent Tweets favorited by the authenticating or
     specified user.
@@ -46,7 +46,7 @@ def list(*, user_id=IGNORE, screen_name=IGNORE, count=IGNORE,
                           binding)
 
 
-def create(id, *, include_entities=IGNORE):
+def create(id, *, include_entities=ELIDE):
     """
     Favorites the status specified in the ID parameter as the authenticating
     user. Returns the favorite status when successful.
@@ -65,7 +65,7 @@ def create(id, *, include_entities=IGNORE):
                           binding)
 
 
-def destroy(id, *, include_entities=IGNORE):
+def destroy(id, *, include_entities=ELIDE):
     """
     Un-favorites the status specified in the ID parameter as the authenticating
     user. Returns the un-favorited status in the requested format when

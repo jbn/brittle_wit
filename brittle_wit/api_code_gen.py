@@ -207,7 +207,7 @@ def generate_modules(base_dir, definitions, func_gen=generate_source):
             sub_module = os.path.join(parent_dir, family + ".py")
             with open(sub_module, "w") as fp:
                 fp.write(AUTOGEN_HEADER + "\n\n\n")
-                fp.write("from brittle_wit import TwitterRequest, IGNORE\n\n\n")
+                fp.write("from brittle_wit import TwitterRequest, ELIDE\n\n\n")
                 for code_block in code_blocks[group, family]:
                     fp.write(code_block + "\n\n\n")
 
@@ -249,7 +249,7 @@ def _generate_param_tokens(api_def):
 
     # Optionals are keyword-only to protect fail loudly.
     for param in optional:
-        tokens.append((param['name'], 'IGNORE'))
+        tokens.append((param['name'], 'ELIDE'))
 
     return tokens
 

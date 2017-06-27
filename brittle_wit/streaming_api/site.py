@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def site(follow, *, delimited=IGNORE, stall_warnings=IGNORE, with_=IGNORE,
-         replies=IGNORE, stringify_friend_ids=IGNORE):
+def site(follow, *, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
+         replies=ELIDE, stringify_friend_ids=ELIDE):
     """
     Streams messages for a set of users, as described in
 

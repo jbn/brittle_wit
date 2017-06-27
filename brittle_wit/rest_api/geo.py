@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def id_by_place_id(place_id):
@@ -23,8 +23,8 @@ def id_by_place_id(place_id):
                           binding)
 
 
-def reverse_code(lat, long, *, accuracy=IGNORE, granularity=IGNORE,
-                 max_results=IGNORE, callback=IGNORE):
+def reverse_code(lat, long, *, accuracy=ELIDE, granularity=ELIDE,
+                 max_results=ELIDE, callback=ELIDE):
     """
     Given a latitude and a longitude, searches for up to 20 places that can be
     used as a
@@ -71,10 +71,10 @@ def reverse_code(lat, long, *, accuracy=IGNORE, granularity=IGNORE,
                           binding)
 
 
-def search(*, lat=IGNORE, long=IGNORE, query=IGNORE, ip=IGNORE,
-           granularity=IGNORE, accuracy=IGNORE, max_results=IGNORE,
-           contained_within=IGNORE, attribute_street_address=IGNORE,
-           callback=IGNORE):
+def search(*, lat=ELIDE, long=ELIDE, query=ELIDE, ip=ELIDE,
+           granularity=ELIDE, accuracy=ELIDE, max_results=ELIDE,
+           contained_within=ELIDE, attribute_street_address=ELIDE,
+           callback=ELIDE):
     """
     Search for places that can be attached to a statuses/update. Given a
     latitude and a longitude pair, an IP address, or a name, this request will
@@ -144,7 +144,7 @@ def search(*, lat=IGNORE, long=IGNORE, query=IGNORE, ip=IGNORE,
 
 
 def place(name, contained_within, token, lat, long, *,
-          attribute_street_address=IGNORE, callback=IGNORE):
+          attribute_street_address=ELIDE, callback=ELIDE):
     """
     As of December 2nd, 2013, this endpoint
 

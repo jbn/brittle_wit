@@ -3,12 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def tweets(q, *, geocode=IGNORE, lang=IGNORE, locale=IGNORE,
-           result_type=IGNORE, count=IGNORE, until=IGNORE, since_id=IGNORE,
-           max_id=IGNORE, include_entities=IGNORE):
+def tweets(q, *, geocode=ELIDE, lang=ELIDE, locale=ELIDE, result_type=ELIDE,
+           count=ELIDE, until=ELIDE, since_id=ELIDE, max_id=ELIDE,
+           include_entities=ELIDE):
     """
     Returns a collection of relevant
 

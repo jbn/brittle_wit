@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def placements(*, product_type=IGNORE):
+def placements(*, product_type=ELIDE):
     """
     Request the valid combinations of
 

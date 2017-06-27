@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def ids(*, stringify_ids=IGNORE, cursor=IGNORE):
+def ids(*, stringify_ids=ELIDE, cursor=ELIDE):
     """
     Returns an array of numeric user ids the authenticating user is blocking.
 
@@ -31,7 +31,7 @@ def ids(*, stringify_ids=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def list(*, include_entities=IGNORE, skip_status=IGNORE, cursor=IGNORE):
+def list(*, include_entities=ELIDE, skip_status=ELIDE, cursor=ELIDE):
     """
     Returns a collection of
 
@@ -59,8 +59,8 @@ def list(*, include_entities=IGNORE, skip_status=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def create(*, screen_name=IGNORE, user_id=IGNORE, include_entities=IGNORE,
-           skip_status=IGNORE):
+def create(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
+           skip_status=ELIDE):
     """
     Blocks the specified user from following the authenticating user. In
     addition the blocked user will not show in the authenticating users
@@ -90,8 +90,8 @@ def create(*, screen_name=IGNORE, user_id=IGNORE, include_entities=IGNORE,
                           binding)
 
 
-def destroy(*, screen_name=IGNORE, user_id=IGNORE, include_entities=IGNORE,
-            skip_status=IGNORE):
+def destroy(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
+            skip_status=ELIDE):
     """
     Un-blocks the user specified in the ID parameter for the authenticating
     user. Returns the un-blocked user in the requested format when successful.

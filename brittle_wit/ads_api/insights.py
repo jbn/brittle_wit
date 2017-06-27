@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def accounts_account_id(account_id, audience_type, audience_valuesometimes,
@@ -56,9 +56,8 @@ def accounts_available_audiences_by_account_id(account_id):
                           binding)
 
 
-def keywords_search(granularity, start_time, *, end_time=IGNORE,
-                    keywords=IGNORE, negative_keywords=IGNORE,
-                    location=IGNORE):
+def keywords_search(granularity, start_time, *, end_time=ELIDE,
+                    keywords=ELIDE, negative_keywords=ELIDE, location=ELIDE):
     """
     Given a group of keywords, get the associated tweet volume for up to 7
     days.

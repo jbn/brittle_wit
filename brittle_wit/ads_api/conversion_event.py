@@ -3,21 +3,21 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def conversion_event(hashed_device_id, app_id, os_type, conversion_time,
-                     conversion_type, *, click_window=IGNORE,
-                     view_through_window=IGNORE,
-                     non_twitter_engagement_time=IGNORE,
-                     non_twitter_engagement_type=IGNORE,
-                     extra_device_ids=IGNORE, conversion_value_micro=IGNORE,
-                     limit_ad_tracking=IGNORE, registration_method=IGNORE,
-                     content_type=IGNORE, content_id=IGNORE,
-                     price_currency=IGNORE, price_micro=IGNORE, level=IGNORE,
-                     number_items=IGNORE, search_string=IGNORE,
-                     user_payment_info=IGNORE, max_rated_value=IGNORE,
-                     description=IGNORE):
+                     conversion_type, *, click_window=ELIDE,
+                     view_through_window=ELIDE,
+                     non_twitter_engagement_time=ELIDE,
+                     non_twitter_engagement_type=ELIDE,
+                     extra_device_ids=ELIDE, conversion_value_micro=ELIDE,
+                     limit_ad_tracking=ELIDE, registration_method=ELIDE,
+                     content_type=ELIDE, content_id=ELIDE,
+                     price_currency=ELIDE, price_micro=ELIDE, level=ELIDE,
+                     number_items=ELIDE, search_string=ELIDE,
+                     user_payment_info=ELIDE, max_rated_value=ELIDE,
+                     description=ELIDE):
     """
     Record a mobile measurement conversion event. The response will indicate
     Twitter or Twitter Audience Platform (TAP) attribution. Relates to

@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def ids(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE,
-        stringify_ids=IGNORE, count=IGNORE):
+def ids(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE,
+        stringify_ids=ELIDE, count=ELIDE):
     """
     Returns a cursored collection of user IDs for every user the specified user
     is following (otherwise known as their “friends”).
@@ -47,8 +47,8 @@ def ids(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE,
                           binding)
 
 
-def list(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE, count=IGNORE,
-         skip_status=IGNORE, include_user_entities=IGNORE):
+def list(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE, count=ELIDE,
+         skip_status=ELIDE, include_user_entities=ELIDE):
     """
     Returns a cursored collection of user objects for every user the specified
     user is following (otherwise known as their “friends”).

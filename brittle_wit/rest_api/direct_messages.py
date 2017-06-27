@@ -3,11 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def direct_messages(*, since_id=IGNORE, max_id=IGNORE, count=IGNORE,
-                    include_entities=IGNORE, skip_status=IGNORE):
+def direct_messages(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE,
+                    include_entities=ELIDE, skip_status=ELIDE):
     """
     Returns the 20 most recent direct messages sent to the authenticating user.
     Includes detailed information about the sender and recipient user. You can
@@ -45,7 +45,7 @@ def direct_messages(*, since_id=IGNORE, max_id=IGNORE, count=IGNORE,
                           binding)
 
 
-def events_list(*, count=IGNORE, cursor=IGNORE):
+def events_list(*, count=ELIDE, cursor=ELIDE):
     """
     Returns all Direct Message events (both sent
     """
@@ -71,8 +71,8 @@ def events_show(id):
                           binding)
 
 
-def sent(*, since_id=IGNORE, max_id=IGNORE, count=IGNORE, page=IGNORE,
-         include_entities=IGNORE):
+def sent(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE, page=ELIDE,
+         include_entities=ELIDE):
     """
     Returns the 20 most recent direct messages sent by the authenticating user.
     Includes detailed information about the sender and recipient user. You can
@@ -121,7 +121,7 @@ def show(id):
                           binding)
 
 
-def welcome_messages_list(*, count=IGNORE, cursor=IGNORE):
+def welcome_messages_list(*, count=ELIDE, cursor=ELIDE):
     """
     Returns a list of Welcome Messages.
     """
@@ -134,7 +134,7 @@ def welcome_messages_list(*, count=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def welcome_messages_rules_list(*, count=IGNORE, cursor=IGNORE):
+def welcome_messages_rules_list(*, count=ELIDE, cursor=ELIDE):
     """
     Returns a list of Welcome Message Rules.
     """
@@ -173,7 +173,7 @@ def welcome_messages_show(id):
                           binding)
 
 
-def destroy(id, *, include_entities=IGNORE):
+def destroy(id, *, include_entities=ELIDE):
     """
     Destroys the direct message specified in the required ID parameter. The
     authenticating user must be the recipient of the specified direct message.
@@ -205,7 +205,7 @@ def events_newmessage_create():
                           binding)
 
 
-def new(text, *, user_id=IGNORE, screen_name=IGNORE):
+def new(text, *, user_id=ELIDE, screen_name=ELIDE):
     """
     Sends a new direct message to the specified user from the authenticating
     user. Requires both the

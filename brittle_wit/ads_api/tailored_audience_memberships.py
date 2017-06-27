@@ -3,15 +3,15 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def tailored_audience_memberships(operation_type, params, user_identifier,
                                   user_identifier_type, *,
-                                  advertiser_account_id=IGNORE,
-                                  membership_type=IGNORE,
-                                  audience_names=IGNORE, effective_at=IGNORE,
-                                  expires_at=IGNORE):
+                                  advertiser_account_id=ELIDE,
+                                  membership_type=ELIDE,
+                                  audience_names=ELIDE, effective_at=ELIDE,
+                                  expires_at=ELIDE):
     """
     This real-time API will enable partners to upload batched tailored audience
     information to Twitter for processing in real-time.

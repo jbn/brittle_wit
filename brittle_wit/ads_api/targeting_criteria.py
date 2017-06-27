@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def app_store_categories(*, store=IGNORE, q=IGNORE):
+def app_store_categories(*, store=ELIDE, q=ELIDE):
     """
     Discover available app store category-based targeting criteria for Promoted
     Products. App store categories are available for the iOS App Store and the
@@ -27,9 +27,9 @@ def app_store_categories(*, store=IGNORE, q=IGNORE):
                           binding)
 
 
-def behavior_taxonomies(*, behavior_taxonomy_ids=IGNORE,
-                        parent_behavior_taxonomy_ids=IGNORE, count=IGNORE,
-                        cursor=IGNORE):
+def behavior_taxonomies(*, behavior_taxonomy_ids=ELIDE,
+                        parent_behavior_taxonomy_ids=ELIDE, count=ELIDE,
+                        cursor=ELIDE):
     """
     This endpoint is used to list the full (or partial) structure of behavior
     taxonomy trees.
@@ -59,8 +59,8 @@ def behavior_taxonomies(*, behavior_taxonomy_ids=IGNORE,
                           binding)
 
 
-def behaviors(*, behavior_ids=IGNORE, country_code=IGNORE, count=IGNORE,
-              cursor=IGNORE, sort_by=IGNORE):
+def behaviors(*, behavior_ids=ELIDE, country_code=ELIDE, count=ELIDE,
+              cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieves all valid behaviors defined by partner audiences that can be
     targeted by an advertiser.
@@ -94,7 +94,7 @@ def behaviors(*, behavior_ids=IGNORE, country_code=IGNORE, count=IGNORE,
                           binding)
 
 
-def devices(*, q=IGNORE):
+def devices(*, q=ELIDE):
     """
     Discover available device-based targeting criteria for Promoted Products.
     Device targeting is available for Promoted Tweets. Examples of devices
@@ -112,8 +112,8 @@ def devices(*, q=IGNORE):
                           binding)
 
 
-def events(*, ids=IGNORE, event_types=IGNORE, country_codes=IGNORE,
-           start_time=IGNORE, end_time=IGNORE, count=IGNORE, cursor=IGNORE):
+def events(*, ids=ELIDE, event_types=ELIDE, country_codes=ELIDE,
+           start_time=ELIDE, end_time=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Discover available event-based targeting criteria for Promoted Products.
     Only one event can be targeted per line item.
@@ -153,7 +153,7 @@ def events(*, ids=IGNORE, event_types=IGNORE, country_codes=IGNORE,
                           binding)
 
 
-def interests(*, q=IGNORE, lang=IGNORE, count=IGNORE, cursor=IGNORE):
+def interests(*, q=ELIDE, lang=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Discover available interest-based targeting criteria for Promoted Products.
     Interests change infrequently, however we suggest you refresh this list at
@@ -180,7 +180,7 @@ def interests(*, q=IGNORE, lang=IGNORE, count=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def languages(*, q=IGNORE, count=IGNORE, cursor=IGNORE):
+def languages(*, q=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Discover languages available for targeting.
 
@@ -202,8 +202,8 @@ def languages(*, q=IGNORE, count=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def locations(*, location_type=IGNORE, q=IGNORE, country_code=IGNORE,
-              count=IGNORE, cursor=IGNORE):
+def locations(*, location_type=ELIDE, q=ELIDE, country_code=ELIDE,
+              count=ELIDE, cursor=ELIDE):
     """
     Discover available location-based targeting criteria for Promoted Products.
     Geo-targeting is available for Promoted Accounts and Promoted Tweets at the
@@ -239,8 +239,8 @@ def locations(*, location_type=IGNORE, q=IGNORE, country_code=IGNORE,
                           binding)
 
 
-def network_operators(*, country_code=IGNORE, q=IGNORE, count=IGNORE,
-                      cursor=IGNORE):
+def network_operators(*, country_code=ELIDE, q=ELIDE, count=ELIDE,
+                      cursor=ELIDE):
     """
     Target users based on mobile carrier (AT&T, Verizon, Sprint, T-Mobile, etc)
     in multiple countries. This endpoint enables you to lookup targetable
@@ -268,7 +268,7 @@ def network_operators(*, country_code=IGNORE, q=IGNORE, count=IGNORE,
                           binding)
 
 
-def platform_versions(*, q=IGNORE):
+def platform_versions(*, q=ELIDE):
     """
     Discover available mobile-OS-version-based targeting criteria for Promoted
     Products. Platform version targeting is available for Promoted Accounts and
@@ -287,7 +287,7 @@ def platform_versions(*, q=IGNORE):
                           binding)
 
 
-def platforms(*, q=IGNORE, lang=IGNORE):
+def platforms(*, q=ELIDE, lang=ELIDE):
     """
     Discover available platform-based targeting criteria for Promoted Products.
 
@@ -320,7 +320,7 @@ def tv_markets():
                           binding)
 
 
-def tv_shows(tv_market_locale, *, q=IGNORE, count=IGNORE, cursor=IGNORE):
+def tv_shows(tv_market_locale, *, q=ELIDE, count=ELIDE, cursor=ELIDE):
     """
     Discover available TV show targeting criteria for Promoted Products. TV
     show targeting is available for Promoted Tweets in certain markets. See

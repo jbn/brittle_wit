@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def accounts(*, with_deleted=IGNORE, sort_by=IGNORE):
+def accounts(*, with_deleted=ELIDE, sort_by=ELIDE):
     """
     Retrieve all of the advertising-enabled accounts the authenticating user
     has access to.
@@ -26,7 +26,7 @@ def accounts(*, with_deleted=IGNORE, sort_by=IGNORE):
                           binding)
 
 
-def by_account_id(account_id, *, with_deleted=IGNORE):
+def by_account_id(account_id, *, with_deleted=ELIDE):
     """
     Retrieve detailed information on the specified account that the
     authenticating user has access to.
@@ -49,9 +49,9 @@ def by_account_id(account_id, *, with_deleted=IGNORE):
                           binding)
 
 
-def account_media_by_account_id(account_id, *, count=IGNORE, sort_by=IGNORE,
-                                cursor=IGNORE, with_deleted=IGNORE,
-                                account_media_ids=IGNORE):
+def account_media_by_account_id(account_id, *, count=ELIDE, sort_by=ELIDE,
+                                cursor=ELIDE, with_deleted=ELIDE,
+                                account_media_ids=ELIDE):
     """
     Retrieve account media for the specified ads account.
 
@@ -82,10 +82,10 @@ def account_media_by_account_id(account_id, *, count=IGNORE, sort_by=IGNORE,
                           binding)
 
 
-def account_media_by_id_and_account_id(id, account_id, *, count=IGNORE,
-                                       sort_by=IGNORE, cursor=IGNORE,
-                                       with_deleted=IGNORE,
-                                       account_media_ids=IGNORE):
+def account_media_by_id_and_account_id(id, account_id, *, count=ELIDE,
+                                       sort_by=ELIDE, cursor=ELIDE,
+                                       with_deleted=ELIDE,
+                                       account_media_ids=ELIDE):
     """
     Retrieves details for specified account media associated to current ads
     account.
@@ -118,7 +118,7 @@ def account_media_by_id_and_account_id(id, account_id, *, count=IGNORE,
 
 
 def app_event_provider_configurations_by_account_id(account_id, *,
-                                                    with_deleted=IGNORE):
+                                                    with_deleted=ELIDE):
     """
     Retrieve all application event provider configurations associated with the
     current account.
@@ -141,8 +141,8 @@ def app_event_provider_configurations_by_account_id(account_id, *,
                           binding)
 
 
-def app_event_tags_by_account_id(account_id, *, with_deleted=IGNORE,
-                                 sort_by=IGNORE):
+def app_event_tags_by_account_id(account_id, *, with_deleted=ELIDE,
+                                 sort_by=ELIDE):
     """
     Retrieve all application event tags associated with the current account.
 
@@ -168,8 +168,7 @@ def app_event_tags_by_account_id(account_id, *, with_deleted=IGNORE,
                           binding)
 
 
-def app_event_tags_by_id_and_account_id(id, account_id, *,
-                                        with_deleted=IGNORE):
+def app_event_tags_by_id_and_account_id(id, account_id, *, with_deleted=ELIDE):
     """
     Retrieve a specific application event tag associated with the current
     account.
@@ -296,10 +295,10 @@ def authenticated_user_access_by_account_id(account_id):
                           binding)
 
 
-def campaigns_by_account_id(account_id, *, campaign_ids=IGNORE,
-                            funding_instrument_ids=IGNORE,
-                            with_deleted=IGNORE, count=IGNORE, cursor=IGNORE,
-                            sort_by=IGNORE, draft_only=IGNORE):
+def campaigns_by_account_id(account_id, *, campaign_ids=ELIDE,
+                            funding_instrument_ids=ELIDE, with_deleted=ELIDE,
+                            count=ELIDE, cursor=ELIDE, sort_by=ELIDE,
+                            draft_only=ELIDE):
     """
     Retrieve details for some or all campaigns associated with the current
     account.
@@ -346,7 +345,7 @@ def campaigns_by_account_id(account_id, *, campaign_ids=IGNORE,
 
 
 def campaigns_by_campaign_id_and_account_id(campaign_id, account_id, *,
-                                            with_deleted=IGNORE):
+                                            with_deleted=ELIDE):
     """
     Retrieve details for a specific campaign associated with the current
     account.
@@ -373,9 +372,9 @@ def campaigns_by_campaign_id_and_account_id(campaign_id, account_id, *,
                           binding)
 
 
-def cards_app_download_by_account_id(account_id, *, card_ids=IGNORE,
-                                     with_deleted=IGNORE, count=IGNORE,
-                                     cursor=IGNORE, sort_by=IGNORE):
+def cards_app_download_by_account_id(account_id, *, card_ids=ELIDE,
+                                     with_deleted=ELIDE, count=ELIDE,
+                                     cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieve card information about app download cards for a given account.
     This card is part of our
@@ -433,9 +432,9 @@ def cards_app_download_by_card_id_and_account_id(card_id, account_id):
                           binding)
 
 
-def cards_image_app_download_by_account_id(account_id, *, card_ids=IGNORE,
-                                           with_deleted=IGNORE, count=IGNORE,
-                                           cursor=IGNORE, sort_by=IGNORE):
+def cards_image_app_download_by_account_id(account_id, *, card_ids=ELIDE,
+                                           with_deleted=ELIDE, count=ELIDE,
+                                           cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieve card information about image app download cards for a given
     account. This card is part of our
@@ -493,9 +492,9 @@ def cards_image_app_download_by_card_id_and_account_id(card_id, account_id):
                           binding)
 
 
-def cards_image_conversation_by_account_id(account_id, *, card_ids=IGNORE,
-                                           with_deleted=IGNORE, count=IGNORE,
-                                           cursor=IGNORE, sort_by=IGNORE):
+def cards_image_conversation_by_account_id(account_id, *, card_ids=ELIDE,
+                                           with_deleted=ELIDE, count=ELIDE,
+                                           cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieve information about image conversation cards for a given account.
 
@@ -551,9 +550,8 @@ def cards_image_conversation_by_card_id_and_account_id(card_id, account_id):
                           binding)
 
 
-def cards_video_app_download_by_account_id(account_id, *,
-                                           with_deleted=IGNORE, count=IGNORE,
-                                           cursor=IGNORE):
+def cards_video_app_download_by_account_id(account_id, *, with_deleted=ELIDE,
+                                           count=ELIDE, cursor=ELIDE):
     """
     Retrieve card information about all Video App Download Cards for the
     specified account. This card is part of our
@@ -606,9 +604,9 @@ def cards_video_app_download_by_id_and_account_id(id, account_id):
                           binding)
 
 
-def cards_video_conversation_by_account_id(account_id, *, card_ids=IGNORE,
-                                           with_deleted=IGNORE, count=IGNORE,
-                                           cursor=IGNORE, sort_by=IGNORE):
+def cards_video_conversation_by_account_id(account_id, *, card_ids=ELIDE,
+                                           with_deleted=ELIDE, count=ELIDE,
+                                           cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieve information about video conversation cards for a given account.
 
@@ -664,9 +662,9 @@ def cards_video_conversation_by_card_id_and_account_id(card_id, account_id):
                           binding)
 
 
-def cards_website_by_account_id(account_id, *, card_ids=IGNORE,
-                                with_deleted=IGNORE, count=IGNORE,
-                                cursor=IGNORE, sort_by=IGNORE):
+def cards_website_by_account_id(account_id, *, card_ids=ELIDE,
+                                with_deleted=ELIDE, count=ELIDE,
+                                cursor=ELIDE, sort_by=ELIDE):
     """
     Retrieve card information about website cards for a given account.
 
@@ -701,7 +699,7 @@ def cards_website_by_account_id(account_id, *, card_ids=IGNORE,
                           binding)
 
 
-def cards_website_by_card_id_and_account_id(account_id, *, card_id=IGNORE):
+def cards_website_by_card_id_and_account_id(account_id, *, card_id=ELIDE):
     """
     Retrieve card information about a given website card.
 
@@ -722,7 +720,7 @@ def cards_website_by_card_id_and_account_id(account_id, *, card_id=IGNORE):
                           binding)
 
 
-def features_by_account_id(account_id, *, feature_keys=IGNORE):
+def features_by_account_id(account_id, *, feature_keys=ELIDE):
     """
     Retrieve the collection of whitelisted features accessible by this ads
     account. Features are indicated by a descriptive feature key and are only
@@ -753,8 +751,8 @@ def features_by_account_id(account_id, *, feature_keys=IGNORE):
 
 
 def funding_instruments_by_account_id(account_id, *,
-                                      funding_instrument_ids=IGNORE,
-                                      with_deleted=IGNORE, sort_by=IGNORE):
+                                      funding_instrument_ids=ELIDE,
+                                      with_deleted=ELIDE, sort_by=ELIDE):
     """
     Retrieve some or all funding instruments associated with the account
     specified in the path.
@@ -787,7 +785,7 @@ def funding_instruments_by_account_id(account_id, *,
 
 
 def funding_instruments_by_id_and_account_id(id, account_id, *,
-                                             with_deleted=IGNORE):
+                                             with_deleted=ELIDE):
     """
     Retrieve a specific funding instrument associated with the account
     specified in the path.
@@ -814,9 +812,9 @@ def funding_instruments_by_id_and_account_id(id, account_id, *,
                           binding)
 
 
-def line_item_apps_by_account_id(account_id, *, line_item_id=IGNORE,
-                                 line_item_app_ids=IGNORE, count=IGNORE,
-                                 cursor=IGNORE, with_deleted=IGNORE):
+def line_item_apps_by_account_id(account_id, *, line_item_id=ELIDE,
+                                 line_item_app_ids=ELIDE, count=ELIDE,
+                                 cursor=ELIDE, with_deleted=ELIDE):
     """
     Retrieve line item to mobile app associations
 
@@ -855,7 +853,7 @@ def line_item_apps_by_account_id(account_id, *, line_item_id=IGNORE,
 
 def line_item_apps_by_line_item_app_id_and_account_id(line_item_app_id,
                                                       account_id, *,
-                                                      with_deleted=IGNORE):
+                                                      with_deleted=ELIDE):
     """
     Retrieve a specific line item to mobile app association.
 
@@ -883,11 +881,11 @@ def line_item_apps_by_line_item_app_id_and_account_id(line_item_app_id,
                           binding)
 
 
-def line_items_by_account_id(account_id, *, campaign_ids=IGNORE,
-                             line_item_ids=IGNORE,
-                             funding_instrument_ids=IGNORE,
-                             with_deleted=IGNORE, count=IGNORE,
-                             cursor=IGNORE, sort_by=IGNORE, draft_only=IGNORE):
+def line_items_by_account_id(account_id, *, campaign_ids=ELIDE,
+                             line_item_ids=ELIDE,
+                             funding_instrument_ids=ELIDE,
+                             with_deleted=ELIDE, count=ELIDE, cursor=ELIDE,
+                             sort_by=ELIDE, draft_only=ELIDE):
     """
     Retrieve the line items associated with a specific campaign belonging to
     the current account.
@@ -939,7 +937,7 @@ def line_items_by_account_id(account_id, *, campaign_ids=IGNORE,
 
 
 def line_items_by_line_item_id_and_account_id(line_item_id, account_id, *,
-                                              with_deleted=IGNORE):
+                                              with_deleted=ELIDE):
     """
     Retrieve a specific line item associated with a campaign belonging to the
     current account.
@@ -966,7 +964,7 @@ def line_items_by_line_item_id_and_account_id(line_item_id, account_id, *,
                           binding)
 
 
-def media_creatives_by_account_id(account_id, *, draft_only=IGNORE):
+def media_creatives_by_account_id(account_id, *, draft_only=ELIDE):
     """
     Retrieve details for all the media_creatives associated with the current
     account.
@@ -1008,8 +1006,8 @@ def media_creatives_by_id_and_account_id(id, account_id):
 
 
 def preroll_call_to_actions_by_account_id(account_id, line_item_id, *,
-                                          with_deleted=IGNORE, count=IGNORE,
-                                          cursor=IGNORE, draft_only=IGNORE):
+                                          with_deleted=ELIDE, count=ELIDE,
+                                          cursor=ELIDE, draft_only=ELIDE):
     """
     Get the Call-to-Actions (CTAs) associated with line items on this account.
 
@@ -1048,9 +1046,9 @@ def preroll_call_to_actions_by_account_id(account_id, line_item_id, *,
 def preroll_call_to_actions_preroll_call_to_action_id_by_account_id(account_id,
                                                                     line_item_id,
                                                                     *,
-                                                                    with_deleted=IGNORE,
-                                                                    count=IGNORE,
-                                                                    cursor=IGNORE):
+                                                                    with_deleted=ELIDE,
+                                                                    count=ELIDE,
+                                                                    cursor=ELIDE):
     """
     Retrieve a specific Call-to-Action (CTAs) associated with this account.
 
@@ -1083,7 +1081,7 @@ def preroll_call_to_actions_preroll_call_to_action_id_by_account_id(account_id,
                           binding)
 
 
-def promotable_users_by_account_id(account_id, *, with_deleted=IGNORE):
+def promotable_users_by_account_id(account_id, *, with_deleted=ELIDE):
     """
     Returns the collection of promotable_users associated with an account.
 
@@ -1105,10 +1103,10 @@ def promotable_users_by_account_id(account_id, *, with_deleted=IGNORE):
                           binding)
 
 
-def promoted__by_account_id(account_id, *, line_item_id=IGNORE,
-                            promoted_account_ids=IGNORE, with_deleted=IGNORE,
-                            count=IGNORE, cursor=IGNORE, sort_by=IGNORE,
-                            draft_only=IGNORE):
+def promoted__by_account_id(account_id, *, line_item_id=ELIDE,
+                            promoted_account_ids=ELIDE, with_deleted=ELIDE,
+                            count=ELIDE, cursor=ELIDE, sort_by=ELIDE,
+                            draft_only=ELIDE):
     """
     Retrieve references to the Promoted Accounts associated with one or more
     line items.
@@ -1156,10 +1154,10 @@ def promoted__by_account_id(account_id, *, line_item_id=IGNORE,
                           binding)
 
 
-def promoted_tweets_by_account_id(account_id, *, line_item_ids=IGNORE,
-                                  line_item_id=IGNORE, with_deleted=IGNORE,
-                                  count=IGNORE, cursor=IGNORE,
-                                  sort_by=IGNORE, draft_only=IGNORE):
+def promoted_tweets_by_account_id(account_id, *, line_item_ids=ELIDE,
+                                  line_item_id=ELIDE, with_deleted=ELIDE,
+                                  count=ELIDE, cursor=ELIDE, sort_by=ELIDE,
+                                  draft_only=ELIDE):
     """
     Retrieve references to the Promoted Tweets associated with one or more line
     items.
@@ -1253,11 +1251,10 @@ def recommendations_by_recommendation_id_and_account_id(recommendation_id,
                           binding)
 
 
-def scoped_timeline_by_account_id(account_id, *, user_id=IGNORE,
-                                  user_ids=IGNORE, scoped_to=IGNORE,
-                                  objective=IGNORE, trim_user=IGNORE,
-                                  count=IGNORE, cursor=IGNORE,
-                                  tweet_mode=IGNORE):
+def scoped_timeline_by_account_id(account_id, *, user_id=ELIDE,
+                                  user_ids=ELIDE, scoped_to=ELIDE,
+                                  objective=ELIDE, trim_user=ELIDE,
+                                  count=ELIDE, cursor=ELIDE, tweet_mode=ELIDE):
     """
     Retrieve up to 200 of the most recent promotable Tweets created by the
     specified Twitter user. This user may be any account for which the current
@@ -1307,8 +1304,8 @@ def scoped_timeline_by_account_id(account_id, *, user_id=IGNORE,
                           binding)
 
 
-def tailored_audience_changes_by_account_id(account_id, *, count=IGNORE,
-                                            cursor=IGNORE):
+def tailored_audience_changes_by_account_id(account_id, *, count=ELIDE,
+                                            cursor=ELIDE):
     """
     Retrieve all audience changes submitted.
 
@@ -1354,8 +1351,8 @@ def tailored_audience_changes_by_id_and_account_id(id, account_id):
                           binding)
 
 
-def tailored_audiences_by_account_id(account_id, *, count=IGNORE,
-                                     cursor=IGNORE, with_deleted=IGNORE):
+def tailored_audiences_by_account_id(account_id, *, count=ELIDE,
+                                     cursor=ELIDE, with_deleted=ELIDE):
     """
     Retrieve tailored audiences associated with a given account.
 
@@ -1385,7 +1382,7 @@ def tailored_audiences_by_account_id(account_id, *, count=IGNORE,
 
 
 def tailored_audiences_by_id_and_account_id(id, account_id, *,
-                                            with_deleted=IGNORE):
+                                            with_deleted=ELIDE):
     """
     Retrieve specific tailored audience associated with a given account.
 
@@ -1411,9 +1408,8 @@ def tailored_audiences_by_id_and_account_id(id, account_id, *,
                           binding)
 
 
-def targeting_criteria_by_account_id(account_id, line_item_id, *,
-                                     lang=IGNORE, with_deleted=IGNORE,
-                                     draft_only=IGNORE):
+def targeting_criteria_by_account_id(account_id, line_item_id, *, lang=ELIDE,
+                                     with_deleted=ELIDE, draft_only=ELIDE):
     """
     Retrieve the targeting criteria associated with line items owned by the
     current account.
@@ -1448,7 +1444,7 @@ def targeting_criteria_by_account_id(account_id, line_item_id, *,
 
 def targeting_criteria_by_id_and_account_id(id, account_id,
                                             targeting_criterion_id, *,
-                                            lang=IGNORE, with_deleted=IGNORE):
+                                            lang=ELIDE, with_deleted=ELIDE):
     """
     Retrieve detailed information on a targeting criterion associated with a
     specific line item.
@@ -1477,7 +1473,7 @@ def targeting_criteria_by_id_and_account_id(id, account_id,
 
 
 def targeting_suggestions_by_account_id(account_id, suggestion_type,
-                                        targeting_values, *, count=IGNORE):
+                                        targeting_values, *, count=ELIDE):
     """
     Get up to 50 targeting suggestion for HANDLES or KEYWORDS to complement
     your initial selection.
@@ -1509,9 +1505,9 @@ def targeting_suggestions_by_account_id(account_id, suggestion_type,
                           binding)
 
 
-def tweet_preview__by_account_id(account_id, status, *, as_user_id=IGNORE,
-                                 media_ids=IGNORE, card_id=IGNORE,
-                                 preview_target=IGNORE):
+def tweet_preview__by_account_id(account_id, status, *, as_user_id=ELIDE,
+                                 media_ids=ELIDE, card_id=ELIDE,
+                                 preview_target=ELIDE):
     """
     Preview a Tweet that does not already exist as it would appear across a
     variety of different platforms; iPhone, Android and Web. You can preview a
@@ -1560,8 +1556,8 @@ def tweet_preview__by_account_id(account_id, status, *, as_user_id=IGNORE,
 
 
 def tweet_preview_by_tweet_id_and_account_id(tweet_id, account_id, *,
-                                             as_user_id=IGNORE,
-                                             preview_target=IGNORE):
+                                             as_user_id=ELIDE,
+                                             preview_target=ELIDE):
     """
     Preview an existing Tweet as it would appear across a variety of different
     platforms; iPhone, Android and Web. You can preview a Tweet both for how it
@@ -1600,8 +1596,8 @@ def tweet_preview_by_tweet_id_and_account_id(tweet_id, account_id, *,
                           binding)
 
 
-def videos_by_account_id(account_id, *, video_ids=IGNORE,
-                         with_deleted=IGNORE, count=IGNORE, cursor=IGNORE):
+def videos_by_account_id(account_id, *, video_ids=ELIDE, with_deleted=ELIDE,
+                         count=ELIDE, cursor=ELIDE):
     """
     Retrieve all video objects associated with the current account.
 
@@ -1632,7 +1628,7 @@ def videos_by_account_id(account_id, *, video_ids=IGNORE,
                           binding)
 
 
-def videos_by_id_and_account_id(id, account_id, *, with_deleted=IGNORE):
+def videos_by_id_and_account_id(id, account_id, *, with_deleted=ELIDE):
     """
     Retrieve a specific video object belonging to the current account.
 
@@ -1657,8 +1653,8 @@ def videos_by_id_and_account_id(id, account_id, *, with_deleted=IGNORE):
                           binding)
 
 
-def web_event_tags_by_account_id(account_id, *, with_deleted=IGNORE,
-                                 count=IGNORE, cursor=IGNORE):
+def web_event_tags_by_account_id(account_id, *, with_deleted=ELIDE,
+                                 count=ELIDE, cursor=ELIDE):
     """
     Retrieve all web event tags associated with the current account.
 
@@ -1689,8 +1685,7 @@ def web_event_tags_by_account_id(account_id, *, with_deleted=IGNORE,
                           binding)
 
 
-def web_event_tags_by_id_and_account_id(id, account_id, *,
-                                        with_deleted=IGNORE):
+def web_event_tags_by_id_and_account_id(id, account_id, *, with_deleted=ELIDE):
     """
     Retrieve a specific web event tag associated with the current account.
 
@@ -1718,25 +1713,24 @@ def web_event_tags_by_id_and_account_id(id, account_id, *,
 def reach_estimate_by_account_id(account_id, product_type, objective,
                                  bid_amount_local_micro, currency,
                                  campaign_daily_budget_amount_local_micro, *,
-                                 bid_type=IGNORE, followers_of_users=IGNORE,
-                                 similar_to_followers_of_users=IGNORE,
-                                 locations=IGNORE, interests=IGNORE,
-                                 gender=IGNORE, platforms=IGNORE,
-                                 tailored_audiences=IGNORE,
-                                 tailored_audiences_expanded=IGNORE,
-                                 languages=IGNORE, platform_versions=IGNORE,
-                                 devices=IGNORE, behaviors=IGNORE,
-                                 behaviors_expanded=IGNORE,
-                                 campaign_engagement=IGNORE,
-                                 user_engagement=IGNORE,
-                                 engagement_type=IGNORE,
-                                 network_operators=IGNORE,
-                                 app_store_categories=IGNORE,
-                                 app_store_categories_expanded=IGNORE,
-                                 exact_keywords=IGNORE,
-                                 broad_keywords=IGNORE,
-                                 phrase_keywords=IGNORE, age_buckets=IGNORE,
-                                 wifi_only=IGNORE):
+                                 bid_type=ELIDE, followers_of_users=ELIDE,
+                                 similar_to_followers_of_users=ELIDE,
+                                 locations=ELIDE, interests=ELIDE,
+                                 gender=ELIDE, platforms=ELIDE,
+                                 tailored_audiences=ELIDE,
+                                 tailored_audiences_expanded=ELIDE,
+                                 languages=ELIDE, platform_versions=ELIDE,
+                                 devices=ELIDE, behaviors=ELIDE,
+                                 behaviors_expanded=ELIDE,
+                                 campaign_engagement=ELIDE,
+                                 user_engagement=ELIDE,
+                                 engagement_type=ELIDE,
+                                 network_operators=ELIDE,
+                                 app_store_categories=ELIDE,
+                                 app_store_categories_expanded=ELIDE,
+                                 exact_keywords=ELIDE, broad_keywords=ELIDE,
+                                 phrase_keywords=ELIDE, age_buckets=ELIDE,
+                                 wifi_only=ELIDE):
     """
     Determine the approximate reach of your campaigns.
 
@@ -1872,8 +1866,8 @@ def reach_estimate_by_account_id(account_id, product_type, objective,
 
 
 def tailored_audiences_by_account_id(account_id, with_deleted, *,
-                                     permission_scope=IGNORE, count=IGNORE,
-                                     cursor=IGNORE):
+                                     permission_scope=ELIDE, count=ELIDE,
+                                     cursor=ELIDE):
     """
     Retrieve tailored audiences associated with a given account.
 
@@ -1909,7 +1903,7 @@ def tailored_audiences_by_account_id(account_id, with_deleted, *,
 
 
 def tailored_audiences_by_id_and_account_id(id, account_id, *,
-                                            with_deleted=IGNORE):
+                                            with_deleted=ELIDE):
     """
     Retrieve specific tailored audience associated with a given account.
 
@@ -1935,10 +1929,10 @@ def tailored_audiences_by_id_and_account_id(id, account_id, *,
 
 
 def tailored_audiences_permissions_by_id_and_account_id(id, account_id, *,
-                                                        granted_account_ids=IGNORE,
-                                                        count=IGNORE,
-                                                        cursor=IGNORE,
-                                                        with_deleted=IGNORE):
+                                                        granted_account_ids=ELIDE,
+                                                        count=ELIDE,
+                                                        cursor=ELIDE,
+                                                        with_deleted=ELIDE):
     """
     Displays all current permissions objects associated with a given tailored
     audience.
@@ -2034,10 +2028,10 @@ def app_event_provider_configurations_by_account_id(account_id,
 def app_event_tags_by_account_id(account_id, app_store_identifier, os_type,
                                  conversion_type, provider_app_event_id,
                                  provider_app_event_name, *,
-                                 post_engagement_attribution_window=IGNORE,
-                                 post_view_attribution_window=IGNORE,
-                                 deep_link_scheme=IGNORE,
-                                 retargeting_enabled=IGNORE):
+                                 post_engagement_attribution_window=ELIDE,
+                                 post_view_attribution_window=ELIDE,
+                                 deep_link_scheme=ELIDE,
+                                 retargeting_enabled=ELIDE):
     """
     Create a new application event tag associated with the current account.
 
@@ -2122,10 +2116,10 @@ def app_lists_by_account_id(account_id, name, app_store_identifiers):
 
 def campaigns_by_account_id(account_id, name, funding_instrument_id,
                             start_time, daily_budget_amount_local_micro, *,
-                            end_time=IGNORE, paused=IGNORE,
-                            standard_delivery=IGNORE, frequency_cap=IGNORE,
-                            duration_in_days=IGNORE,
-                            total_budget_amount_local_micro=IGNORE):
+                            end_time=ELIDE, paused=ELIDE,
+                            standard_delivery=ELIDE, frequency_cap=ELIDE,
+                            duration_in_days=ELIDE,
+                            total_budget_amount_local_micro=ELIDE):
     """
     Create a new campaign associated with the current account.
 
@@ -2191,14 +2185,13 @@ def campaigns_by_account_id(account_id, name, funding_instrument_id,
 
 
 def cards_app_download_by_account_id(account_id, name, app_country_code, *,
-                                     iphone_app_id=IGNORE,
-                                     ipad_app_id=IGNORE,
-                                     googleplay_app_id=IGNORE,
-                                     app_cta=IGNORE, iphone_deep_link=IGNORE,
-                                     ipad_deep_link=IGNORE,
-                                     googleplay_deep_link=IGNORE,
-                                     custom_icon_media_id=IGNORE,
-                                     custom_app_description=IGNORE):
+                                     iphone_app_id=ELIDE, ipad_app_id=ELIDE,
+                                     googleplay_app_id=ELIDE, app_cta=ELIDE,
+                                     iphone_deep_link=ELIDE,
+                                     ipad_deep_link=ELIDE,
+                                     googleplay_deep_link=ELIDE,
+                                     custom_icon_media_id=ELIDE,
+                                     custom_app_description=ELIDE):
     """
     Creates a new app download card associated to a given account. This card is
     part of our
@@ -2265,13 +2258,13 @@ def cards_app_download_by_account_id(account_id, name, app_country_code, *,
 def cards_image_app_download_by_account_id(account_id, name,
                                            app_country_code,
                                            wide_app_image_media_id, *,
-                                           iphone_app_id=IGNORE,
-                                           ipad_app_id=IGNORE,
-                                           googleplay_app_id=IGNORE,
-                                           app_cta=IGNORE,
-                                           iphone_deep_link=IGNORE,
-                                           ipad_deep_link=IGNORE,
-                                           googleplay_deep_link=IGNORE):
+                                           iphone_app_id=ELIDE,
+                                           ipad_app_id=ELIDE,
+                                           googleplay_app_id=ELIDE,
+                                           app_cta=ELIDE,
+                                           iphone_deep_link=ELIDE,
+                                           ipad_deep_link=ELIDE,
+                                           googleplay_deep_link=ELIDE):
     """
     Creates a new image app download card associated to a given account. This
     card is part of our
@@ -2333,14 +2326,14 @@ def cards_image_app_download_by_account_id(account_id, name,
 def cards_image_conversation_by_account_id(account_id, name, title,
                                            first_cta, first_cta_tweet,
                                            thank_you_text, image_media_id, *,
-                                           second_cta=IGNORE,
-                                           second_cta_tweet=IGNORE,
-                                           third_cta=IGNORE,
-                                           third_cta_tweet=IGNORE,
-                                           fourth_cta=IGNORE,
-                                           fourth_cta_tweet=IGNORE,
-                                           thank_you_url=IGNORE,
-                                           cover_image_id=IGNORE):
+                                           second_cta=ELIDE,
+                                           second_cta_tweet=ELIDE,
+                                           third_cta=ELIDE,
+                                           third_cta_tweet=ELIDE,
+                                           fourth_cta=ELIDE,
+                                           fourth_cta_tweet=ELIDE,
+                                           thank_you_url=ELIDE,
+                                           cover_image_id=ELIDE):
     """
     Creates a new image conversation card associated to a given account.
 
@@ -2412,14 +2405,14 @@ def cards_image_conversation_by_account_id(account_id, name, title,
 
 def cards_video_app_download_by_account_id(account_id, name,
                                            app_country_code, video_id, *,
-                                           iphone_app_id=IGNORE,
-                                           ipad_app_id=IGNORE,
-                                           googleplay_app_id=IGNORE,
-                                           app_cta=IGNORE,
-                                           iphone_deep_link=IGNORE,
-                                           ipad_deep_link=IGNORE,
-                                           googleplay_deep_link=IGNORE,
-                                           image_media_id=IGNORE):
+                                           iphone_app_id=ELIDE,
+                                           ipad_app_id=ELIDE,
+                                           googleplay_app_id=ELIDE,
+                                           app_cta=ELIDE,
+                                           iphone_deep_link=ELIDE,
+                                           ipad_deep_link=ELIDE,
+                                           googleplay_deep_link=ELIDE,
+                                           image_media_id=ELIDE):
     """
     Creates a new Video App Download Card associated to the specified account.
     This card is part of our
@@ -2482,14 +2475,14 @@ def cards_video_app_download_by_account_id(account_id, name,
 def cards_video_conversation_by_account_id(account_id, name, title,
                                            first_cta, first_cta_tweet,
                                            thank_you_text, image_media_id,
-                                           video_id, *, second_cta=IGNORE,
-                                           second_cta_tweet=IGNORE,
-                                           third_cta=IGNORE,
-                                           third_cta_tweet=IGNORE,
-                                           fourth_cta=IGNORE,
-                                           fourth_cta_tweet=IGNORE,
-                                           thank_you_url=IGNORE,
-                                           cover_video_id=IGNORE):
+                                           video_id, *, second_cta=ELIDE,
+                                           second_cta_tweet=ELIDE,
+                                           third_cta=ELIDE,
+                                           third_cta_tweet=ELIDE,
+                                           fourth_cta=ELIDE,
+                                           fourth_cta_tweet=ELIDE,
+                                           thank_you_url=ELIDE,
+                                           cover_video_id=ELIDE):
     """
     Creates a new video conversation card associated to a given account.
 
@@ -2634,18 +2627,16 @@ def line_item_apps_by_account_id(account_id, line_item_id,
 
 def line_items_by_account_id(account_id, campaign_id, product_type,
                              placements, objective, *,
-                             bid_amount_local_micro=IGNORE, name=IGNORE,
-                             bid_type=IGNORE,
-                             automatically_select_bid=IGNORE, paused=IGNORE,
-                             include_sentiment=IGNORE,
-                             total_budget_amount_local_micro=IGNORE,
-                             start_time=IGNORE, end_time=IGNORE,
-                             primary_web_event_tag=IGNORE,
-                             optimization=IGNORE, bid_unit=IGNORE,
-                             charge_by=IGNORE, advertiser_domain=IGNORE,
-                             categories=IGNORE, tracking_tags=IGNORE,
-                             advertiser_user_id=IGNORE,
-                             target_cpa_local_micro=IGNORE):
+                             bid_amount_local_micro=ELIDE, name=ELIDE,
+                             bid_type=ELIDE, automatically_select_bid=ELIDE,
+                             paused=ELIDE, include_sentiment=ELIDE,
+                             total_budget_amount_local_micro=ELIDE,
+                             start_time=ELIDE, end_time=ELIDE,
+                             primary_web_event_tag=ELIDE, optimization=ELIDE,
+                             bid_unit=ELIDE, charge_by=ELIDE,
+                             advertiser_domain=ELIDE, categories=ELIDE,
+                             tracking_tags=ELIDE, advertiser_user_id=ELIDE,
+                             target_cpa_local_micro=ELIDE):
     """
     Create a line item associated with the specified campaign belonging to the
     current account.
@@ -2778,7 +2769,7 @@ def line_items_by_account_id(account_id, campaign_id, product_type,
 
 
 def media_creatives_by_account_id(account_id, line_item_id, account_media_id,
-                                  *, landing_url=IGNORE):
+                                  *, landing_url=ELIDE):
     """
     Creates a new media creative associated to the current account.
 
@@ -2951,8 +2942,8 @@ def tailored_audiences_by_account_id(account_id, name, list_type):
 
 def targeting_criteria_by_account_id(account_id, line_item_id,
                                      targeting_type, targeting_value, *,
-                                     tailored_audience_expansion=IGNORE,
-                                     tailored_audience_type=IGNORE):
+                                     tailored_audience_expansion=ELIDE,
+                                     tailored_audience_type=ELIDE):
     """
     Use the following endpoints to locate the correct
 
@@ -3005,11 +2996,11 @@ def targeting_criteria_by_account_id(account_id, line_item_id,
                           binding)
 
 
-def tweet_by_account_id(account_id, status, *, as_user_id=IGNORE,
-                        trim_user=IGNORE, media_ids=IGNORE, video_id=IGNORE,
-                        video_title=IGNORE, video_description=IGNORE,
-                        video_cta=IGNORE, video_cta_value=IGNORE,
-                        tweet_mode=IGNORE):
+def tweet_by_account_id(account_id, status, *, as_user_id=ELIDE,
+                        trim_user=ELIDE, media_ids=ELIDE, video_id=ELIDE,
+                        video_title=ELIDE, video_description=ELIDE,
+                        video_cta=ELIDE, video_cta_value=ELIDE,
+                        tweet_mode=ELIDE):
     """
     Create “Promoted-Only” Tweets. The Tweets posted via this endpoint can be
     used in Promoted Tweets campaigns but will not appear on the public
@@ -3068,8 +3059,8 @@ def tweet_by_account_id(account_id, status, *, as_user_id=IGNORE,
 
 
 def videos_by_account_id(account_id, video_media_id, *,
-                         poster_image_media_id=IGNORE, title=IGNORE,
-                         description=IGNORE):
+                         poster_image_media_id=ELIDE, title=ELIDE,
+                         description=ELIDE):
     """
     Associate a video with the current account.
 
@@ -3188,9 +3179,9 @@ def features__by_account_id(account_id, type):
 
 
 def funding_instruments_by_account_id(account_id, type, currency, start_time,
-                                      *, funded_amount_local_micro=IGNORE,
-                                      credit_limit_local_micro=IGNORE,
-                                      end_time=IGNORE):
+                                      *, funded_amount_local_micro=ELIDE,
+                                      credit_limit_local_micro=ELIDE,
+                                      end_time=ELIDE):
     """
 
 

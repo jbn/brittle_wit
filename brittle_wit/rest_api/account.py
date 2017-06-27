@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def settings():
@@ -20,8 +20,8 @@ def settings():
                           binding)
 
 
-def verify_credentials(*, include_entities=IGNORE, skip_status=IGNORE,
-                       include_email=IGNORE):
+def verify_credentials(*, include_entities=ELIDE, skip_status=ELIDE,
+                       include_email=ELIDE):
     """
     Returns an HTTP 200 OK response code and a representation of the requesting
     user if authentication was successful; returns a 401 status code and an
@@ -63,9 +63,9 @@ def remove_profile_banner():
                           binding)
 
 
-def settings(*, sleep_time_enabled=IGNORE, start_sleep_time=IGNORE,
-             end_sleep_time=IGNORE, time_zone=IGNORE,
-             trend_location_woeid=IGNORE, lang=IGNORE):
+def settings(*, sleep_time_enabled=ELIDE, start_sleep_time=ELIDE,
+             end_sleep_time=ELIDE, time_zone=ELIDE,
+             trend_location_woeid=ELIDE, lang=ELIDE):
     """
     Updates the authenticating user’s settings.
 
@@ -108,9 +108,9 @@ def settings(*, sleep_time_enabled=IGNORE, start_sleep_time=IGNORE,
                           binding)
 
 
-def update_profile(*, name=IGNORE, url=IGNORE, location=IGNORE,
-                   description=IGNORE, profile_link_color=IGNORE,
-                   include_entities=IGNORE, skip_status=IGNORE):
+def update_profile(*, name=ELIDE, url=ELIDE, location=ELIDE,
+                   description=ELIDE, profile_link_color=ELIDE,
+                   include_entities=ELIDE, skip_status=ELIDE):
     """
     Sets some values that users are able to set under the “Account” tab of
     their settings page. Only the parameters specified will be updated.
@@ -152,9 +152,9 @@ def update_profile(*, name=IGNORE, url=IGNORE, location=IGNORE,
                           binding)
 
 
-def update_profile_background_image(*, image=IGNORE, tile=IGNORE,
-                                    include_entities=IGNORE,
-                                    skip_status=IGNORE, media_id=IGNORE):
+def update_profile_background_image(*, image=ELIDE, tile=ELIDE,
+                                    include_entities=ELIDE,
+                                    skip_status=ELIDE, media_id=ELIDE):
     """
     Updates the authenticating user’s profile background image. This method can
     also be used to enable or disable the profile background image.
@@ -188,8 +188,8 @@ def update_profile_background_image(*, image=IGNORE, tile=IGNORE,
                           binding)
 
 
-def update_profile_banner(banner, *, width=IGNORE, height=IGNORE,
-                          offset_left=IGNORE, offset_top=IGNORE):
+def update_profile_banner(banner, *, width=ELIDE, height=ELIDE,
+                          offset_left=ELIDE, offset_top=ELIDE):
     """
     Uploads a profile banner on behalf of the authenticating user. More
     information about sizing variations can be found in
@@ -223,8 +223,7 @@ def update_profile_banner(banner, *, width=IGNORE, height=IGNORE,
                           binding)
 
 
-def update_profile_image(image, *, include_entities=IGNORE,
-                         skip_status=IGNORE):
+def update_profile_image(image, *, include_entities=ELIDE, skip_status=ELIDE):
     """
     Updates the authenticating user’s profile image. Note that this method
     expects raw multipart data, not a URL to an image.

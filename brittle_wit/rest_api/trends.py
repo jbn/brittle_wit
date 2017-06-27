@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
 def available():
@@ -43,7 +43,7 @@ def closest(lat, long):
                           binding)
 
 
-def place(id, *, exclude=IGNORE):
+def place(id, *, exclude=ELIDE):
     """
     Returns the top 50 trending topics for a specific
 

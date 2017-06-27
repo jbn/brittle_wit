@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def iab_categories(*, count=IGNORE, cursor=IGNORE):
+def iab_categories(*, count=ELIDE, cursor=ELIDE):
     """
     Request the valid app
 

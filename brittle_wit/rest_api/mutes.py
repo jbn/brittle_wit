@@ -3,10 +3,10 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, IGNORE
+from brittle_wit import TwitterRequest, ELIDE
 
 
-def users_ids(*, stringify_ids=IGNORE, cursor=IGNORE):
+def users_ids(*, stringify_ids=ELIDE, cursor=ELIDE):
     """
     Returns an array of numeric user ids the authenticating user has muted.
 
@@ -31,7 +31,7 @@ def users_ids(*, stringify_ids=IGNORE, cursor=IGNORE):
                           binding)
 
 
-def users_list(*, cursor=IGNORE, include_entities=IGNORE, skip_status=IGNORE):
+def users_list(*, cursor=ELIDE, include_entities=ELIDE, skip_status=ELIDE):
     """
     Returns an array of
 
@@ -59,7 +59,7 @@ def users_list(*, cursor=IGNORE, include_entities=IGNORE, skip_status=IGNORE):
                           binding)
 
 
-def users_create(*, screen_name=IGNORE, user_id=IGNORE):
+def users_create(*, screen_name=ELIDE, user_id=ELIDE):
     """
     Mutes the user specified in the ID parameter for the authenticating user.
 
@@ -78,7 +78,7 @@ def users_create(*, screen_name=IGNORE, user_id=IGNORE):
                           binding)
 
 
-def users_destroy(*, screen_name=IGNORE, user_id=IGNORE):
+def users_destroy(*, screen_name=ELIDE, user_id=ELIDE):
     """
     Un-mutes the user specified in the ID parameter for the authenticating
     user.
