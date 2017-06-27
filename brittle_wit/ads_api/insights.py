@@ -3,106 +3,99 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest
+from brittle_wit import TwitterRequest, IGNORE
 
 
-def accounts_account_id(account_id, audience_type, audience_valuesometimes, interaction_typesometimes):
+def accounts_account_id(account_id, audience_type, audience_valuesometimes,
+                        interaction_typesometimes):
     """
     Retrieve insights for specific account.
-    
+
     :param account_id: The identifier for the leveraged account. Appears within
-        the resource's path and is generally a required parameter for all
+        the resource’s path and is generally a required parameter for all
         Advertising API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. (True)
-    
-    
-    :param audience_type: Example Values : ALL_ON_TWITTER (True)
-    
-    :param audience_valuesometimes: The identifier (ID) of the available audien
-        ce set requested. Availability depends on the audience_type. Required
-        for ORGANIC. (True)
-    
-    
-    :param interaction_typesometimes: The type of interaction captured for the 
+        must be associated with the authenticating user.
+
+    :param audience_type: Example Values : ALL_ON_TWITTER
+
+    :param audience_valuesometimes: The identifier (ID) of the available
+        audience set requested. Availability depends on the audience_type.
+        Required for ORGANIC.
+
+    :param interaction_typesometimes: The type of interaction captured for the
         available audience set requested. Required for ORGANIC. See Ads
-        Enumerations for possible values. (True)
+        Enumerations for possible values.
     """
-    url = "https://ads-api.twitter.com/1/insights/accounts/:account_id"
+    binding = {'account_id': account_id, 'audience_type': audience_type,
+               'audience_valuesometimes': audience_valuesometimes,
+               'interaction_typesometimes': interaction_typesometimes}
+    url = 'https://ads-api.twitter.com/1/insights/accounts/:account_id'
     return TwitterRequest('GET',
                           url,
-                          'ADS:INSIGHTS',
-                          'GET-INSIGHTS-ACCOUNTS-ACCOUNT-ID',
-                          account_id=account_id
-                          audience_type=audience_type
-                          audience_valuesometimes=audience_valuesometimes
-                          interaction_typesometimes=interaction_typesometimes)
+                          'ads:insights',
+                          'get-insights-accounts-account-id',
+                          binding)
 
 
 def accounts_available_audiences_by_account_id(account_id):
     """
     Retrieve available audiences for this account.
-    
+
     :param account_id: The identifier for the leveraged account. Appears within
-        the resource's path and is generally a required parameter for all
+        the resource’s path and is generally a required parameter for all
         Advertising API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. (True)
+        must be associated with the authenticating user.
     """
-    url = "https://ads-api.twitter.com/1/insights/accounts/{account_id}/available_audiences"
-    url = url.format(account_id=account_id)
+    binding = {'account_id': account_id}
+    url = 'https://ads-api.twitter.com/1/insights/accounts/{account_id}/available_audiences'
+    url = url.format(**binding)
     return TwitterRequest('GET',
                           url,
-                          'ADS:INSIGHTS',
-                          'GET-INSIGHTS-ACCOUNTS-ACCOUNT-ID-AVAILABLE-AUDIENCES',
-                          account_id=account_id)
+                          'ads:insights',
+                          'get-insights-accounts-account-id-available-audiences',
+                          binding)
 
 
-def keywords_search(granularity, start_time, *, end_time=IGNORE, keywords=IGNORE, negative_keywords=IGNORE, location=IGNORE):
+def keywords_search(granularity, start_time, *, end_time=IGNORE,
+                    keywords=IGNORE, negative_keywords=IGNORE,
+                    location=IGNORE):
     """
     Given a group of keywords, get the associated tweet volume for up to 7
     days.
-    
-    :param granularity: Specifies the granularity of the data returned for the 
+
+    :param granularity: Specifies the granularity of the data returned for the
         time range denoted by start_time and end_time. For instance, when set
         to HOUR, you will be presented with a datapoint for each hour between
-        start_time and end_time. Possible values include: DAY, HOUR. (True)
-    
-    
-    :param start_time: Scopes the retrieved data to data collected in the windo
-        w of time between start_time and end_time. Expressed in ISO 8601.
-        (True)
-    
-    
-    :param end_time: Scopes the retrieved data to data collected in the window 
+        start_time and end_time. Possible values include: DAY, HOUR.
+
+    :param start_time: Scopes the retrieved data to data collected in the
+        window of time between start_time and end_time. Expressed in ISO 8601.
+
+    :param end_time: Scopes the retrieved data to data collected in the window
         of time between start_time and end_time. If not set, this defaults to
-        the time of the request. Expressed in ISO 8601. (False)
-    
-    
-    :param keywords: A comma-separated string of keywords to narrow search by. 
-        All keywords are OR'ed with one another. A maximum of 10 keywords and
-        negative_keywords (combined) may be used. (False)
-    
-    
-    :param negative_keywords: A comma-separated string of keywords to exclude (
-        black list). All negative keywords are OR'ed with one another. A
+        the time of the request. Expressed in ISO 8601.
+
+    :param keywords: A comma-separated string of keywords to narrow search by.
+        All keywords are OR’ed with one another. A maximum of 10 keywords and
+        negative_keywords (combined) may be used.
+
+    :param negative_keywords: A comma-separated string of keywords to exclude
+        (black list). All negative keywords are OR’ed with one another. A
         maximum of 10 keywords and negative_keywords (combined) may be used.
-        (False)
-    
-    
-    :param location: A targeting value you would get from the GET targeting_cri
-        teria/locations endpoint to narrow results in terms of where the user
-        of the account is located. Note that at present only country level
-        locations are supported. (False)
+
+    :param location: A targeting value you would get from the GET
+        targeting_criteria/locations endpoint to narrow results in terms of
+        where the user of the account is located. Note that at present only
+        country level locations are supported.
     """
-    url = "https://ads-api.twitter.com/1/insights/keywords/search"
+    binding = {'granularity': granularity, 'start_time': start_time,
+               'end_time': end_time, 'keywords': keywords,
+               'negative_keywords': negative_keywords, 'location': location}
+    url = 'https://ads-api.twitter.com/1/insights/keywords/search'
     return TwitterRequest('GET',
                           url,
-                          'ADS:INSIGHTS',
-                          'GET-INSIGHTS-KEYWORDS-SEARCH',
-                          granularity=granularity
-                          start_time=start_time
-                          end_time=end_time
-                          keywords=keywords
-                          negative_keywords=negative_keywords
-                          location=location)
+                          'ads:insights',
+                          'get-insights-keywords-search',
+                          binding)
 
 

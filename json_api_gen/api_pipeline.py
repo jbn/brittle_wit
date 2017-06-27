@@ -57,6 +57,11 @@ def extract_and_verify_basic_info(src, dst):
             raise
 
 
+def fix_bad_url(_, dst):
+    if "Resource URL¶" in dst['url']:
+        dst['url'] = dst['url'].replace("Resource URL¶", "").strip()
+
+
 RESOURCE_INFO_RENAMES = {'response_formats': 'resp_format',
                          'requires_authentication': 'authentication_required'}
 

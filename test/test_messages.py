@@ -61,8 +61,8 @@ class TestTwitterRequest(unittest.TestCase):
 
     def test_twitter_request(self):
         req = TwitterRequest("GET", "http://twitter.com/faux/service",
-                             "faux", "faux/service", parse_as="json",
-                             timeout=1000)
+                             "faux", "faux/service", {'timeout': 1000},
+                             parse_as="json")
         req.parse_as = "raw"
         self.assertEqual(req.parse_as, "raw")
         self.assertEqual(str(req),

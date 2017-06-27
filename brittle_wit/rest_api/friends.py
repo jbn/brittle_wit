@@ -3,20 +3,20 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest
+from brittle_wit import TwitterRequest, IGNORE
 
 
-def ids(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE, stringify_ids=IGNORE, count=IGNORE):
+def ids(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE,
+        stringify_ids=IGNORE, count=IGNORE):
     """
     Returns a cursored collection of user IDs for every user the specified user
     is following (otherwise known as their “friends”).
-    
-    :param user_id: The ID of the user for whom to return results for. (False)
-    
-    :param screen_name: The screen name of the user for whom to return results 
-        for. (False)
-    
-    
+
+    :param user_id: The ID of the user for whom to return results for.
+
+    :param screen_name: The screen name of the user for whom to return results
+        for.
+
     :param cursor: Causes the list of connections to be broken into pages of no
         more than 5000 IDs at a time. The number of IDs returned is not
         guaranteed to be 5000 as suspended users are filtered out after
@@ -24,73 +24,62 @@ def ids(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE, stringify_ids=IGNO
         be assumed, which is the first “page.” The response from the API will
         include a previous_cursor and next_cursor to allow paging back and
         forth. See Using cursors to navigate collections for more information.
-        (False)
-    
-    
-    :param stringify_ids: Many programming environments will not consume our Tw
-        eet ids due to their size. Provide this option to have ids returned as
-        strings instead. More about Twitter IDs. (False)
-    
-    
-    :param count: Specifies the number of IDs attempt retrieval of, up to a max
-        imum of 5,000 per distinct request. The value of count is best thought
-        of as a limit to the number of results to return. When using the count
-        parameter with this method, it is wise to use a consistent count value
-        across all requests to the same user's collection. Usage of this
-        parameter is encouraged in environments where all 5,000 IDs constitutes
-        too large of a response. (False)
+
+    :param stringify_ids: Many programming environments will not consume our
+        Tweet ids due to their size. Provide this option to have ids returned
+        as strings instead. More about Twitter IDs.
+
+    :param count: Specifies the number of IDs attempt retrieval of, up to a
+        maximum of 5,000 per distinct request. The value of count is best
+        thought of as a limit to the number of results to return. When using
+        the count parameter with this method, it is wise to use a consistent
+        count value across all requests to the same user’s collection. Usage of
+        this parameter is encouraged in environments where all 5,000 IDs
+        constitutes too large of a response.
     """
-    url = "https://api.twitter.com/1.1/friends/ids.json"
+    binding = {'user_id': user_id, 'screen_name': screen_name, 'cursor':
+               cursor, 'stringify_ids': stringify_ids, 'count': count}
+    url = 'https://api.twitter.com/1.1/friends/ids.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:FRIENDS',
-                          'GET-FRIENDS-IDS',
-                          user_id=user_id
-                          screen_name=screen_name
-                          cursor=cursor
-                          stringify_ids=stringify_ids
-                          count=count)
+                          'rest:friends',
+                          'get-friends-ids',
+                          binding)
 
 
-def list(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE, count=IGNORE, skip_status=IGNORE, include_user_entities=IGNORE):
+def list(*, user_id=IGNORE, screen_name=IGNORE, cursor=IGNORE, count=IGNORE,
+         skip_status=IGNORE, include_user_entities=IGNORE):
     """
     Returns a cursored collection of user objects for every user the specified
     user is following (otherwise known as their “friends”).
-    
-    :param user_id: The ID of the user for whom to return results. (False)
-    
+
+    :param user_id: The ID of the user for whom to return results.
+
     :param screen_name: The screen name of the user for whom to return results.
-        (False)
-    
-    
-    :param cursor: Causes the results to be broken into pages. If no cursor is 
+
+    :param cursor: Causes the results to be broken into pages. If no cursor is
         provided, a value of -1 will be assumed, which is the first “page.” The
         response from the API will include a previous_cursor and next_cursor to
         allow paging back and forth. See [node:10362, title=”Using cursors to
-        navigate collections”] for more information. (False)
-    
-    
-    :param count: The number of users to return per page, up to a maximum of 20
-        0. Defaults to 20. (False)
-    
-    
-    :param skip_status: When set to either true, t or 1 statuses will not be in
-        cluded in the returned user objects. (False)
-    
-    
-    :param include_user_entities: The user object entities node will not be inc
-        luded when set to false. (False)
+        navigate collections”] for more information.
+
+    :param count: The number of users to return per page, up to a maximum of
+        200. Defaults to 20.
+
+    :param skip_status: When set to either true, t or 1 statuses will not be
+        included in the returned user objects.
+
+    :param include_user_entities: The user object entities node will not be
+        included when set to false.
     """
-    url = "https://api.twitter.com/1.1/friends/list.json"
+    binding = {'user_id': user_id, 'screen_name': screen_name, 'cursor':
+               cursor, 'count': count, 'skip_status': skip_status,
+               'include_user_entities': include_user_entities}
+    url = 'https://api.twitter.com/1.1/friends/list.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:FRIENDS',
-                          'GET-FRIENDS-LIST',
-                          user_id=user_id
-                          screen_name=screen_name
-                          cursor=cursor
-                          count=count
-                          skip_status=skip_status
-                          include_user_entities=include_user_entities)
+                          'rest:friends',
+                          'get-friends-list',
+                          binding)
 
 

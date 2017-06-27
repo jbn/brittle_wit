@@ -32,6 +32,6 @@ if __name__ == '__main__':
             definitions[dst['group']].append(dst)
 
     if not os.environ.get('DEBUG'):
-        for group, defns in definitions.items():
+        for group, api_defs in definitions.items():
             with open(os.path.join(CLEAN_DIR, group + "_api.json"), "w") as fp:
-                json.dump(defns, fp, indent=4)
+                json.dump(api_defs, fp, indent=4)

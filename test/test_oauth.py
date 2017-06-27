@@ -85,8 +85,7 @@ class TestOAuth(unittest.TestCase):
                              "https://api.twitter.com/1/statuses/update.json",
                              'statuses',
                              'statuses/update',
-                             include_entities='true',
-                             status=status)
+                             dict(include_entities='true', status=status))
         expected = load_fixture_expectation("header_string.txt")
 
         overrides = {k: oauth_params[k]

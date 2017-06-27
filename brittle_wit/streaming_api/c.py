@@ -3,19 +3,20 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest
+from brittle_wit import TwitterRequest, IGNORE
 
 
 def info_by_stream_id(stream_id):
     """
     Retrieves information about the established stream represented by the
     """
-    url = "https://sitestream.twitter.com/2b/site/c/01_225167_334389048B872A533002B34D73F8C29FD09EFC50/info.json"
-    url = url.format(stream_id=stream_id)
+    binding = {'stream_id': stream_id}
+    url = 'https://sitestream.twitter.com/2b/site/c/01_225167_334389048B872A533002B34D73F8C29FD09EFC50/info.json'
+    url = url.format(**binding)
     return TwitterRequest('GET',
                           url,
-                          'STREAMING:C',
-                          'GET-C-STREAM-ID-INFO',
-                          stream_id=stream_id)
+                          'streaming:c',
+                          'get-c-stream-id-info',
+                          binding)
 
 

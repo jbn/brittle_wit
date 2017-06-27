@@ -12,6 +12,18 @@ RETRYABLE_CODES = {500,  # INTERNAL SERVER ERROR
 RETRYABLE_EXCEPTIONS = {ClientOSError, asyncio.TimeoutError}
 
 
+class _IGNORE:
+
+    def __repr__(self):
+        return 'IGNORE'
+
+    def __str__(self):
+        return 'IGNORE'
+
+
+IGNORE = _IGNORE()
+
+
 class TwitterRequest:
     """
     A (mostly) immutable twitter request
@@ -26,13 +38,16 @@ class TwitterRequest:
                  '_service', '_parse_as', '_params')
 
     def __init__(self, method, url, family, service,
-                 *, parse_as='json', **params):
+                 params=None, *, parse_as='json'):
         self._method = method
         self._url = url
         self._family = family
         self._service = service.upper()
         self._parse_as = parse_as
-        self._params = params
+        if params:
+            self._params = {k: v for k, v in params.items() if v is not IGNORE}
+        else:
+            self._params = {}
 
     @property
     def method(self):
@@ -68,8 +83,8 @@ class TwitterRequest:
     def clone_and_merge(self, updated_params):
         return TwitterRequest(self._method, self._url, self._family,
                               self._service,
-                              parse_as=self._parse_as,
-                              **{**self._params, **updated_params})
+                              {**self._params, **updated_params},
+                              parse_as=self._parse_as)
 
 
 class Cursor:

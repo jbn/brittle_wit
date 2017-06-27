@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest
+from brittle_wit import TwitterRequest, IGNORE
 
 
 def configuration():
@@ -12,11 +12,13 @@ def configuration():
     slugs which are not usernames, maximum photo resolutions, and t.co
     shortened URL length.
     """
-    url = "https://api.twitter.com/1.1/help/configuration.json"
+    binding = {}
+    url = 'https://api.twitter.com/1.1/help/configuration.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:HELP',
-                          'GET-HELP-CONFIGURATION')
+                          'rest:help',
+                          'get-help-configuration',
+                          binding)
 
 
 def languages():
@@ -24,32 +26,38 @@ def languages():
     Returns the list of languages supported by Twitter along with the language
     code supported by Twitter.
     """
-    url = "https://api.twitter.com/1.1/help/languages.json"
+    binding = {}
+    url = 'https://api.twitter.com/1.1/help/languages.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:HELP',
-                          'GET-HELP-LANGUAGES')
+                          'rest:help',
+                          'get-help-languages',
+                          binding)
 
 
 def privacy():
     """
     Returns
     """
-    url = "https://api.twitter.com/1.1/help/privacy.json"
+    binding = {}
+    url = 'https://api.twitter.com/1.1/help/privacy.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:HELP',
-                          'GET-HELP-PRIVACY')
+                          'rest:help',
+                          'get-help-privacy',
+                          binding)
 
 
 def tos():
     """
     Returns the
     """
-    url = "https://api.twitter.com/1.1/help/tos.json"
+    binding = {}
+    url = 'https://api.twitter.com/1.1/help/tos.json'
     return TwitterRequest('GET',
                           url,
-                          'REST:HELP',
-                          'GET-HELP-TOS')
+                          'rest:help',
+                          'get-help-tos',
+                          binding)
 
 

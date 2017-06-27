@@ -2,12 +2,59 @@ import os
 import shutil
 import unittest
 from test.helpers import FIXTURES_DIR
-from brittle_wit.api_tools import (generate_modules,
-                                   _generate_signature_str,
-                                   _generate_func_name)
+from brittle_wit.api_code_gen import (generate_modules,
+                                      pep8_join,
+                                      _generate_param_tokens,
+                                      generate_source,
+                                      _param_name_translations,
+                                      _generate_def_line,
+                                      _generate_func_name)
 
 
-class TestAPITools(unittest.TestCase):
+class TestAPICodeGen(unittest.TestCase):
+
+    def test_pep8_join(self):
+        with open(os.path.join(FIXTURES_DIR, "pep8_join.txt")) as fp:
+            expected = fp.read().rstrip()
+        sent = "this is a sequence of words some are reallyreallyreallylong"
+        tokens = sent.split(" ") * 3
+        res = pep8_join(tokens, ", ", init_indent='--', next_indent='::')
+        self.assertEqual(res, expected)
+
+    DEF_LINE_1 = """
+def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
+                                                count=IGNORE, sort_by=IGNORE,
+                                                cursor=IGNORE,
+                                                with_deleted=IGNORE,
+                                                account_media_ids=IGNORE):
+""".strip()
+
+    def test_generate_def_line(self):
+        example_api_def = {'family': 'ads:accounts',
+                           'group': 'ads',
+                           'method': 'FAKE',
+                           'params': [{'name': 'count', 'required': False},
+                                      {'name': 'account_id', 'required': True},
+                                      {'name': 'sort_by', 'required': False},
+                                      {'name': 'cursor', 'required': False},
+                                      {'name': 'with_deleted',
+                                          'required': False},
+                                      {'name': 'account_media_ids',
+                                          'required': False},
+                                      {'name': 'id', 'required': True}],
+                           'path': 'accounts/:account_id/account_media/:id',
+                           'slugs': ['account_id', 'id'],
+                           'service':
+                                'get-accounts-account-id-account-media-id'}
+        renamings = {'account_id': 'account_id_'}
+        res = _generate_def_line(example_api_def, True, **renamings)
+        self.assertEqual(res, TestAPICodeGen.DEF_LINE_1)
+
+
+    def test_param_name_translations(self):
+        example = ["with", "array[]", "for", "simple"]
+        expected = dict(zip(example, ["with_", "array", "for_", "simple"]))
+        self.assertEqual(_param_name_translations(example), expected)
 
     def test_generate_modules(self):
         tmp_dir = os.path.join(FIXTURES_DIR, "skel")
@@ -17,7 +64,7 @@ class TestAPITools(unittest.TestCase):
         definitions = {'public': [{'family': 'x:dog'}, {'family': 'y:cat'}],
                        'private': [{'family': 'y:octopus'}]}
 
-        generate_modules(tmp_dir, definitions, lambda defn: '')
+        generate_modules(tmp_dir, definitions, lambda api_def: '')
 
         expected_paths = [('public_api', '__init__.py'),
                           ('public_api', 'dog.py'),
@@ -36,9 +83,9 @@ class TestAPITools(unittest.TestCase):
                               {'name': 'c', 'required': False},
                               {'name': 'd', 'required': True}],
                    'slugs': ['d']}
-
-        self.assertEquals(_generate_signature_str(example),
-                          "d, a, *, b=IGNORE, c=IGNORE")
+        expected = [("d", None), ("a", None), ("*", None),
+                    ("b", "IGNORE"), ("c", "IGNORE")]
+        self.assertEquals(_generate_param_tokens(example), expected)
 
 
 class TestsGenerateFuncName(unittest.TestCase):
