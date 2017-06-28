@@ -2,12 +2,16 @@ import os
 import shutil
 import unittest
 from test.helpers import FIXTURES_DIR
-from brittle_wit.api_code_gen import (generate_modules,
-                                      pep8_join,
+from brittle_wit.api_code_gen import (pep8_join,
                                       _generate_param_tokens,
                                       generate_source,
                                       _param_name_translations,
+                                      _generate_param_doc,
+                                      _generate_doc_str,
                                       _generate_def_line,
+                                      _generate_binding,
+                                      _generate_url_block,
+                                      generate_modules,
                                       _generate_func_name)
 
 
@@ -20,6 +24,11 @@ class TestAPICodeGen(unittest.TestCase):
         tokens = sent.split(" ") * 3
         res = pep8_join(tokens, ", ", init_indent='--', next_indent='::')
         self.assertEqual(res, expected)
+
+    def test_param_name_translations(self):
+        example = ["with", "array[]", "for", "simple"]
+        expected = dict(zip(example, ["with_", "array", "for_", "simple"]))
+        self.assertEqual(_param_name_translations(example), expected)
 
     DEF_LINE_1 = """
 def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
@@ -50,11 +59,77 @@ def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
         res = _generate_def_line(example_api_def, True, **renamings)
         self.assertEqual(res, TestAPICodeGen.DEF_LINE_1)
 
+        example_api_def = {'family': 'ads:accounts',
+                           'group': 'ads',
+                           'method': 'FAKE',
+                           'params': [],
+                           'path': 'accounts/list_all',
+                           'slugs': [],
+                           'service':
+                                'get-accounts-account-id-account-media-id'}
+        res = _generate_def_line(example_api_def)
+        self.assertEqual(res, "def list_all():")
 
-    def test_param_name_translations(self):
-        example = ["with", "array[]", "for", "simple"]
-        expected = dict(zip(example, ["with_", "array", "for_", "simple"]))
-        self.assertEqual(_param_name_translations(example), expected)
+    def test_generate_param_doc(self):
+        example_def = {'description': ("This is a description line." +
+                                       " It should wrap correctly so it is " +
+                                       " PEP8 compliant."),
+                       'type': 'An Integer'}
+        expected = ("    :param id: This is a description line. It should " +
+                    "wrap correctly so it is\n" +
+                    "        PEP8 compliant. (An Integer)")
+        self.assertEqual(_generate_param_doc(example_def, 'id'), expected)
+        self.assertEqual(_generate_param_doc({}, 'id'), None)
+
+    def test_generate_doc_str(self):
+        example_api_def = {'family': 'ads:accounts',
+                           'group': 'ads',
+                           'desc': "An Example",
+                           'method': 'FAKE',
+                           'params': [{'name': 'count', 'desc': 'A word'},
+                                      {'name': 'account_id', 'desc': 'A word'},
+                                      {'name': 'sort_by', 'desc': 'A word'},
+                                      {'name': 'cursor', 'desc': 'A word'},
+                                      {'name': 'with_deleted',
+                                          'desc': 'A word'},
+                                      {'name': 'account_media_ids',
+                                          'desc': 'A word'},
+                                      {'name': 'id', 'desc': 'A word'}],
+                           'path': 'accounts/:account_id/account_media/:id',
+                           'slugs': ['account_id', 'id'],
+                           'service':
+                                'get-accounts-account-id-account-media-id'}
+        renamings = {'account_id': 'account_id_'}
+        with open(os.path.join(FIXTURES_DIR, "doc_str.txt")) as fp:
+            expected = fp.read()
+
+        res = _generate_doc_str(example_api_def, **renamings)
+        self.assertEqual(res, expected)
+
+    def test_generate_binding(self):
+        names = ["with", "array[]", "for", "simple"]
+        renamings = _param_name_translations(names)
+        self.assertEqual(_generate_binding({'params': {}}), "    binding = {}")
+
+        api_def = {'params': [{'name': "with"},
+                              {'name': "array[]"},
+                              {'name': "for"},
+                              {'name': "simple"}]}
+
+        expected = ("    binding = {'with': with_, 'array[]': array, " +
+                    "'for': for_, 'simple': simple}")
+        self.assertEqual(_generate_binding(api_def, **renamings),
+                         expected)
+
+    def test_generate_url_block(self):
+        expected = "    url = 'http://google.com/{id}'"
+        res = _generate_url_block({'url': "http://google.com/{id}",
+                                   'slugs': []})
+        self.assertEqual(res, expected)
+
+        res = _generate_url_block({'url': "http://google.com/{id}",
+                                   'slugs': ['id']})
+        self.assertEqual(res, expected + "\n    url = url.format(**binding)")
 
     def test_generate_modules(self):
         tmp_dir = os.path.join(FIXTURES_DIR, "skel")

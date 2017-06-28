@@ -67,6 +67,15 @@ def _generate_def_line(api_def, method_name_in_fname=False, **renamings):
 
 
 def _generate_param_doc(param_def, name):
+    """
+    Generate the parameter part of a doc string
+
+    The name is taken as an argument because some names like
+    ``with`` are reserved words.
+
+    :param param_def: the parameter dict from the api json.
+    :param name: the parameter's name
+    """
     desc, kind = param_def.get('description'), param_def.get('type')
 
     # There is no additional documentation for this argument, so
@@ -74,10 +83,7 @@ def _generate_param_doc(param_def, name):
     if not desc and not kind:
         return None
 
-    desc = desc or ""
-
-    if kind:
-        desc += " ({})".format(kind)
+    desc = (desc or "") + (" ({})".format(kind) if kind else "")
 
     doc_str = ":param {}: {}".format(name, desc)
 
