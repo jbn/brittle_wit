@@ -1,7 +1,7 @@
 import os
 import shutil
 import unittest
-from test.helpers import FIXTURES_DIR, load_fixture_txt
+from test.helpers import FIXTURES_DIR, load_fixture_txt, load_fixture_json
 from brittle_wit.api_code_gen import (pep8_join,
                                       _generate_param_tokens,
                                       generate_source,
@@ -161,7 +161,11 @@ def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
         self.assertEquals(_generate_param_tokens(example), expected)
 
     def test_generate_source(self):
-        pass
+        example = load_fixture_json("get_block_ids.json")
+        src = generate_source(example)
+        with open(os.path.join(FIXTURES_DIR, "get_block_ids.src"), "w") as fp:
+            fp.write(src)
+        self.assertEqual(src, load_fixture_txt("get_block_ids.src"))
 
 
 class TestsGenerateFuncName(unittest.TestCase):

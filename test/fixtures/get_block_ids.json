@@ -1,0 +1,36 @@
+{
+    "service": "get-blocks-ids",
+    "rate_limited": true,
+    "example_response": "{\n  \"ids\": [\n    \"123\"\n  ],\n  \"next_cursor\": 0,\n  \"next_cursor_str\": \"0\",\n  \"previous_cursor\": 0,\n  \"previous_cursor_str\": \"0\"\n}\n\n",
+    "example_request": "GET https://api.twitter.com/1.1/blocks/ids.json?stringify_ids=true&cursor=-1",
+    "reference_url": "https://dev.twitter.com/rest/reference/get/blocks/ids",
+    "authentication_required": true,
+    "resp_format": [
+        "JSON"
+    ],
+    "method": "GET",
+    "url": "https://api.twitter.com/1.1/blocks/ids.json",
+    "slugs": [],
+    "path": "blocks/ids",
+    "desc": "Returns an array of numeric user ids the authenticating user is blocking.",
+    "family": "rest:blocks",
+    "params": [
+        {
+            "required": "optional",
+            "example": "true",
+            "description": "Many programming environments will not consume our ids due to their size. Provide this option to have ids returned as strings instead. Read more about Twitter IDs.",
+            "name": "stringify_ids"
+        },
+        {
+            "required": "semi-optional",
+            "example": "12893764510938",
+            "description": "Causes the list of IDs to be broken into pages of no more than 5000 IDs at a time. The number of IDs returned is not guaranteed to be 5000 as suspended users are filtered out after connections are queried. If no cursor is provided, a value of -1 will be assumed, which is the first \u201cpage.\u201d The response from the API will include a previous_cursor and next_cursor to allow paging back and forth. See Using cursors to navigate collections for more information.",
+            "name": "cursor"
+        }
+    ],
+    "requests_15_min_window_user_auth": "15",
+    "group": "rest",
+    "limits": {
+        "user": 15
+    }
+}
