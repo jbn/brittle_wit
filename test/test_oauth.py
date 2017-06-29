@@ -1,7 +1,7 @@
 import json
 import unittest
 from functools import lru_cache
-
+from test.helpers import load_fixture_txt, load_fixture_json
 from brittle_wit import *
 from brittle_wit import TwitterRequest
 from brittle_wit.oauth import (_generate_nonce,
@@ -23,6 +23,7 @@ class TestOAuth(unittest.TestCase):
 
     See: https://dev.twitter.com/oauth/overview
     """
+
     def test_quote(self):
         self.assertEqual(_quote(1), "1")
         self.assertEqual(_quote(1.0), "1.0")
@@ -97,6 +98,7 @@ class TestOAuth(unittest.TestCase):
 
 
 class TestAppCredentials(unittest.TestCase):
+
     def test_app_credentials(self):
         app_1 = AppCredentials("app_1", "secret")
         self.assertEqual(app_1, AppCredentials("app_1", "secret"))
@@ -113,6 +115,7 @@ class TestAppCredentials(unittest.TestCase):
 
 
 class TestClientCredentials(unittest.TestCase):
+
     def test_client_credentials(self):
         client_1 = ClientCredentials(1, "token_1", "secret")
         self.assertEqual(client_1, ClientCredentials(1, "token_1", "secret"))
@@ -140,26 +143,19 @@ class TestClientCredentials(unittest.TestCase):
         self.assertEqual(client_1.token, client_2.token)
 
 
-FIXTURES_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                            "fixtures")
-
 @lru_cache()
 def _load_oauth_params():
-    with open(os.path.join(FIXTURES_DIR, "oauth_params.json")) as fp:
-        return json.load(fp)
+    return load_fixture_json("oauth_params.json")
 
 
 @lru_cache()
 def _load_request_params():
-    with open(os.path.join(FIXTURES_DIR, "request_params.json")) as fp:
-        return json.load(fp)
+    return load_fixture_json("request_params.json")
 
 
 @lru_cache()
 def load_fixture_expectation(file_name):
-    print(file_name)
-    with open(os.path.join(FIXTURES_DIR, file_name)) as fp:
-        return fp.read()
+    return load_fixture_txt(file_name)
 
 
 if __name__ == '__main__':

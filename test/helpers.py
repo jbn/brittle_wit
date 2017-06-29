@@ -1,4 +1,5 @@
 import asyncio
+import json
 import os
 from collections import namedtuple
 from functools import wraps
@@ -6,6 +7,17 @@ from functools import wraps
 
 SELF_DIR = os.path.dirname(os.path.realpath(__file__))
 FIXTURES_DIR = os.path.join(SELF_DIR, "fixtures")
+
+
+def load_fixture_txt(file_name):
+    with open(os.path.join(FIXTURES_DIR, file_name)) as fp:
+        return fp.read()
+
+
+def load_fixture_json(file_name):
+    with open(os.path.join(FIXTURES_DIR, file_name)) as fp:
+        return json.load(fp)
+
 
 MockResp = namedtuple("MockResp", "headers")
 

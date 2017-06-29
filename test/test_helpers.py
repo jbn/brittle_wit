@@ -1,7 +1,7 @@
 import os
 import unittest
 import brittle_wit as bw
-from test.helpers import FIXTURES_DIR
+from test.helpers import load_fixture_txt
 from brittle_wit.helpers import *
 from brittle_wit.ipython_helpers import twitter_request_html_repr
 
@@ -22,12 +22,10 @@ class TestHelpers(unittest.TestCase):
         self.assertEqual(" ".join(messages), "hello. it's me.")
 
 
-# class TestIPythonHelpers(unittest.TestCase):
+class TestIPythonHelpers(unittest.TestCase):
 
-#     def test_twitter_request_html_repr(self):
-#         with open(os.path.join(FIXTURES_DIR, "ipython_html.html")) as fp:
-#             expected = fp.read()
-
-#         req = bw.rest_api.direct_messages.new("hello world")
-#         self.assertEqual(twitter_request_html_repr(req).strip(),
-#                          expected.strip())
+    def test_twitter_request_html_repr(self):
+        expected = load_fixture_txt("ipython_html.html")
+        req = bw.rest_api.direct_messages.new("hello world")
+        self.assertEqual(twitter_request_html_repr(req).strip(),
+                         expected.strip())

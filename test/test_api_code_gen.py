@@ -1,7 +1,7 @@
 import os
 import shutil
 import unittest
-from test.helpers import FIXTURES_DIR
+from test.helpers import FIXTURES_DIR, load_fixture_txt
 from brittle_wit.api_code_gen import (pep8_join,
                                       _generate_param_tokens,
                                       generate_source,
@@ -18,8 +18,7 @@ from brittle_wit.api_code_gen import (pep8_join,
 class TestAPICodeGen(unittest.TestCase):
 
     def test_pep8_join(self):
-        with open(os.path.join(FIXTURES_DIR, "pep8_join.txt")) as fp:
-            expected = fp.read().rstrip()
+        expected = load_fixture_txt("pep8_join.txt").rstrip()
         sent = "this is a sequence of words some are reallyreallyreallylong"
         tokens = sent.split(" ") * 3
         res = pep8_join(tokens, ", ", init_indent='--', next_indent='::')
@@ -100,8 +99,7 @@ def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
                            'service':
                                 'get-accounts-account-id-account-media-id'}
         renamings = {'account_id': 'account_id_'}
-        with open(os.path.join(FIXTURES_DIR, "doc_str.txt")) as fp:
-            expected = fp.read()
+        expected = load_fixture_txt("doc_str.txt")
 
         res = _generate_doc_str(example_api_def, **renamings)
         self.assertEqual(res, expected)
@@ -161,6 +159,9 @@ def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
         expected = [("d", None), ("a", None), ("*", None),
                     ("b", "ELIDE"), ("c", "ELIDE")]
         self.assertEquals(_generate_param_tokens(example), expected)
+
+    def test_generate_source(self):
+        pass
 
 
 class TestsGenerateFuncName(unittest.TestCase):
