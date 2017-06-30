@@ -272,7 +272,6 @@ class TestsGenerateFuncName(unittest.TestCase):
         with self.assertRaises(ValueError):
             _generate_func_name(example)
 
-
     def test_bad_name(self):
         example = {'family': 'ads:stats',
                    'method': 'GET',

@@ -11,6 +11,7 @@ SELF_DIR = os.path.dirname(os.path.realpath(__file__))
 RAW_DIR = os.path.join(SELF_DIR, "data", "raw")
 CLEAN_DIR = os.path.join(SELF_DIR, "data", "clean")
 INPUT_PATH = os.path.join(RAW_DIR, "raw_html.jsonl")
+OUTPUT_PATH = os.path.join(CLEAN_DIR, "api.json")
 
 
 if __name__ == '__main__':
@@ -21,7 +22,7 @@ if __name__ == '__main__':
     import api_pipeline
     pipeline = ModulePipeline(api_pipeline)
 
-    # These reset so you can do `%run -i extract_definitions.py`
+    # These reset so you can do `%run -i extract_definitions.py` in a notebook
     vaq.reset()
     pipeline.reload()
 
@@ -32,6 +33,5 @@ if __name__ == '__main__':
             definitions[dst['group']].append(dst)
 
     if not os.environ.get('DEBUG'):
-        for group, api_defs in definitions.items():
-            with open(os.path.join(CLEAN_DIR, group + "_api.json"), "w") as fp:
-                json.dump(api_defs, fp, indent=4)
+        with open(OUTPUT_PATH, "w") as fp:
+            json.dump(definitions, fp, indent=4)
