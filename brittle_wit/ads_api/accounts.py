@@ -1865,69 +1865,6 @@ def reach_estimate_by_account_id(account_id, product_type, objective,
                           binding)
 
 
-def tailored_audiences_by_account_id(account_id, with_deleted, *,
-                                     permission_scope=ELIDE, count=ELIDE,
-                                     cursor=ELIDE):
-    """
-    Retrieve tailored audiences associated with a given account.
-
-    :param account_id: The identifier for the leveraged account. Appears within
-        the resource’s path and is generally a required parameter for all
-        Advertiser API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. Type: string Example:
-        18ce54d4x5t
-
-    :param permission_scope: Allows filtering the response to lists you own or
-        lists that have been shared with you. By default, without specifying
-        this parameter you will only see audiences you own. Type: enum Default:
-        OWNER Possible values: OWNER, SHARED
-
-    :param count: Specifies the number of records to try and retrieve per
-        distinct request. Type: int Default: 200 Min, Max: 1, 1000
-
-    :param cursor: Specifies a cursor to get the next page of results. See
-        pagination for more information. Type: string Example: gc-ddf4a
-
-    :param with_deleted: Include deleted results in your request. Type: enum
-        Default: false Possible values: true, false
-    """
-    binding = {'account_id': account_id, 'permission_scope': permission_scope,
-               'count': count, 'cursor': cursor, 'with_deleted': with_deleted}
-    url = 'https://ads-api.twitter.com/1/accounts/{account_id}/tailored_audiences'
-    url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'ads:accounts',
-                          'get-1-accounts-account-id-tailored-audiences',
-                          binding)
-
-
-def tailored_audiences_by_id_and_account_id(id, account_id, *,
-                                            with_deleted=ELIDE):
-    """
-    Retrieve specific tailored audience associated with a given account.
-
-    :param account_id: The identifier for the leveraged account. Appears within
-        the resource’s path and is generally a required parameter for all
-        Advertising API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. Note that this
-        parameter is part of the resources path and should not be included as
-        an additional parameter in your request.
-
-    :param with_deleted: Include deleted results in your request. Defaults to
-        false.
-    """
-    binding = {'account_id': account_id, 'id': id, 'with_deleted':
-               with_deleted}
-    url = 'https://ads-api.twitter.com/1/accounts/{account_id}/tailored_audiences/{id}'
-    url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'ads:accounts',
-                          'get-accounts-account-id-tailored-audiences-id',
-                          binding)
-
-
 def tailored_audiences_permissions_by_id_and_account_id(id, account_id, *,
                                                         granted_account_ids=ELIDE,
                                                         count=ELIDE,
@@ -3227,32 +3164,6 @@ def funding_instruments_by_account_id(account_id, type, currency, start_time,
                           binding)
 
 
-def tailored_audiences_by_account_id(account_id, name, list_type):
-    """
-    Create a new tailored audience to which many files can be uploaded.
-
-    :param account_id: The identifier for the leveraged account. Appears within
-        the resource’s path and is generally a required parameter for all
-        Advertising API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. Note that this
-        parameter is part of the resources path and should not be included as
-        an additional parameter in your request.
-
-    :param name: The display name for this audience.
-
-    :param list_type: The type of list for this audience. Possible values
-        include EMAIL, DEVICE_ID, TWITTER_ID, HANDLE, PHONE_NUMBER.
-    """
-    binding = {'account_id': account_id, 'name': name, 'list_type': list_type}
-    url = 'https://ads-api.twitter.com/1/accounts/{account_id}/tailored_audiences'
-    url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'ads:accounts',
-                          'post-1-accounts-account-id-tailored-audiences',
-                          binding)
-
-
 def tailored_audiences_permissions_by_id_and_account_id(id, account_id,
                                                         granted_account_id,
                                                         permission_level):
@@ -3782,29 +3693,6 @@ def funding_instruments_by_id_and_account_id(id, account_id,
                           url,
                           'ads:accounts',
                           'delete-1-accounts-account-id-funding-instruments-id',
-                          binding)
-
-
-def tailored_audiences_by_id_and_account_id(id, account_id):
-    """
-    Delete a tailored audience from an account.
-
-    :param account_id: The identifier for the leveraged account. Appears within
-        the resource’s path and is generally a required parameter for all
-        Advertising API requests excluding GET accounts. The specified account
-        must be associated with the authenticating user. Note that this
-        parameter is part of the resources path and should not be included as
-        an additional parameter in your request.
-
-    :param id: The identifier for the tailored audience.
-    """
-    binding = {'account_id': account_id, 'id': id}
-    url = 'https://ads-api.twitter.com/1/accounts/{account_id}/tailored_audiences/{id}'
-    url = url.format(**binding)
-    return TwitterRequest('DELETE',
-                          url,
-                          'ads:accounts',
-                          'delete-1-accounts-account-id-tailored-audiences-id',
                           binding)
 
 

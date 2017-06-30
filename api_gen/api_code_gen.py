@@ -337,3 +337,57 @@ def _generate_func_name(api_def, append_http_method=False):
     assert f_name, f_name
 
     return f_name
+
+
+def _aggregate_defns(definitions):
+    # parent -> child -> definition
+    agg = defaultdict(lambda: defaultdict(list))
+
+    # parent -> child -> name -> definition
+    names = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
+
+    # Aggregate names and definition collections.
+    for parent_module, api_defs in definitions.items():
+        parent_module = parent_module + "_api"
+        for api_def in api_defs:
+            sub_module = api_def['family'].split(":")[1]
+            agg[parent_module][sub_module].append(api_def)
+
+            name = _generate_func_name(api_def)
+            names[parent_module][sub_module][name].append(api_def)
+
+    return agg, names
+
+
+def _annotate_nonunique_names(definitions):
+    agg, names = _aggregate_defns(definitions)
+
+    for parent_module, sub_module in names.items():
+        for sub_module_name, functions in sub_module.items():
+            for func_name, api_defs in functions.items():
+                if len(api_defs) == 1:
+                    continue  # Ready for source code generation
+
+                methods = {d['method'] for d in api_defs}
+
+                if len(methods) == len(api_defs):  # 1-to-1
+                    if 'GET' in methods:
+                        methods.remove('GET')
+
+                    if len(methods) > 1 and 'DELETE' in methods:
+                        methods.remove('DELETE')
+
+                    assert len(methods) == 1
+
+                    for api_def in api_defs:
+                        if api_def['method'] not in methods:
+                            api_def['_annotate_with_method'] = True
+                else:
+                    print(func_name, len(api_defs),
+                          methods,
+                          len(api_defs))
+                    for api_def in api_defs:
+                        print(api_def['reference_url'])
+                    assert False, "UNKNOWN CONDITION"
+
+    return agg
