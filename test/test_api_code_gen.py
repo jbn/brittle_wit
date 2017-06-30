@@ -2,17 +2,17 @@ import os
 import shutil
 import unittest
 from test.helpers import FIXTURES_DIR, load_fixture_txt, load_fixture_json
-from brittle_wit.api_code_gen import (pep8_join,
-                                      _generate_param_tokens,
-                                      generate_source,
-                                      _param_name_translations,
-                                      _generate_param_doc,
-                                      _generate_doc_str,
-                                      _generate_def_line,
-                                      _generate_binding,
-                                      _generate_url_block,
-                                      generate_modules,
-                                      _generate_func_name)
+from api_gen.api_code_gen import (pep8_join,
+                                  _generate_param_tokens,
+                                  generate_source,
+                                  _param_name_translations,
+                                  _generate_param_doc,
+                                  _generate_doc_str,
+                                  _generate_def_line,
+                                  _generate_binding,
+                                  _generate_url_block,
+                                  generate_modules,
+                                  _generate_func_name)
 
 
 class TestAPICodeGen(unittest.TestCase):
