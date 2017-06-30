@@ -84,6 +84,7 @@ class TestTwitterRequest(unittest.TestCase):
                              {'timeout': 1000, 'name': ELIDE})
         self.assertIn('timeout', req.params)
         self.assertNotIn('name', req.params)
+        self.assertEqual(req.family, "faux")
 
     def test_twitter_request(self):
         req = TwitterRequest("GET", "http://twitter.com/faux/service",

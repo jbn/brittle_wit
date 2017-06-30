@@ -259,3 +259,28 @@ class TestsGenerateFuncName(unittest.TestCase):
                          "jobs_accounts_by_job_id_and_account_id")
         self.assertEqual(_generate_func_name(example, True),
                          "jobs_accounts_by_job_id_and_account_id_via_delete")
+
+    def test_too_long(self):
+        example = {'family': 'ads:stats',
+                   'method': 'DELETE',
+                   'params': [{'name': 'account_id', 'required': True},
+                              {'name': 'another', 'required': True},
+                              {'name': 'job_id', 'required': True}],
+                   'path': '1/stats/jobs/accounts/:account_id/:job_id/:another',
+                   'slugs': ['account_id', 'job_id', 'another']}
+
+        with self.assertRaises(ValueError):
+            _generate_func_name(example)
+
+
+    def test_bad_name(self):
+        example = {'family': 'ads:stats',
+                   'method': 'GET',
+                   'params': {},
+                   'path': 'stats',
+                   'slugs': []}
+
+        self.assertEqual(_generate_func_name(example), 'stats')
+
+        example['path'] = "stats/arr[]"
+        self.assertEqual(_generate_func_name(example), 'arr')
