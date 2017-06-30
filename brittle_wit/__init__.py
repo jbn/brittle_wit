@@ -10,14 +10,11 @@ __email__ = "jbn@abreka.com"
 
 import os
 
-from brittle_wit.constants import LOGGER, FIFTEEN_MINUTES
-from brittle_wit.messages import (TwitterRequest, Cursor, TwitterResponse,
-                                  BrittleWitError, ELIDE)
+from brittle_wit.messages import Cursor, BrittleWitError, ELIDE
 from brittle_wit.oauth import (AppCredentials, ClientCredentials,
                                ANY_CREDENTIALS)
 from brittle_wit.executors import (ClientRequestProcessor,
                                    ManagedClientRequestProcessors)
-from brittle_wit.helpers import parse_date
 from brittle_wit.streaming import (TwitterStream,
                                    StreamProcessor,
                                    StreamingHTTPPipe)

@@ -3,7 +3,7 @@ import unittest
 from functools import lru_cache
 from test.helpers import load_fixture_txt, load_fixture_json
 from brittle_wit import *
-from brittle_wit import TwitterRequest
+from brittle_wit.messages import TwitterRequest
 from brittle_wit.oauth import (_generate_nonce,
                                _generate_timestamp,
                                _generate_header_string,

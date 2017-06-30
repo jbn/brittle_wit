@@ -2,7 +2,7 @@ RAW_HTML=api_gen/data/raw/raw_html.jsonl
 JSON_API=api_gen/data/clean/api.json
 API_SRC=brittle_wit/rest_api/friends.py
 
-$(API_SRC): api_gen/generate_src.py $(JSON_API)
+$(API_SRC): api_gen/generate_src.py api_gen/api_code_gen.py $(JSON_API)
 	PYTHON_PATH=api_gen ./api_gen/generate_src.py
 
 $(JSON_API): api_gen/api_pipeline.py api_gen/generate_json_api.py $(RAW_HTML)

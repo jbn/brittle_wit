@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, ELIDE
+from brittle_wit.messages import TwitterRequest, ELIDE
 
 
 def conversion_event(hashed_device_id, app_id, os_type, conversion_time,

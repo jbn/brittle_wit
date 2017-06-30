@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, ELIDE
+from brittle_wit.messages import TwitterRequest, ELIDE
 
 
 def accounts_campaigns_by_account_id(account_id):

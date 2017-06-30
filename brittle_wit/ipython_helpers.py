@@ -3,7 +3,7 @@ Import this module to monkey patch twitter requests for display in an
 IPython/Jupyter notebook.
 """
 from collections import OrderedDict
-from brittle_wit import TwitterRequest
+from brittle_wit.messages import TwitterRequest
 
 
 def _make_table(d, header_labels=None, sort=False):

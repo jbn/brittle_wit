@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, ELIDE
+from brittle_wit.messages import TwitterRequest, ELIDE
 
 
 def list(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, since_id=ELIDE,

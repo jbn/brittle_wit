@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import MagicMock
 
-from brittle_wit import TwitterRequest
+from brittle_wit.messages import TwitterRequest
 from brittle_wit.executors import *
 from brittle_wit.messages import TwitterError
 from brittle_wit.oauth import AppCredentials, ClientCredentials

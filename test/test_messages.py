@@ -3,10 +3,9 @@ from unittest.mock import MagicMock
 
 import aiohttp
 
-from brittle_wit import (TwitterRequest, Cursor, TwitterResponse,
-                         BrittleWitError)
 from brittle_wit.messages import (TwitterError, WrappedException,
-                                  ELIDE, wrap_if_nessessary)
+                                  TwitterResponse, Cursor, BrittleWitError,
+                                  ELIDE, wrap_if_nessessary, TwitterRequest)
 from brittle_wit.oauth import ClientCredentials
 
 

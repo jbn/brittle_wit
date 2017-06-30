@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit import TwitterRequest, ELIDE
+from brittle_wit.messages import TwitterRequest, ELIDE
 
 
 def tailored_audience_memberships(operation_type, params, user_identifier,
