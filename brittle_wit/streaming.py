@@ -1,6 +1,7 @@
 import asyncio
 import json
 import aiohttp
+import bz2
 
 from aiohttp import web
 
@@ -439,3 +440,12 @@ async def save_raw_stream(session, app_cred, client_cred, twitter_req,
                         fp.write(chunk)
         except asyncio.TimeoutError:
             pass
+
+
+class FeedSerializer:
+
+    def __init__(self, output_file):
+        self._output_stream = bz2.open(output_file, 'a')
+
+    def send(self, message):
+        self._output_stream.write(json.dumps(message).encode() + b"\n")
