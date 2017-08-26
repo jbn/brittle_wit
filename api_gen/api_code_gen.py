@@ -213,7 +213,7 @@ def generate_modules(base_dir, definitions, func_gen=generate_source):
             sub_module = os.path.join(parent_dir, family + ".py")
             with open(sub_module, "w") as fp:
                 fp.write(AUTOGEN_HEADER + "\n\n\n")
-                fp.write("from brittle_wit.messages import TwitterRequest, ELIDE\n\n\n")
+                fp.write("from brittle_wit_core import TwitterRequest, ELIDE\n\n\n")
                 for code_block in code_blocks[group, family]:
                     fp.write(code_block + "\n\n\n")
 

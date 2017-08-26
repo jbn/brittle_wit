@@ -13,8 +13,11 @@
 .. image:: https://img.shields.io/pypi/pyversions/brittle_wit.svg
     :target: https://pypi.python.org/pypi/brittle_wit
 
-About
-=====
+-------------------------------------------------------------------------------
+
+====================
+What is Brittle Wit?
+====================
 
 **Brittle Wit is a Twitter Lib for Python.**
 
@@ -25,48 +28,30 @@ About
    limits <https://dev.twitter.com/rest/public/rate-limiting>`__.
 -  It scales well.
 -  It works as a library or a server.
+-  "Namespaces are one honking great idea -- let's do more of those!"
 
-"Namespaces are one honking great idea -- let's do more of those!"
 
-Warning
--------
-
-I started developing this package months ago. I wanted to create some
-tools for for media company agenda management. But, I ran out of
-safety-net cash, and had to go back to a 9–5 (on top of my Ph.D. work).
-Consequently, this library is unfinished and certainly buggy. I'm
-releasing it earlier than I'd prefer as a mean of facilitating
-replicability for a post I wrote on Medium.
-
-Developer, beware.
-
-Installation
-------------
-
-From a Python 3.5 environment,
-
-.. code:: bash
-
-    pip install brittle_wit
-
-Simple Example
+--------------
+A Trivial Demo
 --------------
 
 .. code:: python
 
     from brittle_wit.app import load_app_cred, load_single_user_cred, App
-    from brittle_wit.patterns import (collect_follower_ids_for,
-                                      collect_lists_with_members,
-                                      collect_user_infos_by_ids)
+    import brittle_wit.patterns as ptns 
 
-    # Reads ENV variables: TWITTER_APP_KEY, TWITTER_APP_SECRET
+    # Reads ENV variables: 
+    # - TWITTER_APP_KEY
+    # - TWITTER_APP_SECRET
     APP_CRED = load_app_cred()
 
-    # Reads ENV variables: TWITTER_USER_ID, TWITTER_USER_TOKEN, TWITTER_USER_SECRET
+    # Reads ENV variables: 
+    # - TWITTER_USER_ID
+    # - TWITTER_USER_TOKEN
+    # - TWITTER_USER_SECRET
     CLIENT_CRED = load_single_user_cred()
 
     with App.reactor(APP_CRED) as app:
         ctx = app.client_context(CLIENT_CRED)
-        followers_of = app.run_until_complete(collect_follower_ids_for(ctx, 'generativist'))
-        lists_of = app.run_until_complete(collect_lists_with_members(ctx, 'generativist'))
-        followers_infos = app.run_until_complete(collect_user_infos_by_ids(ctx, followers_of))
+        followers_of = app.run_until_complete(ptns.collect_follower_ids_for(ctx, 'generativist'))
+        followers_infos = app.run_until_complete(ptns.collect_user_infos_by_ids(ctx, followers_of))

@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit.messages import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest, ELIDE
 
 
 def id_by_place_id(place_id):

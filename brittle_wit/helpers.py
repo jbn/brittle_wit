@@ -2,6 +2,9 @@ from datetime import datetime
 
 
 def parse_date(s):
+    """
+    Parse a date string sent in a tweet.
+    """
     return datetime.strptime(s, "%a %b %d %H:%M:%S %z %Y")
 
 

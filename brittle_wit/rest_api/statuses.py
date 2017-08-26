@@ -3,7 +3,7 @@
 ###############################################################################
 
 
-from brittle_wit.messages import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest, ELIDE
 
 
 def home_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,

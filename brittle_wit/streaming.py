@@ -5,9 +5,9 @@ import bz2
 
 from aiohttp import web
 
+from brittle_wit_core import TwitterError, BrittleWitError
 from brittle_wit.constants import LOGGER
 from brittle_wit.executors import twitter_req_to_http_req
-from brittle_wit.messages import TwitterError, BrittleWitError
 
 
 class EntryProcessor:

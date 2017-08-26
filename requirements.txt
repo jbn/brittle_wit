@@ -1,1 +1,2 @@
 aiohttp
+brittle_wit_core

@@ -2,12 +2,16 @@ import asyncio
 import aiohttp
 import time
 
+from brittle_wit_core import (generate_req_headers,
+                              TwitterResponse,
+                              TwitterError,
+                              BrittleWitError,
+                              WrappedException)
 from brittle_wit.constants import FIFTEEN_MINUTES, LOGGER
-from brittle_wit.oauth import generate_req_headers, ANY_CREDENTIALS
 from brittle_wit.rate_limit import RateLimit
 from brittle_wit.ticketing import TicketMaster
-from brittle_wit.messages import (TwitterResponse, TwitterError,
-                                  wrap_if_nessessary, BrittleWitError)
+
+ANY_CREDENTIALS = None
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req, **overrides):
@@ -69,7 +73,7 @@ async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
                          twitter_req.service,
                          id(twitter_req),
                          code)
-        raise wrap_if_nessessary(e)
+        raise WrappedException.wrap_if_nessessary(e)
 
 
 class ClientRequestProcessor:

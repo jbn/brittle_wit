@@ -8,13 +8,22 @@ __version__ = "0.0.3"
 __author__ = "John Bjorn Nelson"
 __email__ = "jbn@abreka.com"
 
-import os
-
-from brittle_wit.messages import Cursor, BrittleWitError, ELIDE
-from brittle_wit.oauth import (AppCredentials, ClientCredentials,
-                               ANY_CREDENTIALS)
+from brittle_wit_core import Cursor, BrittleWitError, ELIDE
+from brittle_wit_core import AppCredentials, ClientCredentials
 from brittle_wit.executors import (ClientRequestProcessor,
-                                   ManagedClientRequestProcessors)
+                                   ManagedClientRequestProcessors,
+                                   ANY_CREDENTIALS)
 from brittle_wit.streaming import (TwitterStream,
                                    StreamProcessor,
                                    StreamingHTTPPipe)
+
+
+def _patch_retryables():
+    import aiohttp
+    import asyncio
+    import brittle_wit_core
+    exceptions = brittle_wit_core.WrappedException.RETRYABLE_EXCEPTIONS
+    exceptions.add(aiohttp.ClientOSError)
+    exceptions.add(asyncio.TimeoutError)
+
+_patch_retryables()

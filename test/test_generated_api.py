@@ -1,7 +1,7 @@
 import unittest
 import inspect
 from importlib import import_module
-from brittle_wit.messages import TwitterRequest
+from brittle_wit_core import TwitterRequest
 from brittle_wit import ads_api, rest_api, streaming_api, webhooks_api
 
 
@@ -50,4 +50,3 @@ class TestGeneratedAPI(unittest.TestCase):
                     arg_names = inspect.getargs(api_call.__code__).args
                     args = dict(zip(arg_names, numbers[:len(arg_names)]))
                     self.assertTrue(isinstance(api_call(**args), TwitterRequest))
-
