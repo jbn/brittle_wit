@@ -11,6 +11,10 @@ $(JSON_API): api_gen/api_pipeline.py api_gen/generate_json_api.py $(RAW_HTML)
 $(RAW_HTML): api_gen/fetch_html.py
 	./api_gen/fetch_html.py
 
+.PHONY: test
+test:
+	python setup.py nosetests
+
 .PHONY: clean
 clean:
 	rm -rf api_gen/data

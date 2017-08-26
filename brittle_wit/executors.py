@@ -10,10 +10,11 @@ from brittle_wit.messages import (TwitterResponse, TwitterError,
                                   wrap_if_nessessary, BrittleWitError)
 
 
-def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req):
+def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req, **overrides):
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
     payload_k = 'data' if twitter_req.method == 'POST' else 'params'
     kwargs = {payload_k: twitter_req.params, 'headers': headers}
+    kwargs.update(overrides)
 
     return session.request(twitter_req.method,
                            twitter_req.url,

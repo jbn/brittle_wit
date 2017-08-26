@@ -150,7 +150,8 @@ class TwitterStream:
         self._http_req = twitter_req_to_http_req(self._session,
                                                  self._app_cred,
                                                  self._client_cred,
-                                                 self._twitter_req)
+                                                 self._twitter_req,
+                                                 timeout=None)
         LOGGER.error("Reconnect, complete...")
 
     @property
@@ -158,7 +159,8 @@ class TwitterStream:
         """
         :return: True if their is an active connection to Twitter's servers.
         """
-        return self._http_req is not None and not self._resp.connection.closed
+        return (self._http_req is not None and
+                self._resp.connection and not self._resp.connection.closed)
 
     def reconnect(self, force_close_if_open=False, clear_prior_messages=False):
         """
@@ -182,7 +184,7 @@ class TwitterStream:
         if clear_prior_messages:
             self._entry_processor.purge_mailbox()
 
-        LOGGER.error("PREGING BUFFER")
+        LOGGER.error("PURGING BUFFER")
         # The buffer underling the entry processor should always be in
         # an initially pristine state. A broken connection virtually
         # ensures corruption.
@@ -300,14 +302,9 @@ class StreamProcessor:
         # Retry Strategy: https://dev.twitter.com/streaming/overview/connecting
         # TODO: More compliant!
         failures, failed = 0, False
+        failed, msg, sleep_time = False, None, 0
         while True:
             try:
-                if failed:
-                    failures += 1
-                    LOGGER.error("RECONNECTING")
-                    self._twitter_stream.reconnect(force_close_if_open=True)
-                    LOGGER.error("AFTER RECONNECT, RESUMING STREAM")
-
                 async for message in self._twitter_stream:
                     self._send_to_all(message)
                     failed = False  # TODO: FIX: This is such a waste!
@@ -317,7 +314,6 @@ class StreamProcessor:
                     sleep_time = 60 * 2**failures
                     msg = "Stream 420'd waiting a {} seconds (failure {})"
                     LOGGER.error(msg.format(sleep_time, failures))
-                    await asyncio.sleep(sleep_time)
                 else:
                     sleep_time = min(5 * 2**failures, 320)
                     msg = "Stream {}'d waiting b {} seconds (failure {})"
@@ -326,23 +322,34 @@ class StreamProcessor:
                     print(e._http_resp)  # FIX: XXX: HACK: FUCK
 
                 failed = True
-                await asyncio.sleep(sleep_time)
             except BrittleWitError as e:
                 if e.is_retryable:  # TODO FIX as is network error.
                     sleep_time = min(0.25 * failures, 16)
                     msg = "Stream {}'d waiting c {} seconds (failure {})"
                     LOGGER.error(msg.format(repr(e), sleep_time, failures))
                     failed = True
-                    await asyncio.sleep(sleep_time)
             except KeyboardInterrupt:
                 raise
+            except asyncio.TimeoutError:
+                sleep_time = min(0.25 * failures, 16)
+                msg = "Stream timeout waiting {} e seconds (failure {})"
+                LOGGER.error(msg.format(sleep_time, failures))
+                failed = True
             except Exception as e:
                 print(e)
                 sleep_time = min(0.25 * failures, 16)
                 msg = "Stream {}'d waiting {} d seconds (failure {})"
                 LOGGER.error(msg.format(repr(e), sleep_time, failures))
                 failed = True
+                raise
+
+            if failed:
+                self._twitter_stream.disconnect()
                 await asyncio.sleep(sleep_time)
+                failures += 1
+                LOGGER.error("RECONNECTING")
+                self._twitter_stream.reconnect(force_close_if_open=True)
+                LOGGER.error("AFTER RECONNECT, RESUMING STREAM")
 
 
 class StreamingHTTPPipe:
@@ -419,7 +426,8 @@ async def save_raw_stream(session, app_cred, client_cred, twitter_req,
     content_path = output_path + ".content.raw"
 
     http_req = twitter_req_to_http_req(session, app_cred,
-                                       client_cred, twitter_req)
+                                       client_cred, twitter_req,
+                                       timeout=None)
 
     # This uses blocking file operations. It's possible that a slow
     # disk could generate a stale warning. But, that's fine for the
