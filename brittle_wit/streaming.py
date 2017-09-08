@@ -4,10 +4,8 @@ import aiohttp
 import bz2
 
 from aiohttp import web
-
 from brittle_wit_core import TwitterError, BrittleWitError
-from brittle_wit.constants import LOGGER
-from brittle_wit.executors import twitter_req_to_http_req
+from brittle_wit.executors import twitter_req_to_http_req, LOGGER
 
 
 class EntryProcessor:
@@ -111,8 +109,8 @@ class TwitterStream:
         """
         Initialize a Twitter stream.
 
-        This connects to Twitter's servers but doesn't start reading until a
-        call to __iter__.
+        There is no initial connection, since Twitter doesn't like idle
+        reader hands.
 
         :param session: the aiohttp.ClientSession object
         :param app_cred: the AppCredentials
@@ -121,7 +119,7 @@ class TwitterStream:
         :param parser: a parser which takes a byte-entry and translates it
             into a message.
         :param chunk_size: the number of bytes to asynchronously read from
-            Twitter at a time
+            Twitter for each receive
         """
         self._session = session
         self._app_cred = app_cred
@@ -132,27 +130,7 @@ class TwitterStream:
 
         self._entry_processor = EntryProcessor()
         self._http_req = None
-
-        self._connect()
-
-    def _connect(self):
-        """
-        Connect to Twitter's servers.
-        """
-        # There may only be one set of credentials connected to a
-        # streaming endpoint at a time. Preempting an existing
-        # connection is error-prone. Complain loudly when a connection
-        # already exists.
-        if self.is_open:
-            LOGGER.error("Already connected. Call close() first!")
-            raise RuntimeError("Already connected. Call close() first!")
-
-        self._http_req = twitter_req_to_http_req(self._session,
-                                                 self._app_cred,
-                                                 self._client_cred,
-                                                 self._twitter_req,
-                                                 timeout=None)
-        LOGGER.error("Reconnect, complete...")
+        self._resp = None
 
     @property
     def is_open(self):
@@ -162,56 +140,69 @@ class TwitterStream:
         return (self._http_req is not None and
                 self._resp.connection and not self._resp.connection.closed)
 
-    def reconnect(self, force_close_if_open=False, clear_prior_messages=False):
+    def _connect(self):
         """
-        Reconnect to Twitter's servers.
-
-        :param force_close_if_open: if True, close the prior connection, if it
-            exists
-        :param clear_prior_messages: if True, purges all (correct) messages
-            waiting for consumption on the internal EntryProcessor from the
-            prior connection
+        Connect to Twitter's servers.
         """
-        print("ATTEMPTING TO RECONNECT")
-        LOGGER.error("ATTEMPTING TO RECONNECT")
-        # Explicitly acknowledge that forced closure is okay.
-        if force_close_if_open and self.is_open:
-            self.disconnect()
+        # There may only be one set of credentials connected to a streaming
+        # endpoint at a time. Preempting an existing connection is
+        # error-prone. Complain loudly when a connection already exists.
+        if self.is_open:
+            raise RuntimeError("Already connected. Call close() first!")
 
-        LOGGER.error("CLEARING PRIOR")
-        # The initiating request does not change between connection resets,
-        # so old messages are consumable.
-        if clear_prior_messages:
-            self._entry_processor.purge_mailbox()
-
-        LOGGER.error("PURGING BUFFER")
-        # The buffer underling the entry processor should always be in
-        # an initially pristine state. A broken connection virtually
-        # ensures corruption.
-        self._entry_processor.purge_buffer()
-
-        LOGGER.error("CONNECTING")
-        self._connect()
-        LOGGER.error("GO")
-
+        self._http_req = twitter_req_to_http_req(self._session,
+                                                 self._app_cred,
+                                                 self._client_cred,
+                                                 self._twitter_req,
+                                                 timeout=None)
     def disconnect(self):
         """
         Disconnect the stream from Twitter's servers.
         """
         if self._http_req is not None:
-            print("Called close!")
-            LOGGER.error("Closing!")
-            print(self._http_req.close())
+            self._http_req.close()
             self._http_req = None
+
+    def reconnect(self, force_close_if_open=True, clear_prior_messages=False):
+        """
+        Reconnect to Twitter's servers.
+
+        :param force_close_if_open: if True, close the prior connection, if it
+            exists; if false, raise error if it is open
+        :param clear_prior_messages: if True, purges all (correct) messages
+            waiting for consumption on the internal EntryProcessor from the
+            prior connection
+        """
+        # Twitter wants one IP per connection.
+        if self.is_open:
+            if force_close_if_open:
+                self.disconnect()
+            else:
+                raise RuntimeError("Trying to reconnect on open stream.")
+
+        # The initiating request does not change between connection resets,
+        # so old messages are consumable.
+        if clear_prior_messages:
+            self._entry_processor.purge_mailbox()
+
+        # The buffer underling the entry processor should always be in
+        # an initially pristine state. A broken connection virtually
+        # ensures corruption.
+        self._entry_processor.purge_buffer()
+
+        self._connect()
 
     async def __aiter__(self):
         """
         Commence streaming, returning this object as an iterator.
         """
-        # I hate the next line. Is there a decontextualize pattern?
+        if not self.is_open:
+            self._connect()
+
+        # XXX. I hate the next line. Is there a decontextualize pattern?
         self._resp = await self._http_req.__aenter__()
+
         if self._resp.status != 200:
-            LOGGER.error("Error on {}".format(self._resp.status))
             raise TwitterError(self._client_cred,
                                self._twitter_req,
                                self._resp,
@@ -220,6 +211,9 @@ class TwitterStream:
         return self
 
     async def __anext__(self):
+        """
+        This reads one message from the stream.
+        """
         # If there are no messages ready, read from the stream.
         while not self._entry_processor:
             chunk = await self._resp.content.read(self._chunk_size)
@@ -229,6 +223,7 @@ class TwitterStream:
             self._entry_processor.process(chunk)
 
         # If there are no messages ready, the stream closed!
+        # XXX: TODO: When does this occur. StopAsycIteration is scary.
         if not self._entry_processor:
             LOGGER.error("Stream Closing (non-explicit)")
             raise StopAsyncIteration
@@ -237,45 +232,92 @@ class TwitterStream:
         return self._parser(self._entry_processor.take_one())
 
 
+class StreamReceiver:
+
+    def close(self):
+        pass
+
+
+class FeedSerializer(StreamReceiver):
+    """
+    Write each message to a bz2 file, *syncronously*.
+
+    """
+
+    def __init__(self, output_file, overwrite_existing=False, as_bz2=False):
+        """
+        :param as_bz2: if true, saves the file with BZ2 copression.
+            BZ2 is useful for Spark/Hadoop analytics as it's splittable and
+            compression rate is high. However, it's CPU intensive, which could
+            be a problem.
+        """
+        mode = 'a' if overwrite_existing else 'w'
+        if not as_bz2:
+            mode += 'b'
+
+        open_file = bz2.open if as_bz2 else open
+        self._output_stream = open_file(output_file, mode)
+
+    def send(self, message):
+        self._output_stream.write(json.dumps(message).encode() + b"\n")
+
+    def close(self):
+        self._output_stream.close()
+
+
+class LambdaStreamHandler(StreamReceiver):
+    """
+    Stream receiver that wraps a lambda (mostly for testing)
+    """
+
+    def __init__(self, underlying_func):
+        """
+        :param underlying_func: function to invoke for each message received
+            by ``#send(msg)``
+        """
+        self._underlying_func = underlying_func
+
+    def send(self, msg):
+        return self._underlying_func(msg)
+
+
 class StreamProcessor:
 
     def __init__(self, twitter_stream):
         self._twitter_stream = twitter_stream
         self._subscribers = {}
         self._requires_json = False
-        LOGGER.info("STREAM READY")
 
-    def subscribe(self, handler, as_json=False):
+    def subscribe(self, receiver, as_json=False):
         """
-        Subscribe a given handler to the stream.
+        Subscribe a given receiver to the stream.
 
-        :param handler: an object which implements ``send`` which receives
-            messages from the TwitterStream
+        :param receiver: a StreamReceiver object
         :param as_json: json parsing is relatively expensive. if a subscriber
             requires json, json parsing occurs, but only once for all the
             subscribers requiring json. Otherwise, there is no json parsing
         """
-        handler_id = id(handler)
+        handler_id = id(receiver)
 
         if handler_id in self._subscribers:
             raise RuntimeError("Already subscribed!")
 
-        if not hasattr(handler, "send"):
+        if not hasattr(receiver, "send"):
             raise RuntimeError("Handler must implement send(msg)")
 
         if as_json:
             self._requires_json = True
 
-        self._subscribers[handler_id] = (handler, as_json)
+        self._subscribers[handler_id] = (receiver, as_json)
         return handler_id
 
-    def unsubscribe(self, handler):
+    def unsubscribe(self, receiver):
         """
-        Unsubscribe the given handler from stream processing.
+        Unsubscribe the given receiver from stream processing.
 
-        :param handler: an already subscribed handler
+        :param receiver: an already subscribed receiver
         """
-        handler_id = id(handler)
+        handler_id = id(receiver)
 
         if handler_id not in self._subscribers:
             msg = "Either never subscribed or already unsubscribed!"
@@ -450,10 +492,3 @@ async def save_raw_stream(session, app_cred, client_cred, twitter_req,
             pass
 
 
-class FeedSerializer:
-
-    def __init__(self, output_file):
-        self._output_stream = bz2.open(output_file, 'a')
-
-    def send(self, message):
-        self._output_stream.write(json.dumps(message).encode() + b"\n")

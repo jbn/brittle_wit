@@ -1,8 +1,9 @@
-*.ipynb
-*.iml
-.idea/
 *.pyc
+.ipynb_checkpoints
+_*.ipynb
+api_gen/scratch.ipynb
 notebooks/*
 TODO
 build/
 brittle_wit.egg-info
+setup_me.sh

@@ -16,6 +16,8 @@ from brittle_wit.executors import (ClientRequestProcessor,
 from brittle_wit.streaming import (TwitterStream,
                                    StreamProcessor,
                                    StreamingHTTPPipe)
+from brittle_wit.app import App
+from brittle_wit.helpers import monkey_patch_ipython_disp
 
 
 def _patch_retryables():
@@ -24,6 +26,7 @@ def _patch_retryables():
     import brittle_wit_core
     exceptions = brittle_wit_core.WrappedException.RETRYABLE_EXCEPTIONS
     exceptions.add(aiohttp.ClientOSError)
+    exceptions.add(aiohttp.ClientConnectorError)
     exceptions.add(asyncio.TimeoutError)
 
 _patch_retryables()

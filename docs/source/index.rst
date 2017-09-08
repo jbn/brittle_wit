@@ -5,6 +5,8 @@
    :caption: Contents:
 
    01_quickstart
+   02_jacks_tweet
+   03_time_line
    oauth
    api_generation
 

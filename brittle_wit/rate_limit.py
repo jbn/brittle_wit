@@ -4,7 +4,8 @@ import time
 from datetime import datetime
 from collections import defaultdict
 
-from brittle_wit.constants import FIFTEEN_MINUTES
+
+FIFTEEN_MINUTES = 15 * 60
 
 
 class RateLimit:
@@ -25,7 +26,7 @@ class RateLimit:
         However, to make sure it is clear to the caller, ignorance is part of
         the name.
         """
-        return RateLimit(1, 1, int(time.time() + FIFTEEN_MINUTES))  
+        return RateLimit(1, 1, int(time.time() + FIFTEEN_MINUTES))
 
     @staticmethod
     def from_response(resp):
@@ -40,8 +41,8 @@ class RateLimit:
         Create a RateLimit object from a limit with all requests remaining.
         """
         return RateLimit(initial_limit,
-                         initial_limit,             
-                         int(time.time() + FIFTEEN_MINUTES))  
+                         initial_limit,
+                         int(time.time() + FIFTEEN_MINUTES))
 
     __slots__ = '_limit', '_remaining', '_reset_time'
 
@@ -129,7 +130,7 @@ class RateLimit:
         return self
 
     def __str__(self):
-        msg = "RateLimit(limit={}, remaining={}, reset_time={})" 
+        msg = "RateLimit(limit={}, remaining={}, reset_time={})"
         time_s = datetime.fromtimestamp(self._reset_time).strftime("%H:%M:%S")
 
         return msg.format(self._limit, self._remaining, time_s)
@@ -151,6 +152,7 @@ class TimingRateLimiter:
     returns False, do not take the action. If it returns True, take the action.
     Implicitly, if it returns True, it assumes you did take the action.
     """
+
     def __init__(self, min_secs_per_op):
         """
         :param min_secs_per_op: the minimum average number of seconds which

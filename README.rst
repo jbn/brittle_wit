@@ -35,23 +35,18 @@ What is Brittle Wit?
 A Trivial Demo
 --------------
 
-.. code:: python
+This code is explained thoroughly in the documentation. It fetches jacks first
+tweet.
 
-    from brittle_wit.app import load_app_cred, load_single_user_cred, App
-    import brittle_wit.patterns as ptns 
+.. code-block:: python
+      
+    import brittle_wit as bw
+    from brittle_wit.executors import debug_blocking_request
+    from brittle_wit import rest_api
+    APP_CRED = bw.AppCredentials.load_from_env()
+    CLIENT_CRED = bw.ClientCredentials.load_from_env()
+    req = rest_api.statuses.lookup(id=20)
+    resp = debug_blocking_request(APP_CRED, CLIENT_CRED, req)
+    jacks_first_tweet = resp.json()
+    print(jacks_first_tweet)
 
-    # Reads ENV variables: 
-    # - TWITTER_APP_KEY
-    # - TWITTER_APP_SECRET
-    APP_CRED = load_app_cred()
-
-    # Reads ENV variables: 
-    # - TWITTER_USER_ID
-    # - TWITTER_USER_TOKEN
-    # - TWITTER_USER_SECRET
-    CLIENT_CRED = load_single_user_cred()
-
-    with App.reactor(APP_CRED) as app:
-        ctx = app.client_context(CLIENT_CRED)
-        followers_of = app.run_until_complete(ptns.collect_follower_ids_for(ctx, 'generativist'))
-        followers_infos = app.run_until_complete(ptns.collect_user_infos_by_ids(ctx, followers_of))

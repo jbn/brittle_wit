@@ -16,9 +16,9 @@ class TestRateLimit(unittest.TestCase):
         self.assertEqual(rate_limit._remaining, 10)
 
     def test_from_response(self):
-        resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                         'X-RATE-LIMIT-REMAINING': 99,
-                         'X-RATE-LIMIT-RESET': 9999})
+        resp = mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                          'X-RATE-LIMIT-REMAINING': 99,
+                          'X-RATE-LIMIT-RESET': 9999})
         rate_limit = RateLimit.from_response(resp)
         local_dt = datetime.fromtimestamp(9999).strftime("%H:%M:%S")
         expected = "RateLimit(limit=100, remaining=99, reset_time={})"
@@ -29,13 +29,13 @@ class TestRateLimit(unittest.TestCase):
         self.assertEqual(str(rate_limit), expected)
 
     def test_is_pristine(self):
-        resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                         'X-RATE-LIMIT-REMAINING': 100,
-                         'X-RATE-LIMIT-RESET': 9999})
+        resp = mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                          'X-RATE-LIMIT-REMAINING': 100,
+                          'X-RATE-LIMIT-RESET': 9999})
         rate_limit = RateLimit.from_response(resp)
         self.assertTrue(rate_limit.is_pristine)
 
-        resp = MockResp({'X-RATE-LIMIT-REMAINING': 99})
+        resp = mock_resp({'X-RATE-LIMIT-REMAINING': 99})
         rate_limit.update(resp)
         self.assertFalse(rate_limit.is_pristine)
 
@@ -43,26 +43,26 @@ class TestRateLimit(unittest.TestCase):
         rate_limit = RateLimit.from_ignorance()
         self.assertFalse(rate_limit.is_exhausted)
 
-        resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                         'X-RATE-LIMIT-REMAINING': 0,
-                         'X-RATE-LIMIT-RESET': 9999})
+        resp = mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                          'X-RATE-LIMIT-REMAINING': 0,
+                          'X-RATE-LIMIT-RESET': 9999})
 
         rate_limit.update(resp)
         self.assertTrue(rate_limit.is_exhausted)
 
     def test_bad_request_update(self):
-        orig_resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                              'X-RATE-LIMIT-REMAINING': 99,
-                              'X-RATE-LIMIT-RESET': 9999})
+        orig_resp = mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                               'X-RATE-LIMIT-REMAINING': 99,
+                               'X-RATE-LIMIT-RESET': 9999})
 
         rate_limit = RateLimit.from_response(orig_resp)
         self.assertFalse(rate_limit.is_exhausted)
-        rate_limit.update(MockResp({}))
+        rate_limit.update(mock_resp({}))
 
     def test_mark_exhausted(self):
-        orig_resp = MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                              'X-RATE-LIMIT-REMAINING': 99,
-                              'X-RATE-LIMIT-RESET': 9999})
+        orig_resp = mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                               'X-RATE-LIMIT-REMAINING': 99,
+                               'X-RATE-LIMIT-RESET': 9999})
 
         rate_limit = RateLimit.from_ignorance()
         self.assertFalse(rate_limit.is_exhausted)
@@ -75,15 +75,30 @@ class TestRateLimit(unittest.TestCase):
         drive_coro_once(rate_limit.comply())
         self.assertTrue(rate_limit.is_exhausted)
 
-        rate_limit.update(MockResp({'X-RATE-LIMIT-LIMIT': 100,
-                                    'X-RATE-LIMIT-REMAINING': 0,
-                                    'X-RATE-LIMIT-RESET': time.time() + 0.1}))
+        rate_limit.update(mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                                     'X-RATE-LIMIT-REMAINING': 0,
+                                     'X-RATE-LIMIT-RESET': time.time() + 0.1}))
+        self.assertTrue(rate_limit.is_exhausted)
+        drive_coro_once(rate_limit.comply())
+        self.assertFalse(rate_limit.is_exhausted)
+
+    def test_comply_with_sleeping(self):
+        # XXX Refactor this so no long wait time.
+        rate_limit = RateLimit.from_ignorance()
+        self.assertFalse(rate_limit.is_exhausted)
+        drive_coro_once(rate_limit.comply())
+        self.assertTrue(rate_limit.is_exhausted)
+
+        rate_limit.update(mock_resp({'X-RATE-LIMIT-LIMIT': 100,
+                                     'X-RATE-LIMIT-REMAINING': 0,
+                                     'X-RATE-LIMIT-RESET': time.time() + 1}))
         self.assertTrue(rate_limit.is_exhausted)
         drive_coro_once(rate_limit.comply())
         self.assertFalse(rate_limit.is_exhausted)
 
 
 class TestTimingRateLimiter(unittest.TestCase):
+
     def test_timing_rate_limiter(self):
         limiter = TimingRateLimiter(60)
         self.assertTrue(limiter.can_proceed())

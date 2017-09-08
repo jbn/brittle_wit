@@ -1,79 +1,79 @@
 import asyncio
 import aiohttp
+import async_timeout
 import time
+import logging
+
 
 from brittle_wit_core import (generate_req_headers,
                               TwitterResponse,
                               TwitterError,
                               BrittleWitError,
                               WrappedException)
-from brittle_wit.constants import FIFTEEN_MINUTES, LOGGER
-from brittle_wit.rate_limit import RateLimit
+from brittle_wit.helpers import retrying
+from brittle_wit.rate_limit import RateLimit, FIFTEEN_MINUTES
 from brittle_wit.ticketing import TicketMaster
+
+
+LOGGER = logging.getLogger('brittle_wit')
 
 ANY_CREDENTIALS = None
 
 
 def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req, **overrides):
+    """
+    Convert a TwitterRequest into a aiohttp request.
+
+    :param session: an aiohttp.ClientSession object
+    :param app_cred: an `AppCredentials` object
+    :param client_cred: an `ClientCredentials` object
+    :param twitter_req: an `TwitterRequest` object
+    :param overrides: override keys for the request
+
+    :return: the aiohttp request
+    """
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
     payload_k = 'data' if twitter_req.method == 'POST' else 'params'
-    kwargs = {payload_k: twitter_req.params, 'headers': headers}
+    kwargs = {payload_k: twitter_req.params,
+              'headers': headers}
     kwargs.update(overrides)
 
-    return session.request(twitter_req.method,
-                           twitter_req.url,
-                           **kwargs)
+    return session.request(twitter_req.method, twitter_req.url, **kwargs)
 
 
-async def execute_req(credentials, twitter_req, http_req, rate_limit, timeout):
+async def execute_req(client_cred, twitter_req, http_req, rate_limit):
     """
     Execute a request with no exception handling.
 
-    :param credentials: the credentials used to build the http_req
+    :param client_cred: the client_cred used to build the http_req
     :param twitter_req: the original TwitterRequest
     :param http_req: the HttpRequest with encoded authentication information
     :param rate_limit: the RateLimit object associated with the endpoint and
-        credentials
-    :param timeout: the time, in seconds, to wait before an exception is
-        thrown
+        client_cred
     :return: a TwitterResponse
     """
-    LOGGER.info("Executing %s request (%s) for %s",
-                credentials.user_id, id(twitter_req), twitter_req.service)
-    try:
-        with aiohttp.Timeout(timeout):
 
-            # Send request over the wire.
-            async with http_req as resp:
+    # Send request over the wire.
+    async with http_req as resp:
 
-                # Update rate limits ASAP. Note: The prior call to comply
-                # decremented the rate limits already. If the context manager
-                # threw an exception on entry, it is still in compliance.
-                rate_limit.update(resp)
+        # Update rate limits ASAP. Note: The prior call to comply
+        # decremented the rate limits already. If the context manager
+        # threw an exception on entry, it is still in compliance.
+        rate_limit.update(resp)
 
-                # An error occurred.
-                if resp.status != 200:
-                    raise TwitterError(credentials,
-                                       twitter_req,
-                                       resp,
-                                       await resp.json())
+        # An error occurred.
+        if resp.status != 200:
+            raise TwitterError(client_cred, twitter_req, resp,
+                               await resp.text())
 
-                # The status code indicates a good response.
-                if twitter_req.parse_as == 'json':
-                    body = await resp.json()
-                else:
-                    body = await resp.text()
+        # The status code indicates a good response.
+        # Choose appropriate parsing strategy.
+        if twitter_req.parse_as == 'json':
+            body = await resp.json()
+        else:
+            body = await resp.text()
 
-                return TwitterResponse(twitter_req, resp, body)
-    except TwitterError as e:
-        code = e.status_code if isinstance(e, TwitterError) else None
-
-        LOGGER.exception("Failed %s request (%s) for %s with %s",
-                         credentials.user_id,
-                         twitter_req.service,
-                         id(twitter_req),
-                         code)
-        raise WrappedException.wrap_if_nessessary(e)
+        return TwitterResponse(twitter_req, resp, body)
 
 
 class ClientRequestProcessor:
@@ -85,23 +85,59 @@ class ClientRequestProcessor:
     given credentials and for a given service. If multiple callers request
     execution at the same time (for a given set of credentials and service),
     the requests execute FIFO.
+
+    There should only be one ClientRequestProcessor per set of credentials!
+
+    Perioditically call ``#cleanup()``. When `#is_removable()` is true, there
+    is no useful state information in the processor, and you can let Python
+    garbage collect the object. This allows for stochastic reclaimation of
+    memory.
     """
 
-    def __init__(self, client_credentials):
+    def __init__(self, client_cred):
         """
-        :param client_credentials: the ClientCredentials to manage
+        :param client_cred: the ClientCredentials to manage
         """
-        self._client_credentials = client_credentials
+        self._client_cred = client_cred
         self._ticket_master = TicketMaster()
         self._rate_limits = {}
 
     @property
     def user_id(self):
-        return self._client_credentials.user_id
+        return self._client_cred.user_id
+
+    def is_removable(self):
+        """
+        :return: True if this executor is not in use and is monitoring no
+            rate limits
+        """
+        return self.is_not_processing() and not self._rate_limits
+
+    def is_not_processing(self):
+        """
+        :return: True if no caller is using this processors' credentials for
+            any endpoint otherwise True
+        """
+        return self._ticket_master.all_lines_empty()
+
+    def is_immediately_available_for(self, service):
+        """
+        :param service: the API service name, as per the Twitter docs
+        :return: True if no caller is using this objects associated credentials
+            for the given service AND that service is not rate limited
+        """
+        if self._ticket_master.is_line_empty(service):
+            if service not in self._rate_limits:
+                return True
+            else:
+                return not self._rate_limits[service].is_exhausted
+        return False
 
     def _rate_limit_for(self, service):
         """
         Get existing or create new RateLimit for the given service.
+
+        Only this object should manage the RateLimits, hence a private method.
 
         :param service: API endpoint service
         :return: the RateLimit object associated with the service
@@ -138,72 +174,42 @@ class ClientRequestProcessor:
         for k in remove_ks:
             del self._rate_limits[k]
 
-    def is_removable(self):
+    async def _execute(self, session, app_cred, twitter_req, timeout=None):
         """
-        :return: True if this executor is not in use and is monitoring no
-            rate limits
+        :param session: an aiohttp.ClientSession object
+        :param app_cred: an `AppCredentials` object
+        :param twitter_req: an `TwitterRequest` object
+        :param timeout: maximium time to wait for a response EVEN IF TWITTER
+            IS STILL SENDING INFORMATION. (default None for no timeout)
         """
-        return self.is_not_processing() and not self._rate_limits
-
-    def is_not_processing(self):
-        """
-        :return: True if no caller is using this processors' credentials for
-            any endpoint otherwise True
-        """
-        return self._ticket_master.all_lines_empty()
-
-    def is_immediately_available_for(self, service):
-        """
-        :param service: the API service name, as per the Twitter docs
-        :return: True if no caller is using this objects associated credentials
-            for the given service AND that service is not rate limited
-        """
-        if self._ticket_master.is_line_empty(service):
-            if service not in self._rate_limits:
-                return True
-            else:
-                return not self._rate_limits[service].is_exhausted
-        return False
-
-    async def _execute(self, session, app_cred, twitter_req, timeout=120):
         service = twitter_req.service
 
-        LOGGER.debug("Waiting for ticket on %s request (%s) for %s",
-                     self._client_credentials.user_id,
-                     id(twitter_req),
-                     twitter_req.service)
-        async with self._ticket_master.take_ticket(service):
-            # The caller is now in charge of this service.
-            rate_limit = self._rate_limit_for(service)
+        # This thows after some amount of time, even if it's still reading!
+        async with async_timeout.timeout(timeout):
 
-            # Block request execution until not rate limited.
-            await rate_limit.comply()
+            async with self._ticket_master.take_ticket(service):
+                # The caller is now in charge of this service.
+                rate_limit = self._rate_limit_for(service)
 
-            http_req = twitter_req_to_http_req(session,
-                                               app_cred,
-                                               self._client_credentials,
-                                               twitter_req)
+                # Block request execution until not rate limited.
+                await rate_limit.comply()
 
-            # This coroutine will raise an exception for non-200 statuses.
-            return await execute_req(self._client_credentials,
-                                     twitter_req,
-                                     http_req,
-                                     rate_limit,
-                                     timeout)
+                http_req = twitter_req_to_http_req(session,
+                                                   app_cred,
+                                                   self._client_cred,
+                                                   twitter_req)
+
+                # This coroutine will raise an exception for non-200 statuses.
+                return await execute_req(self._client_cred,
+                                         twitter_req,
+                                         http_req,
+                                         rate_limit)
 
     async def execute(self, session, app_cred, twitter_req, timeout=120,
-                      n_retries=5):
-        tries = 0
-        while True:
-            try:
-                return await self._execute(session, app_cred,
-                                           twitter_req, timeout)
-            except BrittleWitError as e:
-                tries += 1
-                if not e.is_retryable or tries >= n_retries:
-                    raise e
-                else:
-                    await asyncio.sleep(60 * tries)  # Sleep progressively
+                      n_retries=5, sleep_time=60):
+        def bound_execute():
+            return self._execute(session, app_cred, twitter_req, timeout)
+        return await retrying(bound_execute, n_retries, sleep_time=sleep_time)
 
 
 class ManagedClientRequestProcessors:
@@ -215,7 +221,7 @@ class ManagedClientRequestProcessors:
 
     For many tasks, you don't need specific credentials, you just need some
     credentials. For example, if you and your social network analyst friends
-    wanted to analyze the followers of Donald Trump, you need to collect all
+    wanted to analyze the followers of Tech Crunch, you need to collect all
     the user objects. Given that there are millions of them that could take
     time. But, if you already have the user id's you can partition the
     collection and run it in parallel. The specific credentials don't matter.
@@ -223,9 +229,8 @@ class ManagedClientRequestProcessors:
 
     Finding an unused set of credentials is non-trivial. Managing a ready-queue
     for each service is expensive in terms of space when there are many users.
-    (See notes on sparsity in rateLimit.RateLimitEnforcer.) As an alternative,
-    I rely on probability. (That is, until I think more and find a better
-    solution.)
+    As an alternative, I rely on probability. (That is, until I think
+    more and find a better solution.)
 
     The any_cred_queue maintains a circular buffer for each set of
     credentials. When a client asks for AnyCredentials, the queue pops
@@ -249,11 +254,14 @@ class ManagedClientRequestProcessors:
         """
         Create and manage a request processor for the given credentials.
 
+        If you add already added credentials, it raises a runtime exception.
+
         :param cred: the client's credentials
         :param any_cred_eligible: if True, then an app may use this
             client's credentials promiscuously; otherwise, only the
             client can use it.
         """
+        # XXX: TODO: What? Why? I'm sure I did this for a reason but...
         if self.is_managed(cred):
             raise RuntimeError("Credential already managed.")
 
@@ -314,8 +322,7 @@ class ManagedClientRequestProcessors:
         """
         Maintains the request processors.
 
-        Mostly, this means cleaning up request processors, allowing
-        garbage collection.
+        Mostly, this means cleaning up request processors, allowing GC.
         """
         now = time.time()
 
@@ -353,6 +360,7 @@ def debug_blocking_request(app_cred, client_cred, twitter_req):
     from requests import request as _request
 
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
+
     return _request(twitter_req.method,
                     twitter_req.url,
                     params=twitter_req.params,

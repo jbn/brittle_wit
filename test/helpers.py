@@ -1,6 +1,7 @@
 import asyncio
 import json
 import os
+import unittest
 from collections import namedtuple
 from functools import wraps
 
@@ -19,7 +20,39 @@ def load_fixture_json(file_name):
         return json.load(fp)
 
 
-MockResp = namedtuple("MockResp", "headers")
+def mock_resp(headers):
+    mock = unittest.mock.MagicMock()
+    mock.headers = headers
+    return mock
+
+
+class MockHTTPResp:
+
+    def __init__(self, status, headers, body, delay=0):
+        self.status, self.headers, self.body = status, headers, body
+        self.delay = delay
+
+    async def json(self):
+        if self.delay > 0:
+            await asyncio.sleep(self.delay)
+        return self.body
+
+    async def text(self):
+        if self.delay > 0:
+            await asyncio.sleep(self.delay)
+        return self.body
+
+
+class MockHTTPReq:
+
+    def __init__(self, resp):
+        self._resp = resp
+
+    async def __aenter__(self):
+        return self._resp
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        pass
 
 
 def pristine_looped(f):
@@ -37,7 +70,7 @@ def pristine_looped(f):
 
 
 @pristine_looped
-def drive_coro_once(coro, timeout=None, swallow_timeout_error=True):
+def drive_coro_once(coro, timeout=None, swallow_timeout_error=False):
     loop = asyncio.get_event_loop()
     try:
         return loop.run_until_complete(asyncio.wait_for(coro, timeout))
