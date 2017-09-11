@@ -90,3 +90,11 @@ def _twitter_request_html_repr(self):
 
 def monkey_patch_ipython_disp():
     TwitterRequest._repr_html_ = _twitter_request_html_repr
+
+
+def running_task_names():
+    """
+    :return: list of all ``qual_name``s for running tasks.
+    """
+    tasks = asyncio.Task.all_tasks()
+    return [t._coro.__qualname__ for t in tasks if not t.done()]

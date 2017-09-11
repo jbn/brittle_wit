@@ -30,42 +30,40 @@ class TestTwitterReqToHTTPRequest(unittest.TestCase):
             self.assertEqual(type(req), aiohttp.client._RequestContextManager)
 
 
-class TestExecuteRequest(unittest.TestCase):
+class TestExecuteRequest(AsyncSafeTestCase):
 
     def setUp(self):
         self.cred = ClientCredentials(1, "token-alice", "****")
         self.twitter_req = TwitterRequest("method", "url", "family", "service")
 
-    def test_good_resp_and_json_body(self):
+    async def test_good_resp_and_json_body(self):
         rate_limit = RateLimit.from_ignorance()
         http_req = MockHTTPReq(MockHTTPResp(200, {}, {'count': 100}))
 
-        res = drive_coro_once(execute_req(self.cred,
-                                          self.twitter_req,
-                                          http_req,
-                                          rate_limit))
+        res = await execute_req(self.cred, self.twitter_req, http_req,
+                                rate_limit)
 
         self.assertIs(type(res), TwitterResponse)
         self.assertEqual(res.body['count'], 100)
 
-    def test_good_resp_and_text_body(self):
+    async def test_good_resp_and_text_body(self):
         self.twitter_req.parse_as = 'text'
         rate_limit = RateLimit.from_ignorance()
         http_req = MockHTTPReq(MockHTTPResp(200, {}, "hello world"))
 
         coro = execute_req(self.cred, self.twitter_req, http_req, rate_limit)
-        res = drive_coro_once(coro)
+        res = await coro
         self.assertIs(type(res), TwitterResponse)
         self.assertEqual(res.body, "hello world")
 
-    def test_bad_resp(self):
+    async def test_bad_resp(self):
         self.twitter_req.parse_as = 'text'
         rate_limit = RateLimit.from_ignorance()
         http_req = MockHTTPReq(MockHTTPResp(403, {}, "Forbidden"))
 
         coro = execute_req(self.cred, self.twitter_req, http_req, rate_limit)
         with self.assertRaises(TwitterError):
-            drive_coro_once(coro)
+            await coro
 
 
 class TestClientRequestProcessor(unittest.TestCase):
@@ -203,7 +201,7 @@ class RateLimitKludge:
             await asyncio.sleep(self.sleep_time)
 
 
-class TestClientRequestProcessorExecution(unittest.TestCase):
+class TestClientRequestProcessorExecution(AsyncSafeTestCase):
 
     def setUp(self):
         self.app_cred = AppCredentials("key", "secret")
@@ -213,11 +211,11 @@ class TestClientRequestProcessorExecution(unittest.TestCase):
         self.http_req = MockHTTPReq(MockHTTPResp(200, {}, {'count': 100}))
         self.twitter_req = TwitterRequest("method", "url", "family", "service")
 
-    def test__execute_prestine(self):
+    async def test__execute_prestine(self):
         coro = self.processor._execute('session', self.app_cred, self.twitter_req)
         func_path = 'brittle_wit.executors.twitter_req_to_http_req'
         with patch(func_path, return_value=self.http_req) as req_to_http_req:
-            resp = drive_coro_once(coro)
+            resp = await coro
 
             req_to_http_req.assert_called_with('session',
                                                self.app_cred,
@@ -227,14 +225,14 @@ class TestClientRequestProcessorExecution(unittest.TestCase):
             self.assertIs(type(resp), TwitterResponse)
             self.assertEqual(resp.body['count'], 100)
 
-    def test__execute_timeout_thrown(self):
+    async def test__execute_timeout_thrown(self):
         coro = self.processor._execute('session', self.app_cred, self.twitter_req, 0.01)
         self.processor._rate_limits['service'] = RateLimitKludge(self.twitter_req, self.client_cred, sleep_time=1)
 
         with self.assertRaises(asyncio.TimeoutError):
-            drive_coro_once(coro)
+            await coro
 
-    def test_execute_retrying(self):
+    async def test_execute_retrying(self):
         fail_queue = [True, False]
         client_cred = self.client_cred
 
@@ -243,12 +241,12 @@ class TestClientRequestProcessorExecution(unittest.TestCase):
         coro = self.processor.execute('session', self.app_cred, self.twitter_req,
                                       sleep_time=0.01)
         with patch(func_path, return_value=self.http_req) as req_to_http_req:
-            resp = drive_coro_once(coro)
+            resp = await coro
             self.assertIs(type(resp), TwitterResponse)
             self.assertEqual(resp.body['count'], 100)
             self.assertEqual(fail_queue, [])
 
-    def test_execute_retrying_too_many_failures(self):
+    async def test_execute_retrying_too_many_failures(self):
         http_req = MockHTTPReq(MockHTTPResp(200, {}, {'count': 100}))
         fail_queue = [True] * 6
         client_cred = self.client_cred
@@ -259,10 +257,10 @@ class TestClientRequestProcessorExecution(unittest.TestCase):
                                       sleep_time=0.01)
         with patch(func_path, return_value=self.http_req) as req_to_http_req:
             with self.assertRaises(TwitterError):
-                resp = drive_coro_once(coro)
+                resp = await coro
 
 
-class TestManagedClientRequestProcessors(unittest.TestCase):
+class TestManagedClientRequestProcessors(AsyncSafeTestCase):
 
     def setUp(self):
         self.manager = ManagedClientRequestProcessors()
@@ -295,6 +293,12 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
         self.assertIn(kept, self.manager._any_cred_queue)
         self.assertNotIn(removed, self.manager._any_cred_queue)
 
+    def test_remove_not_any_cred(self):
+        self.manager.add(self.alice, any_cred_eligible=False)
+        self.assertNotIn(self.alice, self.manager._any_cred_queue)
+        self.manager.remove(self.alice)
+        self.assertNotIn(self.alice, self.manager._any_cred_queue)
+
     def test_add_cannot_add_dup(self):
         self.manager.add(self.bob)
         with self.assertRaises(RuntimeError):
@@ -308,7 +312,12 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
                           for _ in range(10)},
                          {self.alice, self.bob})
 
-    def test_maintain(self):
+    def test__getitem__anycred_exhausted(self):
+        self.assertIsNone(self.manager[ANY_CREDENTIALS])
+        self.manager.add(self.bob)
+        self.assertEqual(self.manager[ANY_CREDENTIALS], self.bob)
+
+    def test__maintain(self):
         self.manager.add_all([self.alice, self.bob])
 
         now = time.time()
@@ -318,7 +327,46 @@ class TestManagedClientRequestProcessors(unittest.TestCase):
         self.assertTrue(self.manager.is_managed(self.alice))
         self.assertTrue(self.manager.is_managed(self.bob))
 
-        self.manager.maintain()
+        self.manager._maintain()
 
         self.assertTrue(self.manager.is_managed(self.alice))
         self.assertFalse(self.manager.is_managed(self.bob))
+
+    async def test_maintain_reraise_keyboard_interrupt(self):
+        path = 'brittle_wit.executors.ManagedClientRequestProcessors._maintain'
+        with patch(path, side_effect=KeyboardInterrupt()) as _maintain:
+            with async_ignore_sleep() as sleep_times:
+                with self.assertRaises(KeyboardInterrupt):
+                    await self.manager.maintain()
+
+    async def test_maintain_graceful_shutdown(self):
+        path = 'brittle_wit.executors.ManagedClientRequestProcessors._maintain'
+        with patch(path, side_effect=asyncio.CancelledError()) as _maintain:
+            with async_ignore_sleep() as sleep_times:
+                await self.manager.maintain()
+
+    async def test_maintain_catches_all_else(self):
+        exceptions = [RuntimeError("test"), KeyboardInterrupt()]
+
+        def f():
+            raise exceptions.pop(0)
+
+        path = 'brittle_wit.executors.ManagedClientRequestProcessors._maintain'
+        with patch(path, side_effect=f) as _maintain:
+            with async_ignore_sleep() as sleep_times:
+                with self.assertRaises(KeyboardInterrupt):
+                    await self.manager.maintain()
+
+
+class TestDebugBlockingRequest(unittest.TestCase):
+
+    def test_debug_blocking_request(self):
+        app_cred = AppCredentials("key", "secret")
+        client_cred = ClientCredentials(1, "token-alice", "****")
+        twitter_req = TwitterRequest("method", "url", "family", "service")
+
+        with patch('requests.request', return_value=42) as f:
+            res = debug_blocking_request(app_cred,
+                                         client_cred,
+                                         twitter_req)
+            self.assertEqual(res, 42)

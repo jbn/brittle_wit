@@ -51,6 +51,13 @@ class RateLimit:
         self._remaining = remaining
         self._reset_time = reset_time
 
+    @property
+    def sleep_time_remaining(self):
+        now = time.time()  # XXX: Is time.time() blocking?
+
+        # XXX: Time sync issue so always add 5 seconds?
+        return (self._reset_time - now + 5) if now < self._reset_time else 0
+
     async def comply(self):
         """
         Ensure request availability before allowing caller to proceed.
@@ -68,10 +75,9 @@ class RateLimit:
         object.
         """
         if self.is_exhausted:
-            now = time.time()  # XXX: Is time.time() blocking?
-            if now < self._reset_time:
-                # XXX: Time sync issue so always add 5 seconds?
-                await asyncio.sleep(self._reset_time - now + 5)
+            t_delta = self.sleep_time_remaining
+            if t_delta > 0:
+                await asyncio.sleep(t_delta)
             self._remaining = self._limit
 
         self._remaining -= 1

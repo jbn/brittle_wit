@@ -1,11 +1,12 @@
 import time
 import unittest
+from unittest.mock import patch
 from datetime import datetime
 from brittle_wit.rate_limit import RateLimit, TimingRateLimiter
 from test.helpers import *
 
 
-class TestRateLimit(unittest.TestCase):
+class TestRateLimit(AsyncSafeTestCase):
 
     def test_from_ignorance(self):
         rate_limit = RateLimit.from_ignorance()
@@ -69,31 +70,36 @@ class TestRateLimit(unittest.TestCase):
         rate_limit.mark_exhausted(orig_resp)
         self.assertTrue(rate_limit.is_exhausted)
 
-    def test_comply_without_sleeping(self):
+    async def test_comply_without_sleeping(self):
         rate_limit = RateLimit.from_ignorance()
         self.assertFalse(rate_limit.is_exhausted)
-        drive_coro_once(rate_limit.comply())
+        await rate_limit.comply()
         self.assertTrue(rate_limit.is_exhausted)
 
         rate_limit.update(mock_resp({'X-RATE-LIMIT-LIMIT': 100,
                                      'X-RATE-LIMIT-REMAINING': 0,
                                      'X-RATE-LIMIT-RESET': time.time() + 0.1}))
         self.assertTrue(rate_limit.is_exhausted)
-        drive_coro_once(rate_limit.comply())
+        await rate_limit.comply()
         self.assertFalse(rate_limit.is_exhausted)
 
-    def test_comply_with_sleeping(self):
-        # XXX Refactor this so no long wait time.
+    async def test_comply_with_sleeping(self):
         rate_limit = RateLimit.from_ignorance()
         self.assertFalse(rate_limit.is_exhausted)
-        drive_coro_once(rate_limit.comply())
+
+        await rate_limit.comply()
         self.assertTrue(rate_limit.is_exhausted)
 
         rate_limit.update(mock_resp({'X-RATE-LIMIT-LIMIT': 100,
                                      'X-RATE-LIMIT-REMAINING': 0,
-                                     'X-RATE-LIMIT-RESET': time.time() + 1}))
+                                     'X-RATE-LIMIT-RESET': time.time() + 360}))
         self.assertTrue(rate_limit.is_exhausted)
-        drive_coro_once(rate_limit.comply())
+
+        with async_patch('asyncio.sleep') as f:
+            await rate_limit.comply()
+        time_slept = f.call_args[0][0]
+        self.assertLess(time_slept, 360 + 5)
+        self.assertGreater(time_slept, 360 - 5)
         self.assertFalse(rate_limit.is_exhausted)
 
 
@@ -106,3 +112,7 @@ class TestTimingRateLimiter(unittest.TestCase):
 
         limiter._start_time -= 61
         self.assertTrue(limiter.can_proceed())
+
+
+if __name__ == '__main__':
+    unittest.main()

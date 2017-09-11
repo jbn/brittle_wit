@@ -318,12 +318,28 @@ class ManagedClientRequestProcessors:
                 self.add(cred)
                 return self._credentials[cred]
 
-    def maintain(self, cull_interval=FIFTEEN_MINUTES):
+    async def maintain(self, cull_interval=FIFTEEN_MINUTES):
         """
-        Maintains the request processors.
+        Maintains the request processors, forever.
 
         Mostly, this means cleaning up request processors, allowing GC.
+
+        :param cull_interval: how frequently, in seconds, maintain
+            should run.
         """
+        while True:
+            await asyncio.sleep(cull_interval)
+
+            try:
+                self._maintain()
+            except KeyboardInterrupt:
+                raise
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                LOGGER.error("Error %s during maintain()", e)
+
+    def _maintain(self):
         now = time.time()
 
         # Cleanup all the request processors and identify those which

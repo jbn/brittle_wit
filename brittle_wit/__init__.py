@@ -8,14 +8,17 @@ __version__ = "0.0.3"
 __author__ = "John Bjorn Nelson"
 __email__ = "jbn@abreka.com"
 
-from brittle_wit_core import Cursor, BrittleWitError, ELIDE
+
 from brittle_wit_core import AppCredentials, ClientCredentials
-from brittle_wit.executors import (ClientRequestProcessor,
-                                   ManagedClientRequestProcessors,
-                                   ANY_CREDENTIALS)
-from brittle_wit.streaming import (TwitterStream,
+from brittle_wit_core import BrittleWitError, Cursor, ELIDE
+from brittle_wit.executors import (ANY_CREDENTIALS,
+                                   ClientRequestProcessor,
+                                   LOGGER,
+                                   ManagedClientRequestProcessors)
+from brittle_wit.streaming import (basic_streamer,
                                    StreamProcessor,
-                                   StreamingHTTPPipe)
+                                   StreamingHTTPPipe,
+                                   TwitterStream)
 from brittle_wit.app import App
 from brittle_wit.helpers import monkey_patch_ipython_disp
 

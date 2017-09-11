@@ -4,8 +4,10 @@ import aiohttp
 import bz2
 
 from aiohttp import web
+from brittle_wit.rate_limit import RateLimit
 from brittle_wit_core import TwitterError, BrittleWitError
 from brittle_wit.executors import twitter_req_to_http_req, LOGGER
+import brittle_wit.connection_props as DEFAULTS
 
 
 class EntryProcessor:
@@ -132,7 +134,6 @@ class TwitterStream:
         self._http_req = None
         self._resp = None
 
-    @property
     def is_open(self):
         """
         :return: True if their is an active connection to Twitter's servers.
@@ -147,7 +148,7 @@ class TwitterStream:
         # There may only be one set of credentials connected to a streaming
         # endpoint at a time. Preempting an existing connection is
         # error-prone. Complain loudly when a connection already exists.
-        if self.is_open:
+        if self.is_open():
             raise RuntimeError("Already connected. Call close() first!")
 
         self._http_req = twitter_req_to_http_req(self._session,
@@ -155,6 +156,7 @@ class TwitterStream:
                                                  self._client_cred,
                                                  self._twitter_req,
                                                  timeout=None)
+
     def disconnect(self):
         """
         Disconnect the stream from Twitter's servers.
@@ -162,6 +164,7 @@ class TwitterStream:
         if self._http_req is not None:
             self._http_req.close()
             self._http_req = None
+            self._resp = None
 
     def reconnect(self, force_close_if_open=True, clear_prior_messages=False):
         """
@@ -174,7 +177,7 @@ class TwitterStream:
             prior connection
         """
         # Twitter wants one IP per connection.
-        if self.is_open:
+        if self.is_open():
             if force_close_if_open:
                 self.disconnect()
             else:
@@ -196,8 +199,10 @@ class TwitterStream:
         """
         Commence streaming, returning this object as an iterator.
         """
-        if not self.is_open:
+        if not self.is_open():
             self._connect()
+        elif self._resp is not None:
+            return self  # Stream processor depends on this behavior.
 
         # XXX. I hate the next line. Is there a decontextualize pattern?
         self._resp = await self._http_req.__aenter__()
@@ -281,120 +286,19 @@ class LambdaStreamHandler(StreamReceiver):
         return self._underlying_func(msg)
 
 
-class StreamProcessor:
+class StreamingHTTPPipe(StreamReceiver):
+    """
+    Utility StreamReceiver which pipes messages to streaming HTTP clients.
 
-    def __init__(self, twitter_stream):
-        self._twitter_stream = twitter_stream
-        self._subscribers = {}
-        self._requires_json = False
-
-    def subscribe(self, receiver, as_json=False):
-        """
-        Subscribe a given receiver to the stream.
-
-        :param receiver: a StreamReceiver object
-        :param as_json: json parsing is relatively expensive. if a subscriber
-            requires json, json parsing occurs, but only once for all the
-            subscribers requiring json. Otherwise, there is no json parsing
-        """
-        handler_id = id(receiver)
-
-        if handler_id in self._subscribers:
-            raise RuntimeError("Already subscribed!")
-
-        if not hasattr(receiver, "send"):
-            raise RuntimeError("Handler must implement send(msg)")
-
-        if as_json:
-            self._requires_json = True
-
-        self._subscribers[handler_id] = (receiver, as_json)
-        return handler_id
-
-    def unsubscribe(self, receiver):
-        """
-        Unsubscribe the given receiver from stream processing.
-
-        :param receiver: an already subscribed receiver
-        """
-        handler_id = id(receiver)
-
-        if handler_id not in self._subscribers:
-            msg = "Either never subscribed or already unsubscribed!"
-            raise RuntimeError(msg)
-
-        required_json = self._subscribers[handler_id][1]
-
-        del self._subscribers[handler_id]
-
-        if required_json and not any(p[1] for p in self._subscribers.values()):
-            self._requires_json = False
-
-    def _send_to_all(self, message):
-        # JSON parsing is expensive. If the application only pipes the
-        # Twitter Stream to HTTP clients, it's dead time. The pattern
-        # would be: BYTES -> JSON -> BYTES
-        if self._requires_json:
-            json_message = json_entry_parser(message)
-
-        for subscriber, as_json in self._subscribers.values():
-            subscriber.send(json_message if as_json else message)
-
-    async def run(self):
-        # Retry Strategy: https://dev.twitter.com/streaming/overview/connecting
-        # TODO: More compliant!
-        failures, failed = 0, False
-        failed, msg, sleep_time = False, None, 0
-        while True:
-            try:
-                async for message in self._twitter_stream:
-                    self._send_to_all(message)
-                    failed = False  # TODO: FIX: This is such a waste!
-            except TwitterError as e:
-                # The docs only say 420. But, I suspect 429 codes, too.
-                if e.status_code == 420 or e.status_code == 429:
-                    sleep_time = 60 * 2**failures
-                    msg = "Stream 420'd waiting a {} seconds (failure {})"
-                    LOGGER.error(msg.format(sleep_time, failures))
-                else:
-                    sleep_time = min(5 * 2**failures, 320)
-                    msg = "Stream {}'d waiting b {} seconds (failure {})"
-                    LOGGER.error(msg.format(e.status_code, sleep_time,
-                                            failures))
-                    print(e._http_resp)  # FIX: XXX: HACK: FUCK
-
-                failed = True
-            except BrittleWitError as e:
-                if e.is_retryable:  # TODO FIX as is network error.
-                    sleep_time = min(0.25 * failures, 16)
-                    msg = "Stream {}'d waiting c {} seconds (failure {})"
-                    LOGGER.error(msg.format(repr(e), sleep_time, failures))
-                    failed = True
-            except KeyboardInterrupt:
-                raise
-            except asyncio.TimeoutError:
-                sleep_time = min(0.25 * failures, 16)
-                msg = "Stream timeout waiting {} e seconds (failure {})"
-                LOGGER.error(msg.format(sleep_time, failures))
-                failed = True
-            except Exception as e:
-                print(e)
-                sleep_time = min(0.25 * failures, 16)
-                msg = "Stream {}'d waiting {} d seconds (failure {})"
-                LOGGER.error(msg.format(repr(e), sleep_time, failures))
-                failed = True
-                raise
-
-            if failed:
-                self._twitter_stream.disconnect()
-                await asyncio.sleep(sleep_time)
-                failures += 1
-                LOGGER.error("RECONNECTING")
-                self._twitter_stream.reconnect(force_close_if_open=True)
-                LOGGER.error("AFTER RECONNECT, RESUMING STREAM")
-
-
-class StreamingHTTPPipe:
+    Example
+    -------
+    > pipe = StreamingHTTPPipe()
+    > stream_processor.subscribe(pipe, False)
+    > app = aiohttp.web.Application()
+    > app.router.add_get('/', pipe.handle())
+    > server = loop.create_server(httpd.make_handler(), "0.0.0.0", 8394)
+    > loop.run_until_complete(server)
+    """
     DEFAULT_HEADERS = {'Content-Type': 'application/json'}
 
     def __init__(self, **resp_headers):
@@ -436,59 +340,155 @@ class StreamingHTTPPipe:
                 # possible write. But, I do know it would be quite
                 # wrong for a write to one client to cause failures
                 # in other clients.
-                print("Send", repr(e))
                 finished_flag.set()
                 removal_set.append(caller_id)
-                raise e
 
         for k in removal_set:
             del self._clients[k]
 
 
-async def save_raw_stream(session, app_cred, client_cred, twitter_req,
-                          output_path, chunk_size=4096, timeout=30):
+class StreamProcessor:
     """
-    Save response headers and timeout seconds of response for a streaming req.
-
-    I use this function to save some stream output so I can write text fixtures
-    against the streaming API.
-
-    :param session: the aiohttp ClientSession
-    :param app_cred: an AppCredentials object
-    :param client_cred: a ClientCredentials object
-    :param twitter_req: the TwitterRequest for the streaming endpoint
-    :param output_path: the output path. Technically, this is a prefix as the
-        function writes two output files: prefix + '.headers.json' and
-        prefix + '.content.raw'
-    :param chunk_size: the number of bytes for read chunking
-    :param timeout: the number of seconds to pipe response to file output
-        before exiting.
+    Sends TwitterResponses from a Stream to subscribers.
     """
-    header_path = output_path + ".headers.json"
-    content_path = output_path + ".content.raw"
 
-    http_req = twitter_req_to_http_req(session, app_cred,
-                                       client_cred, twitter_req,
-                                       timeout=None)
+    def __init__(self, twitter_stream):
+        self._twitter_stream = twitter_stream
+        self._subscribers = {}
+        self._requires_json = False
+        self._n_failures = False
 
-    # This uses blocking file operations. It's possible that a slow
-    # disk could generate a stale warning. But, that's fine for the
-    # use case of this function: debugging. A stale warning is useful
-    # information to have in a saved feed as a fixture.
-    with open(header_path, "w") as hp, open(content_path, "wb") as fp:
-        try:
-            with aiohttp.Timeout(timeout):
-                async with http_req as resp:
-                    # Save response headers.
-                    json.dump({k: v for k, v in resp.headers.items()},
-                              hp, indent=4)
+    def subscribe(self, receiver, as_json=False):
+        """
+        Subscribe a given receiver to the stream.
 
-                    while True:
-                        chunk = await resp.content.read(chunk_size)
-                        if not chunk:
-                            break
-                        fp.write(chunk)
-        except asyncio.TimeoutError:
-            pass
+        :param receiver: a StreamReceiver object
+        :param as_json: json parsing is relatively expensive. if a subscriber
+            requires json, json parsing occurs, but only once for all the
+            subscribers requiring json. Otherwise, there is no json parsing
+        """
+        # It's preferable to derive a class from StreamReceiver, but sometimes
+        # it adds complexity. Send is the duck-type-required method.
+        if not hasattr(receiver, "send"):
+            raise AttributeError("Handler must implement send(msg)")
+
+        handler_id = id(receiver)
+
+        if handler_id in self._subscribers:
+            raise RuntimeError("Already subscribed!")
+
+        if as_json:
+            self._requires_json = True
+
+        self._subscribers[handler_id] = (receiver, as_json)
+        return handler_id
+
+    def unsubscribe(self, receiver):
+        """
+        Unsubscribe the given receiver from stream processing.
+
+        :param receiver: an already subscribed receiver
+        """
+        handler_id = id(receiver)
+
+        if handler_id not in self._subscribers:
+            msg = "Either never subscribed or already unsubscribed!"
+            raise RuntimeError(msg)
+
+        required_json = self._subscribers[handler_id][1]
+
+        del self._subscribers[handler_id]
+
+        if required_json and not any(p[1] for p in self._subscribers.values()):
+            self._requires_json = False
+
+    def _send_to_all(self, message):
+        # JSON parsing is expensive. If the application only pipes the
+        # Twitter Stream to HTTP clients, it's dead time. The pattern
+        # would be: BYTES -> JSON -> BYTES
+        if self._requires_json:
+            json_message = json_entry_parser(message)
+
+        for subscriber, as_json in self._subscribers.values():
+            subscriber.send(json_message if as_json else message)
+
+    async def _stream_to_subscribers(self):
+        # Take one. If it's successful, this lets us reset the failure count.
+        # One assignment for each send is a waste of cycles!
+        async for message in self._twitter_stream:
+            self._send_to_all(message)
+            self._n_failures = 0
+            break
+
+        async for message in self._twitter_stream:
+            self._send_to_all(message)
+
+    async def run(self):
+        """
+        Run the StreamProcessor, parsing the stream and sending responses.
+
+        Retry Strategy: https://dev.twitter.com/streaming/overview/connecting
+        """
+        sleep_time = 0
+
+        while True:
+            try:
+                await self._stream_to_subscribers()
+            except KeyboardInterrupt:
+                LOGGER.error("User requested termination (KeyboardInterrupt)!")
+                raise  # You're debugging, and want things to stop.
+            except TwitterError as e:
+                if e.status_code == 420:
+                    # > Back off exponentially for HTTP 420 errors.
+                    # > Start with a 1 minute wait and double each attempt.
+                    sleep_time = min(2**self._n_failures, 16) * 60
+                elif e.status_code == 429:
+                    # You've been rate limited.
+                    rate_limit = RateLimit.from_response(self._resp)
+                    sleep_time = rate_limit.sleep_time_remaining
+                else:
+                    # > Back off exponentially for HTTP errors for which
+                    # > reconnecting would be appropriate. Start with a 5
+                    # > second wait, doubling each attempt, up to 320 seconds.
+                    sleep_time = min(2**self._n_failures * 5, 320)
+                msg = "Stream %s'd waiting a %d seconds (failure #%d)"
+                LOGGER.error(msg, e, sleep_time, self._n_failures)
+            except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+                # > These problems are generally temporary and tend to clear
+                # > quickly. Increase the delay in reconnects by 250ms each
+                # > attempt, up to 16 seconds.
+                sleep_time = min(0.25 * (self._n_failures + 1), 16.0)
+                msg = "Stream %s'd waiting a %d seconds (failure #%d)"
+                LOGGER.error(msg, e, sleep_time, self._n_failures)
+            except Exception as e:
+                LOGGER.error("Aborting on %s", e)
+                raise
+
+            self._n_failures += 1
+            # You have to completely disconnect!
+            self._twitter_stream.disconnect()
+            await asyncio.sleep(sleep_time)
 
 
+async def basic_streamer(app_cred, client_cred, twitter_req, callback,
+                         as_json=True):
+    """
+    Process a simple stream with a callback.
+
+    :param app_cred: the AppCredentials
+    :param client_cred: the ClientCredentials
+    :param twitter_req: the TwitterRequest to initiate streaming
+    :param callback: a callback in the form of ``f(tweet_obj)``
+    :param as_json: if True (default) parse each message as json
+    """
+    handler = LambdaStreamHandler(callback)
+
+    opts = DEFAULTS.SESSION_OPTS.copy()
+    opts['connector'] = aiohttp.TCPConnector(**DEFAULTS.TCP_CONN_STREAMING)
+
+    with aiohttp.ClientSession(**opts) as sess:
+        stream = TwitterStream(sess, app_cred, client_cred, twitter_req)
+        processor = StreamProcessor(stream)
+        processor.subscribe(handler, as_json)
+
+        await processor.run()

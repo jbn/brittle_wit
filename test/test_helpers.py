@@ -2,11 +2,12 @@ import os
 import unittest
 import brittle_wit as bw
 import brittle_wit.rest_api as rest_api
-from test.helpers import load_fixture_txt, drive_coro_once
+from test.helpers import load_fixture_txt, AsyncSafeTestCase
 from brittle_wit_core import TwitterError
-from brittle_wit.helpers import (parse_datetime, grouping,
+from brittle_wit.helpers import (parse_datetime, grouping, running_task_names,
                                  linear_backoff, expon_backoff, retrying,
                                  _twitter_request_html_repr)
+
 
 def failure_script(ret_val, *failure_schedule):
     failure_schedule = list(failure_schedule)
@@ -25,7 +26,7 @@ def make_twitter_error(status_code):
     return TwitterError(None, None, resp, "none")
 
 
-class TestHelpers(unittest.TestCase):
+class TestHelpers(AsyncSafeTestCase):
 
     def test_parse_datetime(self):
         s = "tue mar 29 15:40:03 +0000 2016"
@@ -42,35 +43,38 @@ class TestHelpers(unittest.TestCase):
     def test_expon_backoff(self):
         self.assertEqual(expon_backoff(3, 60), 240)
 
-    def test_retrying_on_no_failures(self):
+    async def test_retrying_on_no_failures(self):
         coro = failure_script(True)
-        self.assertTrue(drive_coro_once(retrying(coro, 1)))
+        self.assertTrue(await retrying(coro, 1))
 
-    def test_retrying_non_retryable(self):
+    async def test_retrying_non_retryable(self):
         err = make_twitter_error(1)
         coro = failure_script(True, err)
         with self.assertRaises(TwitterError):
-            self.assertTrue(drive_coro_once(retrying(coro, 2)))
+            self.assertTrue(await retrying(coro, 2))
 
-    def test_retrying_after_one_failure_tries_left(self):
+    async def test_retrying_after_one_failure_tries_left(self):
         err = make_twitter_error(500)
         coro = failure_script(True, err)
-        self.assertTrue(drive_coro_once(retrying(coro, 2, sleep_time=0)))
+        self.assertTrue(await retrying(coro, 2, sleep_time=0))
 
-    def test_retrying_after_one_failure_after_all_tries(self):
+    async def test_retrying_after_one_failure_after_all_tries(self):
         err = make_twitter_error(500)
         coro = failure_script(True, err)
         with self.assertRaises(TwitterError):
-            self.assertTrue(drive_coro_once(retrying(coro, 1)))
+            self.assertTrue(await retrying(coro, 1))
 
-    def test_retrying_given_known_retryable_codes(self):
+    async def test_retrying_given_known_retryable_codes(self):
         # Be overly cautious with this test. It's hard to test services!
         for code in [500, 502, 503, 504]:
             err = make_twitter_error(code)
             coro = failure_script(True, err)
             with self.assertRaises(TwitterError):
-                self.assertTrue(drive_coro_once(retrying(coro, 1)))
+                self.assertTrue(await retrying(coro, 1))
 
+    async def test_running_task_names(self):
+        self.assertEqual(['TestHelpers.test_running_task_names'],
+                         running_task_names())
 
 
 class TestIPythonHelpers(unittest.TestCase):

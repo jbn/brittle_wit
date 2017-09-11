@@ -1,16 +1,17 @@
-import unittest
-import os
+import aiohttp
 import bz2
+import os
+import unittest
+
+from aiohttp import web
 import brittle_wit
-from test.helpers import drive_coro_once
 from unittest.mock import Mock, MagicMock, patch
 from brittle_wit_core import AppCredentials, ClientCredentials, TwitterRequest
 from brittle_wit.streaming import *
-from test.helpers import FIXTURES_DIR
-
-
-SERIALIZATION_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                                 'tmp')
+from test.helpers import (FIXTURES_DIR, AsyncSafeTestCase, MockHTTPResp,
+                          SERIALIZATION_DIR, async_patch, async_ignore_sleep,
+                          mock_http_req, mock_content_reader,
+                          ensure_deleted, mock_stream)
 
 
 class TestEntryProcessor(unittest.TestCase):
@@ -85,7 +86,7 @@ class TestParsers(unittest.TestCase):
 
 
 # XXX: TODO: Brittle as fuck.
-class TestTwitterStream(unittest.TestCase):
+class TestTwitterStream(AsyncSafeTestCase):
 
     def setUp(self):
         self.twitter_req = brittle_wit.streaming_api.statuses.filter()
@@ -97,11 +98,12 @@ class TestTwitterStream(unittest.TestCase):
                                     self.twitter_req)
 
     def test_is_not_open_by_default(self):
-        self.assertFalse(self.stream.is_open)
+        self.assertFalse(self.stream.is_open())
 
     def test_no_double_connecting(self):
         self.stream._connect()
         self.assertTrue(self.session.request.called)
+
         self.stream._resp = Mock()
         self.stream._resp.connection.closed = False
 
@@ -113,6 +115,7 @@ class TestTwitterStream(unittest.TestCase):
         http_req = Mock()
         self.stream._http_req = http_req
         self.stream.disconnect()
+
         self.assertTrue(http_req.close.called)
         self.assertIs(self.stream._http_req, None)
 
@@ -124,79 +127,68 @@ class TestTwitterStream(unittest.TestCase):
 
     def test_reconnect_forces_closure(self):
         self.stream._connect()
-        self.stream._resp = Mock()
-        self.stream._resp.connection.closed = True
-        self.stream.reconnect()
-
-    def test__aiter__200_status(self):
+        self.stream._http_req = Mock()
         self.stream._resp = Mock()
         self.stream._resp.connection.closed = False
+        self.stream.reconnect()
 
+    def test_reconnect_errs_if_open(self):
+        self.stream._connect()
+        self.stream._http_req = Mock()
+        self.stream._resp = Mock()
+        self.stream._resp.connection.closed = False
+        self.assertTrue(self.stream.is_open())
+        with self.assertRaisesRegexp(RuntimeError, 'open stream'):
+            self.stream.reconnect(force_close_if_open=False)
+
+    async def test__aiter__200_status(self):
+        self.stream._resp = Mock()
+        self.stream._resp.connection.closed = False
         self.stream._connect = Mock()
+        self.stream._http_req = mock_http_req(200, False)
 
-        class MockReq:
-            async def __aenter__(self):
-                resp = Mock()
-                resp.connection.closed = False
-                resp.status = 200
+        self.assertIs(await self.stream.__aiter__(), self.stream)
 
-                return resp
-
-        self.stream._http_req = MockReq()
-
-        drive_coro_once(self.stream.__aiter__())
-
-    def test__aiter__300_status(self):
-        class MockResp:
-
-            def __init__(self):
-                self.status = 500
-
-            @property
-            def connection(self):
-                m = Mock()
-                m.closed = True
-                return m
-
-            async def text(self):
-                return "mock text"
-
-        self.stream._resp = MockResp()
-
+    async def test__aiter__auto_connect(self):
+        self.stream._resp = Mock()
+        self.stream._resp.connection.closed = True
         self.stream._connect = Mock()
+        self.stream._http_req = mock_http_req(200, False)
 
-        class MockReq:
-            async def __aenter__(self):
-                return MockResp()
+        await self.stream.__aiter__()
+        self.stream._connect.assert_called_once_with()
 
-        self.stream._http_req = MockReq()
+    async def test__aiter__300_status(self):
+        with patch.object(self.stream, 'is_open', return_value=True) as pred:
+            self.stream._http_req = mock_http_req(500, True, 'mock text')
 
-        with self.assertRaises(TwitterError):
-            drive_coro_once(self.stream.__aiter__())
+            with self.assertRaises(TwitterError):
+                await self.stream.__aiter__()
 
-    def test__anext__(self):
+            pred.assert_called_once_with()
 
-        class MockRead:
+    async def test__anext__(self):
+        messages = [b"this is a message\r\nthis is another\r\n"]
 
-            async def read(self, n):
-                return b"this is a message\r\nthis is another\r\n"
-
-        class MockResp:
-
-            @property
-            def content(self):
-                return MockRead()
-
-        self.stream._resp = MockResp()
-        msg = drive_coro_once(self.stream.__anext__())
+        self.stream._resp = mock_content_reader(messages)
+        msg = await self.stream.__anext__()
         self.assertEqual(msg, b"this is a message")
-        msg = drive_coro_once(self.stream.__anext__())
+
+        msg = await self.stream.__anext__()
         self.assertEqual(msg, b"this is another")
 
-class TestFeedReceivers(unittest.TestCase):
+        with self.assertRaises(StopAsyncIteration):
+            msg = await self.stream.__anext__()
 
-    def test_feed_serializer(self):
+
+class TestFeedReceivers(AsyncSafeTestCase):
+
+    def test_stream_receiver_close_does_nothing_for_base(self):
+        StreamReceiver().close()
+
+    def test_feed_serializer_bz2(self):
         output_path = os.path.join(SERIALIZATION_DIR, "feed.bz2")
+        ensure_deleted(output_path)
 
         feed_serializer = FeedSerializer(output_path, as_bz2=True)
 
@@ -211,7 +203,29 @@ class TestFeedReceivers(unittest.TestCase):
             res = [json.loads(s.decode('utf8')) for s in fp.readlines()]
             self.assertEqual(res, messages)
 
-        os.unlink(output_path)
+        self.assertEqual(10, 20)
+        ensure_deleted(output_path)
+
+    def test_feed_serializer_bz2(self):
+        output_path = os.path.join(SERIALIZATION_DIR, "feed.jsonl")
+        ensure_deleted(output_path)
+
+        feed_serializer = FeedSerializer(output_path,
+                                         overwrite_existing=True,
+                                         as_bz2=False)
+
+        messages = [[1, 2], [3, 4]]
+        for msg in messages:
+            feed_serializer.send(msg)
+
+        # XXX: Ensure close called?
+        feed_serializer.close()
+
+        with open(output_path, 'rb') as fp:
+            res = [json.loads(s.decode('utf8')) for s in fp.readlines()]
+            self.assertEqual(res, messages)
+
+        ensure_deleted(output_path)
 
     def test_lambda_stream_handler(self):
         received = []
@@ -223,8 +237,46 @@ class TestFeedReceivers(unittest.TestCase):
 
         self.assertEqual(received, messages)
 
+    async def test_streaming_http_pipe(self):
+        pipe = StreamingHTTPPipe()
+        httpd = web.Application()
+        httpd.router.add_get('/', pipe.handle)
 
-class TestStreamingProcessor(unittest.TestCase):
+        msgs = [b'abcdefghij', b'klmnopqrst', b'ABCDEFGHIJ', b'KLMNOPQRST']
+
+        async def dispatch_msgs():
+            for msg in msgs:
+                pipe.send(msg)
+
+        async def client(n_reads):
+            collected = []
+
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get('http://localhost:8394') as resp:
+                    self.assertEqual(resp.status, 200)
+
+                    for i in range(n_reads):
+                        collected.append(await resp.content.read(10))
+
+                    resp.close()
+
+            return collected
+
+        loop = asyncio.get_event_loop()
+        await loop.create_server(httpd.make_handler(), "localhost", 8394)
+
+        alice = loop.create_task(client(3))
+        bob = loop.create_task(client(4))
+
+        await asyncio.sleep(1)
+
+        await dispatch_msgs()
+
+        self.assertEqual(await asyncio.wait_for(alice, 9), msgs[:3])
+        self.assertEqual(await asyncio.wait_for(bob, 9), msgs[:4])
+
+
+class TestStreamingProcessor(AsyncSafeTestCase):
 
     def setUp(self):
         byte_msgs, json_msgs = [], []
@@ -241,6 +293,11 @@ class TestStreamingProcessor(unittest.TestCase):
         sp = StreamProcessor(None)
         sp.subscribe(self.json_handler, True)
         self.assertTrue(sp._requires_json)
+
+    def test_subscribe_receiver_must_implement_send(self):
+        sp = StreamProcessor(None)
+        with self.assertRaises(AttributeError):
+            sp.subscribe(None, True)
 
     def test_no_duplicate_subscriptions(self):
         sp = StreamProcessor(None)
@@ -276,11 +333,96 @@ class TestStreamingProcessor(unittest.TestCase):
         self.assertEqual(self.byte_msgs,
                          [json.dumps(m).encode() for m in messages])
 
+    async def test_stream_to_subscribers(self):
+        expected = [b"a", b"b"]
 
-class TestSaveRawStream(unittest.TestCase):
+        sp = StreamProcessor(None)
+        sp._twitter_stream = mock_stream(expected)
+        sp.subscribe(self.byte_handler, False)
+        await sp._stream_to_subscribers()
+        self.assertEqual(self.byte_msgs, expected)
 
-    def test_save_raw_stream(self):
-        output_path = os.path.join(FIXTURES_DIR, "raw_stream")
+    async def test_run_aborts_on_keyboard_interrupt(self):
+        sp = StreamProcessor(None)
+        sp._twitter_stream = mock_stream([KeyboardInterrupt()])
 
-        # coro = save_raw_stream(session, app_cred, client_cred, req, output_path)
-        # drive_coro_once(coro)
+        # This is more explicit as a reminder: KeyboardInterrupts are weird.
+        # There is some weirdness with KeyboardException and nosetest.
+        # It can make things seem like they are working!
+        raised = False
+        try:
+            await sp.run()
+        except KeyboardInterrupt:
+            raised = True
+        self.assertTrue(raised)
+
+    async def test_run_reraises_unguarded_exception(self):
+        sp = StreamProcessor(None)
+        sp._twitter_stream = mock_stream([AttributeError()])
+        with self.assertRaises(AttributeError):
+            await sp.run()
+
+    async def _assert_run_expectations(self, expected, messages, **overrides):
+        sp = StreamProcessor(mock_stream(messages))
+        for k, v in overrides.items():
+            setattr(sp, k, v)
+
+        with async_ignore_sleep() as sleep_times:
+            with patch.object(sp._twitter_stream, 'disconnect') as disconnect:
+                with self.assertRaisesRegexp(RuntimeError, "Sentinel"):
+                    await sp.run()
+
+            self.assertEqual(len(disconnect.call_args_list), len(expected))
+            self.assertEqual(sleep_times(), expected)
+
+    async def test_run_on_timeout_error(self):
+        expected = [min(0.25 * i, 16.0) for i in range(1, 66)]
+        messages = ([asyncio.TimeoutError()] * len(expected) +
+                    [RuntimeError("Sentinel")])
+        await self._assert_run_expectations(expected, messages)
+
+    async def test_run_on_client_error(self):
+        expected = [min(0.25 * i, 16.0) for i in range(1, 66)]
+        messages = ([aiohttp.ClientError()] * len(expected) +
+                    [RuntimeError("Sentinel")])
+        await self._assert_run_expectations(expected, messages)
+
+    async def test_run_on_420_error(self):
+        err = TwitterError(None, None, MockHTTPResp(420, [], None), '')
+        expected = [60, 120, 240, 480, 960, 960]
+        messages = ([err] * len(expected) + [RuntimeError("Sentinel")])
+        await self._assert_run_expectations(expected, messages)
+
+    async def test_run_on_other_twitter_error(self):
+        err = TwitterError(None, None, MockHTTPResp(500, [], None), '')
+        expected = [5, 10, 20, 40, 80, 160, 320, 320]
+        messages = ([err] * len(expected) + [RuntimeError("Sentinel")])
+        await self._assert_run_expectations(expected, messages)
+
+    async def test_run_on_rate_limit(self):
+        err = TwitterError(None, None, MockHTTPResp(429, [], None), '')
+        expected = [42] * 3
+        messages = ([err] * len(expected) + [RuntimeError("Sentinel")])
+
+        mock_limit = Mock()
+        mock_limit.sleep_time_remaining = 42
+        with patch('brittle_wit.rate_limit.RateLimit.from_response', return_value=mock_limit):
+            await self._assert_run_expectations(expected, messages, _resp=None)
+
+
+class TestBasicStreamer(AsyncSafeTestCase):
+
+    async def test_basic_streamer(self):
+        app_cred = AppCredentials("app", "secret"),
+        client_cred = ClientCredentials(1, "client", "secret"),
+        twitter_req = brittle_wit.streaming_api.statuses.sample()
+        callback = Mock()
+
+        expected = [b'{"status": "a"}', b'{"status": "b"}', RuntimeError('Sentinel')]
+
+        stream = mock_stream(expected)
+        with patch('brittle_wit.streaming.TwitterStream', return_value=stream) as stream:
+            with self.assertRaisesRegexp(RuntimeError, 'Sentinel'):
+                await basic_streamer(app_cred, client_cred, twitter_req, callback)
+            callbacks = [call[0][0] for call in callback.call_args_list]
+            self.assertEqual([{'status': "a"}, {'status': "b"}], callbacks)

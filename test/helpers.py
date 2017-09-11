@@ -1,13 +1,20 @@
 import asyncio
 import json
+import logging
 import os
 import unittest
+from unittest.mock import Mock, patch
+from contextlib import contextmanager
 from collections import namedtuple
 from functools import wraps
+from inspect import iscoroutinefunction
 
 
 SELF_DIR = os.path.dirname(os.path.realpath(__file__))
+
 FIXTURES_DIR = os.path.join(SELF_DIR, "fixtures")
+
+SERIALIZATION_DIR = os.path.join(SELF_DIR, "tmp")
 
 
 def load_fixture_txt(file_name):
@@ -18,6 +25,92 @@ def load_fixture_txt(file_name):
 def load_fixture_json(file_name):
     with open(os.path.join(FIXTURES_DIR, file_name)) as fp:
         return json.load(fp)
+
+
+@contextmanager
+def async_patch(*args, **kwargs):
+    value = kwargs.get('return_value')
+    if 'return_value' in kwargs:
+        del kwargs['return_value']
+
+    async def basic_coro():
+        return value
+
+    def side_effect(*args, **kwargs):
+        return basic_coro()  # Make a new coroutine for each call.
+
+    kwargs['side_effect'] = side_effect
+
+    with unittest.mock.patch(*args, **kwargs) as f:
+        yield f
+
+
+@contextmanager
+def async_ignore_sleep():
+    with async_patch('asyncio.sleep') as f:
+        def sleep_times():
+            return [call[0][0] for call in f.call_args_list]
+        yield sleep_times
+
+
+def mock_http_req(status, closed, body_as_text=''):
+
+    async def text():
+        return body_as_text
+
+    resp = Mock()
+    resp.connection.closed = closed
+    resp.status = status
+    resp.text = lambda: text()
+
+    class MockReq:
+        async def __aenter__(self):
+            return resp
+
+    return MockReq()
+
+
+def ensure_deleted(file_path):
+    try:
+        os.unlink(file_path)
+    except FileNotFoundError:
+        pass
+
+
+def mock_content_reader(messages):
+    messages = messages[:]
+
+    async def read(n):
+        return messages.pop(0) if messages else ''
+
+    resp = Mock()
+    resp.content.read = lambda n: read(n)
+    return resp
+
+
+def mock_stream(messages):
+    messages = messages[:]
+
+    class MockStream:
+
+        async def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            if not messages:
+                raise StopAsyncIteration
+
+            msg = messages.pop(0)
+
+            if isinstance(msg, BaseException):
+                raise msg
+            else:
+                return msg
+
+        def disconnect(self):
+            pass
+
+    return MockStream()
 
 
 def mock_resp(headers):
@@ -55,46 +148,41 @@ class MockHTTPReq:
         pass
 
 
-def pristine_looped(f):
+def make_coro_runner(f):
+
     @wraps(f)
-    def _f():
-        old_loop = asyncio.get_event_loop()
-        new_loop = asyncio.new_event_loop()
-        try:
-            asyncio.set_event_loop(new_loop)
-            f()
-        finally:
-            new_loop.close()
-            asyncio.set_event_loop(old_loop)
-    return f
+    def coro_runner_test(self):
+        # Create a new event loop.
+        loop = asyncio.new_event_loop()
+        loop.set_debug(True)
+        logging.getLogger('asyncio').setLevel(logging.WARNING)
+        asyncio.set_event_loop(loop)
+
+        # Run it.
+        loop.run_until_complete(f(self))
+
+        # Close it.
+        loop.close()
+
+    return coro_runner_test
 
 
-@pristine_looped
-def drive_coro_once(coro, timeout=None, swallow_timeout_error=False):
-    loop = asyncio.get_event_loop()
-    try:
-        return loop.run_until_complete(asyncio.wait_for(coro, timeout))
-    except asyncio.TimeoutError as e:
-        if not swallow_timeout_error:
-            raise e
+class AsyncSafeTestCase(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        updates = {}
+        for k, f in vars(cls).items():
+            if k.startswith('test') and iscoroutinefunction(f):
+                setattr(cls, k, make_coro_runner(f))
 
 
-@pristine_looped
-def drive_all(coros, timeout=None, swallow_timeout_error=True, interval=0.01):
-    loop = asyncio.get_event_loop()
+# https://blog.miguelgrinberg.com/post/unit-testing-asyncio-code
+def AsyncMock(*args, **kwargs):
+    m = mock.MagicMock(*args, **kwargs)
 
-    async def _collector():
-        tasks = []
+    async def mock_coro(*args, **kwargs):
+        return m(*args, **kwargs)
 
-        for coro in coros:
-            tasks.append(loop.create_task(coro))
-            # Loosely enforce ordering using sleep.
-            # XXX: This is a FUCKING fragile test.
-            await asyncio.sleep(interval)
-
-        results = []
-        for task in asyncio.as_completed(tasks):
-            results.append(await task)
-        return results
-
-    return loop.run_until_complete(_collector())
+    mock_coro.mock = m
+    return mock_coro

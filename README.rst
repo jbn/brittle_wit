@@ -1,7 +1,7 @@
 .. image:: https://travis-ci.org/jbn/brittle_wit.svg?branch=master
     :target: https://travis-ci.org/jbn/brittle_wit
-.. image:: https://ci.appveyor.com/api/projects/status/69kj3prrrieyp8q2/branch/master?svg=true
-    :target: https://ci.appveyor.com/project/jbn/brittle_wit/branch/master 
+.. image:: https://ci.appveyor.com/api/projects/status/9k78nhy88v51fd69?svg=true
+    :target: https://ci.appveyor.com/project/jbn/brittle-wit/branch/master
 .. image:: https://coveralls.io/repos/github/jbn/brittle_wit/badge.svg?branch=master
     :target: https://coveralls.io/github/jbn/brittle_wit?branch=master 
 .. image:: https://img.shields.io/pypi/dm/brittle_wit.svg
