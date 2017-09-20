@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def users_ids(*, stringify_ids=ELIDE, cursor=ELIDE):
+def users_ids(*, stringify_ids=_ELIDE, cursor=_ELIDE):
     """
     Returns an array of numeric user ids the authenticating user has muted.
 
@@ -24,14 +25,14 @@ def users_ids(*, stringify_ids=ELIDE, cursor=ELIDE):
     """
     binding = {'stringify_ids': stringify_ids, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/mutes/users/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:mutes',
-                          'get-mutes-users-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:mutes',
+                           'get-mutes-users-ids',
+                           binding)
 
 
-def users_list(*, cursor=ELIDE, include_entities=ELIDE, skip_status=ELIDE):
+def users_list(*, cursor=_ELIDE, include_entities=_ELIDE, skip_status=_ELIDE):
     """
     Returns an array of
 
@@ -52,14 +53,14 @@ def users_list(*, cursor=ELIDE, include_entities=ELIDE, skip_status=ELIDE):
     binding = {'cursor': cursor, 'include_entities': include_entities,
                'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/mutes/users/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:mutes',
-                          'get-mutes-users-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:mutes',
+                           'get-mutes-users-list',
+                           binding)
 
 
-def users_create(*, screen_name=ELIDE, user_id=ELIDE):
+def users_create(*, screen_name=_ELIDE, user_id=_ELIDE):
     """
     Mutes the user specified in the ID parameter for the authenticating user.
 
@@ -71,14 +72,14 @@ def users_create(*, screen_name=ELIDE, user_id=ELIDE):
     """
     binding = {'screen_name': screen_name, 'user_id': user_id}
     url = 'https://api.twitter.com/1.1/mutes/users/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:mutes',
-                          'post-mutes-users-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:mutes',
+                           'post-mutes-users-create',
+                           binding)
 
 
-def users_destroy(*, screen_name=ELIDE, user_id=ELIDE):
+def users_destroy(*, screen_name=_ELIDE, user_id=_ELIDE):
     """
     Un-mutes the user specified in the ID parameter for the authenticating
     user.
@@ -91,10 +92,14 @@ def users_destroy(*, screen_name=ELIDE, user_id=ELIDE):
     """
     binding = {'screen_name': screen_name, 'user_id': user_id}
     url = 'https://api.twitter.com/1.1/mutes/users/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:mutes',
-                          'post-mutes-users-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:mutes',
+                           'post-mutes-users-destroy',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/mutes/users/ids.json'] = 'https://dev.twitter.com/rest/reference/get/mutes/users/ids'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/mutes/users/list.json'] = 'https://dev.twitter.com/rest/reference/get/mutes/users/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/mutes/users/create.json'] = 'https://dev.twitter.com/rest/reference/post/mutes/users/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/mutes/users/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/mutes/users/destroy'

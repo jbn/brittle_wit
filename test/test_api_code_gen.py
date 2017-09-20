@@ -31,10 +31,10 @@ class TestAPICodeGen(unittest.TestCase):
 
     DEF_LINE_1 = """
 def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
-                                                count=ELIDE, sort_by=ELIDE,
-                                                cursor=ELIDE,
-                                                with_deleted=ELIDE,
-                                                account_media_ids=ELIDE):
+                                                count=_ELIDE, sort_by=_ELIDE,
+                                                cursor=_ELIDE,
+                                                with_deleted=_ELIDE,
+                                                account_media_ids=_ELIDE):
 """.strip()
 
     def test_generate_def_line(self):
@@ -157,7 +157,7 @@ def account_media_by_id_and_account_id_via_fake(id, account_id_, *,
                               {'name': 'd', 'required': True}],
                    'slugs': ['d']}
         expected = [("d", None), ("a", None), ("*", None),
-                    ("b", "ELIDE"), ("c", "ELIDE")]
+                    ("b", "_ELIDE"), ("c", "_ELIDE")]
         self.assertEquals(_generate_param_tokens(example), expected)
 
     def test_generate_source(self):

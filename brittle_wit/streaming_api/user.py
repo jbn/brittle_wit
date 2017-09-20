@@ -3,12 +3,13 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def user(*, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
-         replies=ELIDE, track=ELIDE, locations=ELIDE,
-         stringify_friend_ids=ELIDE):
+def user(*, delimited=_ELIDE, stall_warnings=_ELIDE, with_=_ELIDE,
+         replies=_ELIDE, track=_ELIDE, locations=_ELIDE,
+         stringify_friend_ids=_ELIDE):
     """
     Streams messages for a single user, as described in
 
@@ -41,10 +42,11 @@ def user(*, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
                'with': with_, 'replies': replies, 'track': track, 'locations':
                locations, 'stringify_friend_ids': stringify_friend_ids}
     url = 'https://userstream.twitter.com/1.1/user.json'
-    return TwitterRequest('GET',
-                          url,
-                          'streaming:user',
-                          'get-user',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'streaming:user',
+                           'get-user',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://userstream.twitter.com/1.1/user.json'] = 'https://dev.twitter.com/streaming/reference/get/user'

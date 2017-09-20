@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def entries(id, *, count=ELIDE, max_position=ELIDE, min_position=ELIDE):
+def entries(id, *, count=_ELIDE, max_position=_ELIDE, min_position=_ELIDE):
     """
     Retrieve the identified Collection, presented as a list of the Tweets
     curated within.
@@ -26,14 +27,15 @@ def entries(id, *, count=ELIDE, max_position=ELIDE, min_position=ELIDE):
     binding = {'id': id, 'count': count, 'max_position': max_position,
                'min_position': min_position}
     url = 'https://api.twitter.com/1.1/collections/entries.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:collections',
-                          'get-collections-entries',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:collections',
+                           'get-collections-entries',
+                           binding)
 
 
-def list(user_id, screen_name, *, tweet_id=ELIDE, count=ELIDE, cursor=ELIDE):
+def list(user_id, screen_name, *, tweet_id=_ELIDE, count=_ELIDE,
+         cursor=_ELIDE):
     """
     Find Collections created by a specific user or containing a specific
     curated Tweet.
@@ -58,11 +60,11 @@ def list(user_id, screen_name, *, tweet_id=ELIDE, count=ELIDE, cursor=ELIDE):
     binding = {'user_id': user_id, 'screen_name': screen_name, 'tweet_id':
                tweet_id, 'count': count, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/collections/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:collections',
-                          'get-collections-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:collections',
+                           'get-collections-list',
+                           binding)
 
 
 def show(id):
@@ -73,14 +75,14 @@ def show(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/collections/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:collections',
-                          'get-collections-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:collections',
+                           'get-collections-show',
+                           binding)
 
 
-def create(name, *, description=ELIDE, url=ELIDE, timeline_order=ELIDE):
+def create(name, *, description=_ELIDE, url=_ELIDE, timeline_order=_ELIDE):
     """
     Create a Collection owned by the currently authenticated user.
 
@@ -100,11 +102,11 @@ def create(name, *, description=ELIDE, url=ELIDE, timeline_order=ELIDE):
     binding = {'name': name, 'description': description, 'url': url,
                'timeline_order': timeline_order}
     url = 'https://api.twitter.com/1.1/collections/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-create',
+                           binding)
 
 
 def destroy(id):
@@ -115,14 +117,14 @@ def destroy(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/collections/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-destroy',
+                           binding)
 
 
-def entries_add(id, tweet_id, *, relative_to=ELIDE, above=ELIDE):
+def entries_add(id, tweet_id, *, relative_to=_ELIDE, above=_ELIDE):
     """
     Add a specified Tweet to a Collection.
 
@@ -139,11 +141,11 @@ def entries_add(id, tweet_id, *, relative_to=ELIDE, above=ELIDE):
     binding = {'id': id, 'tweet_id': tweet_id, 'relative_to': relative_to,
                'above': above}
     url = 'https://api.twitter.com/1.1/collections/entries/add.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-entries-add',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-entries-add',
+                           binding)
 
 
 def entries_curate():
@@ -153,14 +155,14 @@ def entries_curate():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/collections/entries/curate.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-entries-curate',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-entries-curate',
+                           binding)
 
 
-def entries_move(id, tweet_id, relative_to, *, above=ELIDE):
+def entries_move(id, tweet_id, relative_to, *, above=_ELIDE):
     """
     Move a specified Tweet to a new position in a
 
@@ -177,11 +179,11 @@ def entries_move(id, tweet_id, relative_to, *, above=ELIDE):
     binding = {'id': id, 'tweet_id': tweet_id, 'relative_to': relative_to,
                'above': above}
     url = 'https://api.twitter.com/1.1/collections/entries/move.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-entries-move',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-entries-move',
+                           binding)
 
 
 def entries_remove(id, tweet_id):
@@ -194,14 +196,14 @@ def entries_remove(id, tweet_id):
     """
     binding = {'id': id, 'tweet_id': tweet_id}
     url = 'https://api.twitter.com/1.1/collections/entries/remove.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-entries-remove',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-entries-remove',
+                           binding)
 
 
-def update(id, *, name=ELIDE, description=ELIDE, url=ELIDE):
+def update(id, *, name=_ELIDE, description=_ELIDE, url=_ELIDE):
     """
     Update information concerning a Collection owned by the currently
     authenticated user.
@@ -218,10 +220,20 @@ def update(id, *, name=ELIDE, description=ELIDE, url=ELIDE):
     """
     binding = {'id': id, 'name': name, 'description': description, 'url': url}
     url = 'https://api.twitter.com/1.1/collections/update.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:collections',
-                          'post-collections-update',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:collections',
+                           'post-collections-update',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/entries.json'] = 'https://dev.twitter.com/rest/reference/get/collections/entries'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/list.json'] = 'https://dev.twitter.com/rest/reference/get/collections/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/show.json'] = 'https://dev.twitter.com/rest/reference/get/collections/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/create.json'] = 'https://dev.twitter.com/rest/reference/post/collections/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/collections/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/entries/add.json'] = 'https://dev.twitter.com/rest/reference/post/collections/entries/add'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/entries/curate.json'] = 'https://dev.twitter.com/rest/reference/post/collections/entries/curate'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/entries/move.json'] = 'https://dev.twitter.com/rest/reference/post/collections/entries/move'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/entries/remove.json'] = 'https://dev.twitter.com/rest/reference/post/collections/entries/remove'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/collections/update.json'] = 'https://dev.twitter.com/rest/reference/post/collections/update'

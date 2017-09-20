@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def lookup(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE):
+def lookup(*, screen_name=_ELIDE, user_id=_ELIDE, include_entities=_ELIDE):
     """
     Returns fully-hydrated
 
@@ -24,14 +25,14 @@ def lookup(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE):
     binding = {'screen_name': screen_name, 'user_id': user_id,
                'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/users/lookup.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-lookup',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-lookup',
+                           binding)
 
 
-def profile_banner(*, user_id=ELIDE, screen_name=ELIDE):
+def profile_banner(*, user_id=_ELIDE, screen_name=_ELIDE):
     """
     Returns a map of the available size variations of the specified user’s
     profile banner. If the user has not uploaded a profile banner, a HTTP 404
@@ -46,14 +47,14 @@ def profile_banner(*, user_id=ELIDE, screen_name=ELIDE):
     """
     binding = {'user_id': user_id, 'screen_name': screen_name}
     url = 'https://api.twitter.com/1.1/users/profile_banner.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-profile-banner',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-profile-banner',
+                           binding)
 
 
-def search(q, *, page=ELIDE, count=ELIDE, include_entities=ELIDE):
+def search(q, *, page=_ELIDE, count=_ELIDE, include_entities=_ELIDE):
     """
     Provides a simple, relevance-based search interface to public user accounts
     on Twitter. Try querying by topical interest, full name, company name,
@@ -72,14 +73,14 @@ def search(q, *, page=ELIDE, count=ELIDE, include_entities=ELIDE):
     binding = {'q': q, 'page': page, 'count': count, 'include_entities':
                include_entities}
     url = 'https://api.twitter.com/1.1/users/search.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-search',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-search',
+                           binding)
 
 
-def show(user_id, screen_name, *, include_entities=ELIDE):
+def show(user_id, screen_name, *, include_entities=_ELIDE):
     """
     Returns a
 
@@ -95,14 +96,14 @@ def show(user_id, screen_name, *, include_entities=ELIDE):
     binding = {'user_id': user_id, 'screen_name': screen_name,
                'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/users/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-show',
+                           binding)
 
 
-def suggestions(*, lang=ELIDE):
+def suggestions(*, lang=_ELIDE):
     """
     Access to Twitter’s suggested user list. This returns the list of suggested
     user categories. The category can be used in
@@ -116,14 +117,14 @@ def suggestions(*, lang=ELIDE):
     """
     binding = {'lang': lang}
     url = 'https://api.twitter.com/1.1/users/suggestions.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-suggestions',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-suggestions',
+                           binding)
 
 
-def suggestions_by_slug(slug, *, lang=ELIDE):
+def suggestions_by_slug(slug, *, lang=_ELIDE):
     """
     Access the users in a given category of the Twitter suggested user list.
 
@@ -139,11 +140,11 @@ def suggestions_by_slug(slug, *, lang=ELIDE):
     binding = {'slug': slug, 'lang': lang}
     url = 'https://api.twitter.com/1.1/users/suggestions/{slug}.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-suggestions-slug',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-suggestions-slug',
+                           binding)
 
 
 def suggestions_members_by_slug(slug):
@@ -156,14 +157,14 @@ def suggestions_members_by_slug(slug):
     binding = {'slug': slug}
     url = 'https://api.twitter.com/1.1/users/suggestions/{slug}/members.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:users',
-                          'get-users-suggestions-slug-members',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:users',
+                           'get-users-suggestions-slug-members',
+                           binding)
 
 
-def report_spam(*, screen_name=ELIDE, user_id=ELIDE, perform_block=ELIDE):
+def report_spam(*, screen_name=_ELIDE, user_id=_ELIDE, perform_block=_ELIDE):
     """
     Report the specified user as a spam account to Twitter. Additionally,
     optionally performs the equivalent of
@@ -180,10 +181,18 @@ def report_spam(*, screen_name=ELIDE, user_id=ELIDE, perform_block=ELIDE):
     binding = {'screen_name': screen_name, 'user_id': user_id,
                'perform_block': perform_block}
     url = 'https://api.twitter.com/1.1/users/report_spam.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:users',
-                          'post-users-report-spam',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:users',
+                           'post-users-report-spam',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/lookup.json'] = 'https://dev.twitter.com/rest/reference/get/users/lookup'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/profile_banner.json'] = 'https://dev.twitter.com/rest/reference/get/users/profile_banner'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/search.json'] = 'https://dev.twitter.com/rest/reference/get/users/search'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/show.json'] = 'https://dev.twitter.com/rest/reference/get/users/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/suggestions.json'] = 'https://dev.twitter.com/rest/reference/get/users/suggestions'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/suggestions/{slug}.json'] = 'https://dev.twitter.com/rest/reference/get/users/suggestions/slug'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/suggestions/{slug}/members.json'] = 'https://dev.twitter.com/rest/reference/get/users/suggestions/slug/members'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/users/report_spam.json'] = 'https://dev.twitter.com/rest/reference/post/users/report_spam'

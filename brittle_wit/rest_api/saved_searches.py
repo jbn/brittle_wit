@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def list():
@@ -12,11 +13,11 @@ def list():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/saved_searches/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:saved_searches',
-                          'get-saved-searches-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:saved_searches',
+                           'get-saved-searches-list',
+                           binding)
 
 
 def show_by_id(id):
@@ -30,11 +31,11 @@ def show_by_id(id):
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/saved_searches/show/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:saved_searches',
-                          'get-saved-searches-show-id',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:saved_searches',
+                           'get-saved-searches-show-id',
+                           binding)
 
 
 def create(query):
@@ -46,11 +47,11 @@ def create(query):
     """
     binding = {'query': query}
     url = 'https://api.twitter.com/1.1/saved_searches/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:saved_searches',
-                          'post-saved-searches-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:saved_searches',
+                           'post-saved-searches-create',
+                           binding)
 
 
 def destroy_by_id(id):
@@ -63,10 +64,14 @@ def destroy_by_id(id):
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/saved_searches/destroy/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'rest:saved_searches',
-                          'post-saved-searches-destroy-id',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:saved_searches',
+                           'post-saved-searches-destroy-id',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/saved_searches/list.json'] = 'https://dev.twitter.com/rest/reference/get/saved_searches/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/saved_searches/show/{id}.json'] = 'https://dev.twitter.com/rest/reference/get/saved_searches/show/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/saved_searches/create.json'] = 'https://dev.twitter.com/rest/reference/post/saved_searches/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/saved_searches/destroy/{id}.json'] = 'https://dev.twitter.com/rest/reference/post/saved_searches/destroy/id'

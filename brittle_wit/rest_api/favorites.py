@@ -3,11 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def list(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, since_id=ELIDE,
-         max_id=ELIDE, include_entities=ELIDE):
+def list(*, user_id=_ELIDE, screen_name=_ELIDE, count=_ELIDE,
+         since_id=_ELIDE, max_id=_ELIDE, include_entities=_ELIDE):
     """
     Returns the 20 most recent Tweets favorited by the authenticating or
     specified user.
@@ -39,14 +40,14 @@ def list(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, since_id=ELIDE,
                'since_id': since_id, 'max_id': max_id, 'include_entities':
                include_entities}
     url = 'https://api.twitter.com/1.1/favorites/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:favorites',
-                          'get-favorites-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:favorites',
+                           'get-favorites-list',
+                           binding)
 
 
-def create(id, *, include_entities=ELIDE):
+def create(id, *, include_entities=_ELIDE):
     """
     Favorites the status specified in the ID parameter as the authenticating
     user. Returns the favorite status when successful.
@@ -58,14 +59,14 @@ def create(id, *, include_entities=ELIDE):
     """
     binding = {'id': id, 'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/favorites/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:favorites',
-                          'post-favorites-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:favorites',
+                           'post-favorites-create',
+                           binding)
 
 
-def destroy(id, *, include_entities=ELIDE):
+def destroy(id, *, include_entities=_ELIDE):
     """
     Un-favorites the status specified in the ID parameter as the authenticating
     user. Returns the un-favorited status in the requested format when
@@ -78,10 +79,13 @@ def destroy(id, *, include_entities=ELIDE):
     """
     binding = {'id': id, 'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/favorites/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:favorites',
-                          'post-favorites-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:favorites',
+                           'post-favorites-destroy',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/favorites/list.json'] = 'https://dev.twitter.com/rest/reference/get/favorites/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/favorites/create.json'] = 'https://dev.twitter.com/rest/reference/post/favorites/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/favorites/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/favorites/destroy'

@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def webhooks(url):
@@ -15,11 +16,11 @@ def webhooks(url):
     """
     binding = {'url': url}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks.json'
-    return TwitterRequest('POST',
-                          url,
-                          'webhooks:account_activity',
-                          'post-account-activity-webhooks',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'webhooks:account_activity',
+                           'post-account-activity-webhooks',
+                           binding)
 
 
 def webhooks():
@@ -29,11 +30,11 @@ def webhooks():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks.json'
-    return TwitterRequest('GET',
-                          url,
-                          'webhooks:account_activity',
-                          'get-account-activity-webhooks',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'webhooks:account_activity',
+                           'get-account-activity-webhooks',
+                           binding)
 
 
 def webhooks_by_webhook_id(webhook_id):
@@ -45,11 +46,27 @@ def webhooks_by_webhook_id(webhook_id):
     binding = {'webhook_id': webhook_id}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}.json'
     url = url.format(**binding)
-    return TwitterRequest('DELETE',
-                          url,
-                          'webhooks:account_activity',
-                          'delete-account-activity-webhooks-webhook-id',
-                          binding)
+    return _TwitterRequest('DELETE',
+                           url,
+                           'webhooks:account_activity',
+                           'delete-account-activity-webhooks-webhook-id',
+                           binding)
+
+
+def webhooks_by_webhook_id(webhook_id):
+    """
+    Triggers the challenge response check (CRC) for the given webhook’s URL. If
+    the check is successful, returns 204 and reenables the webhook by setting
+    its status to
+    """
+    binding = {'webhook_id': webhook_id}
+    url = 'https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}.json'
+    url = url.format(**binding)
+    return _TwitterRequest('PUT',
+                           url,
+                           'webhooks:account_activity',
+                           'put-account-activity-webhooks-webhook-id',
+                           binding)
 
 
 def webhooks_subscriptions_by_webhook_id(webhook_id):
@@ -61,11 +78,11 @@ def webhooks_subscriptions_by_webhook_id(webhook_id):
     binding = {'webhook_id': webhook_id}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'
     url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'webhooks:account_activity',
-                          'post-account-activity-webhooks-webhook-id-subscriptions',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'webhooks:account_activity',
+                           'post-account-activity-webhooks-webhook-id-subscriptions',
+                           binding)
 
 
 def webhooks_subscriptions_by_webhook_id(webhook_id):
@@ -79,11 +96,11 @@ def webhooks_subscriptions_by_webhook_id(webhook_id):
     binding = {'webhook_id': webhook_id}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'webhooks:account_activity',
-                          'get-account-activity-webhooks-webhook-id-subscriptions',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'webhooks:account_activity',
+                           'get-account-activity-webhooks-webhook-id-subscriptions',
+                           binding)
 
 
 def webhooks_subscriptions_by_webhook_id(webhook_id):
@@ -95,10 +112,17 @@ def webhooks_subscriptions_by_webhook_id(webhook_id):
     binding = {'webhook_id': webhook_id}
     url = 'https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'
     url = url.format(**binding)
-    return TwitterRequest('DELETE',
-                          url,
-                          'webhooks:account_activity',
-                          'delete-account-activity-webhooks-webhook-id-subscriptions',
-                          binding)
+    return _TwitterRequest('DELETE',
+                           url,
+                           'webhooks:account_activity',
+                           'delete-account-activity-webhooks-webhook-id-subscriptions',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks.json'] = 'https://dev.twitter.com/webhooks/reference/post/account_activity/webhooks'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks.json'] = 'https://dev.twitter.com/webhooks/reference/get/account_activity/webhooks'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}.json'] = 'https://dev.twitter.com/webhooks/reference/del/account_activity/webhooks'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}.json'] = 'https://dev.twitter.com/webhooks/reference/put/account_activity/webhooks'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'] = 'https://dev.twitter.com/webhooks/reference/post/account_activity/webhooks/subscriptions'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'] = 'https://dev.twitter.com/webhooks/reference/get/account_activity/webhooks/subscriptions'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account_activity/webhooks/{webhook_id}/subscriptions.json'] = 'https://dev.twitter.com/webhooks/reference/del/account_activity/webhooks/subscriptions'

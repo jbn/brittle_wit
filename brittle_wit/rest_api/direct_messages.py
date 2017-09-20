@@ -3,11 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def direct_messages(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE,
-                    include_entities=ELIDE, skip_status=ELIDE):
+def direct_messages(*, since_id=_ELIDE, max_id=_ELIDE, count=_ELIDE,
+                    include_entities=_ELIDE, skip_status=_ELIDE):
     """
     Returns the 20 most recent direct messages sent to the authenticating user.
     Includes detailed information about the sender and recipient user. You can
@@ -38,24 +39,24 @@ def direct_messages(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE,
                'include_entities': include_entities, 'skip_status':
                skip_status}
     url = 'https://api.twitter.com/1.1/direct_messages.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages',
+                           binding)
 
 
-def events_list(*, count=ELIDE, cursor=ELIDE):
+def events_list(*, count=_ELIDE, cursor=_ELIDE):
     """
     Returns all Direct Message events (both sent
     """
     binding = {'count': count, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/direct_messages/events/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-events-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-events-list',
+                           binding)
 
 
 def events_show(id):
@@ -64,15 +65,15 @@ def events_show(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/events/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-events-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-events-show',
+                           binding)
 
 
-def sent(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE, page=ELIDE,
-         include_entities=ELIDE):
+def sent(*, since_id=_ELIDE, max_id=_ELIDE, count=_ELIDE, page=_ELIDE,
+         include_entities=_ELIDE):
     """
     Returns the 20 most recent direct messages sent by the authenticating user.
     Includes detailed information about the sender and recipient user. You can
@@ -99,11 +100,11 @@ def sent(*, since_id=ELIDE, max_id=ELIDE, count=ELIDE, page=ELIDE,
     binding = {'since_id': since_id, 'max_id': max_id, 'count': count, 'page':
                page, 'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/direct_messages/sent.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-sent',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-sent',
+                           binding)
 
 
 def show(id):
@@ -114,37 +115,37 @@ def show(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-show',
+                           binding)
 
 
-def welcome_messages_list(*, count=ELIDE, cursor=ELIDE):
+def welcome_messages_list(*, count=_ELIDE, cursor=_ELIDE):
     """
     Returns a list of Welcome Messages.
     """
     binding = {'count': count, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-welcome-messages-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-welcome-messages-list',
+                           binding)
 
 
-def welcome_messages_rules_list(*, count=ELIDE, cursor=ELIDE):
+def welcome_messages_rules_list(*, count=_ELIDE, cursor=_ELIDE):
     """
     Returns a list of Welcome Message Rules.
     """
     binding = {'count': count, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-welcome-messages-rules-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-welcome-messages-rules-list',
+                           binding)
 
 
 def welcome_messages_rules_show(id):
@@ -153,11 +154,11 @@ def welcome_messages_rules_show(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-welcome-messages-rules-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-welcome-messages-rules-show',
+                           binding)
 
 
 def welcome_messages_show(id):
@@ -166,14 +167,14 @@ def welcome_messages_show(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:direct_messages',
-                          'get-direct-messages-welcome-messages-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:direct_messages',
+                           'get-direct-messages-welcome-messages-show',
+                           binding)
 
 
-def destroy(id, *, include_entities=ELIDE):
+def destroy(id, *, include_entities=_ELIDE):
     """
     Destroys the direct message specified in the required ID parameter. The
     authenticating user must be the recipient of the specified direct message.
@@ -185,11 +186,11 @@ def destroy(id, *, include_entities=ELIDE):
     """
     binding = {'id': id, 'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/direct_messages/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:direct_messages',
-                          'post-direct-messages-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:direct_messages',
+                           'post-direct-messages-destroy',
+                           binding)
 
 
 def events_newmessage_create():
@@ -198,14 +199,14 @@ def events_newmessage_create():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/direct_messages/events/new.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:direct_messages',
-                          'post-direct-messages-events-new-message-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:direct_messages',
+                           'post-direct-messages-events-new-message-create',
+                           binding)
 
 
-def new(text, *, user_id=ELIDE, screen_name=ELIDE):
+def new(text, *, user_id=_ELIDE, screen_name=_ELIDE):
     """
     Sends a new direct message to the specified user from the authenticating
     user. Requires both the
@@ -223,11 +224,11 @@ def new(text, *, user_id=ELIDE, screen_name=ELIDE):
     """
     binding = {'user_id': user_id, 'screen_name': screen_name, 'text': text}
     url = 'https://api.twitter.com/1.1/direct_messages/new.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:direct_messages',
-                          'post-direct-messages-new',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:direct_messages',
+                           'post-direct-messages-new',
+                           binding)
 
 
 def welcome_messages_new():
@@ -240,11 +241,11 @@ def welcome_messages_new():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/new.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:direct_messages',
-                          'post-direct-messages-welcome-messages-new',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:direct_messages',
+                           'post-direct-messages-welcome-messages-new',
+                           binding)
 
 
 def welcome_messages_rules_new():
@@ -255,11 +256,11 @@ def welcome_messages_rules_new():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/new.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:direct_messages',
-                          'post-direct-messages-welcome-messages-rules-new',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:direct_messages',
+                           'post-direct-messages-welcome-messages-rules-new',
+                           binding)
 
 
 def welcome_messages_destroy(id):
@@ -268,11 +269,11 @@ def welcome_messages_destroy(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/destroy.json'
-    return TwitterRequest('DELETE',
-                          url,
-                          'rest:direct_messages',
-                          'delete-direct-messages-welcome-messages-destroy',
-                          binding)
+    return _TwitterRequest('DELETE',
+                           url,
+                           'rest:direct_messages',
+                           'delete-direct-messages-welcome-messages-destroy',
+                           binding)
 
 
 def welcome_messages_rules_destroy(id):
@@ -281,10 +282,26 @@ def welcome_messages_rules_destroy(id):
     """
     binding = {'id': id}
     url = 'https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/destroy.json'
-    return TwitterRequest('DELETE',
-                          url,
-                          'rest:direct_messages',
-                          'delete-direct-messages-welcome-messages-rules-destroy',
-                          binding)
+    return _TwitterRequest('DELETE',
+                           url,
+                           'rest:direct_messages',
+                           'delete-direct-messages-welcome-messages-rules-destroy',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/events/list.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/events/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/events/show.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/events/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/sent.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/sent'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/show.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/list.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/welcome_messages/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/list.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/welcome_messages/rules/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/show.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/welcome_messages/rules/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/show.json'] = 'https://dev.twitter.com/rest/reference/get/direct_messages/welcome_messages/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/direct_messages/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/events/new.json'] = 'https://dev.twitter.com/rest/reference/post/direct_messages/events/new'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/new.json'] = 'https://dev.twitter.com/rest/reference/post/direct_messages/new'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/new.json'] = 'https://dev.twitter.com/rest/reference/post/direct_messages/welcome_messages/new'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/new.json'] = 'https://dev.twitter.com/rest/reference/post/direct_messages/welcome_messages/rules/new'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/destroy.json'] = 'https://dev.twitter.com/rest/reference/del/direct_messages/welcome_messages/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/direct_messages/welcome_messages/rules/destroy.json'] = 'https://dev.twitter.com/rest/reference/del/direct_messages/welcome_messages/rules/destroy'

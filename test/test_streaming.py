@@ -275,6 +275,47 @@ class TestFeedReceivers(AsyncSafeTestCase):
         self.assertEqual(await asyncio.wait_for(alice, 9), msgs[:3])
         self.assertEqual(await asyncio.wait_for(bob, 9), msgs[:4])
 
+    async def test_streaming_http_pipe_handles_error(self):
+        pipe = StreamingHTTPPipe()
+        httpd = web.Application()
+        httpd.router.add_get('/', pipe.handle)
+
+        msgs = [b'abcdefghij', b'klmnopqrst', b'ABCDEFGHIJ', b'KLMNOPQRST']
+
+        async def dispatch_msgs():
+            for resp, _ in pipe._clients.values():
+                await resp.write_eof()  # You can't do this. It will err.
+
+            for msg in msgs:
+                pipe.send(msg)
+
+        async def client(n_reads):
+            collected = []
+
+            async with aiohttp.ClientSession() as sess:
+                async with sess.get('http://localhost:8394') as resp:
+                    self.assertEqual(resp.status, 200)
+
+                    for i in range(n_reads):
+                        data = await resp.content.read(10)
+                        if data:
+                            collected.append(data)
+
+                    resp.close()
+
+            return collected
+
+        loop = asyncio.get_event_loop()
+
+        await loop.create_server(httpd.make_handler(), "localhost", 8394)
+
+        bob = loop.create_task(client(4))
+
+        await asyncio.sleep(1)
+
+        await dispatch_msgs()
+
+        self.assertEqual(await asyncio.wait_for(bob, 9), [])
 
 class TestStreamingProcessor(AsyncSafeTestCase):
 

@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def ids(*, stringify_ids=ELIDE, cursor=ELIDE):
+def ids(*, stringify_ids=_ELIDE, cursor=_ELIDE):
     """
     Returns an array of numeric user ids the authenticating user is blocking.
 
@@ -24,14 +25,14 @@ def ids(*, stringify_ids=ELIDE, cursor=ELIDE):
     """
     binding = {'stringify_ids': stringify_ids, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/blocks/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:blocks',
-                          'get-blocks-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:blocks',
+                           'get-blocks-ids',
+                           binding)
 
 
-def list(*, include_entities=ELIDE, skip_status=ELIDE, cursor=ELIDE):
+def list(*, include_entities=_ELIDE, skip_status=_ELIDE, cursor=_ELIDE):
     """
     Returns a collection of
 
@@ -52,15 +53,15 @@ def list(*, include_entities=ELIDE, skip_status=ELIDE, cursor=ELIDE):
     binding = {'include_entities': include_entities, 'skip_status':
                skip_status, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/blocks/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:blocks',
-                          'get-blocks-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:blocks',
+                           'get-blocks-list',
+                           binding)
 
 
-def create(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
-           skip_status=ELIDE):
+def create(*, screen_name=_ELIDE, user_id=_ELIDE, include_entities=_ELIDE,
+           skip_status=_ELIDE):
     """
     Blocks the specified user from following the authenticating user. In
     addition the blocked user will not show in the authenticating users
@@ -83,15 +84,15 @@ def create(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
                'include_entities': include_entities, 'skip_status':
                skip_status}
     url = 'https://api.twitter.com/1.1/blocks/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:blocks',
-                          'post-blocks-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:blocks',
+                           'post-blocks-create',
+                           binding)
 
 
-def destroy(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
-            skip_status=ELIDE):
+def destroy(*, screen_name=_ELIDE, user_id=_ELIDE, include_entities=_ELIDE,
+            skip_status=_ELIDE):
     """
     Un-blocks the user specified in the ID parameter for the authenticating
     user. Returns the un-blocked user in the requested format when successful.
@@ -114,10 +115,14 @@ def destroy(*, screen_name=ELIDE, user_id=ELIDE, include_entities=ELIDE,
                'include_entities': include_entities, 'skip_status':
                skip_status}
     url = 'https://api.twitter.com/1.1/blocks/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:blocks',
-                          'post-blocks-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:blocks',
+                           'post-blocks-destroy',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/blocks/ids.json'] = 'https://dev.twitter.com/rest/reference/get/blocks/ids'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/blocks/list.json'] = 'https://dev.twitter.com/rest/reference/get/blocks/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/blocks/create.json'] = 'https://dev.twitter.com/rest/reference/post/blocks/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/blocks/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/blocks/destroy'

@@ -3,11 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def site(follow, *, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
-         replies=ELIDE, stringify_friend_ids=ELIDE):
+def site(follow, *, delimited=_ELIDE, stall_warnings=_ELIDE, with_=_ELIDE,
+         replies=_ELIDE, stringify_friend_ids=_ELIDE):
     """
     Streams messages for a set of users, as described in
 
@@ -35,10 +36,11 @@ def site(follow, *, delimited=ELIDE, stall_warnings=ELIDE, with_=ELIDE,
                stall_warnings, 'with': with_, 'replies': replies,
                'stringify_friend_ids': stringify_friend_ids}
     url = 'https://sitestream.twitter.com/1.1/site.json'
-    return TwitterRequest('GET',
-                          url,
-                          'streaming:site',
-                          'get-site',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'streaming:site',
+                           'get-site',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://sitestream.twitter.com/1.1/site.json'] = 'https://dev.twitter.com/streaming/reference/get/site'

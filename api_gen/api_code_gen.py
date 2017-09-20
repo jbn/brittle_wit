@@ -146,11 +146,11 @@ def _generate_url_block(api_def):
 
 
 REQ_TEMPLATE = "    " + """
-    return TwitterRequest('{method}',
-                          url,
-                          '{family}',
-                          '{service}',
-                          binding)
+    return _TwitterRequest('{method}',
+                           url,
+                           '{family}',
+                           '{service}',
+                           binding)
 """.strip()
 
 
@@ -180,6 +180,11 @@ AUTOGEN_HEADER = '''
 '''.strip()
 
 
+IMPORT_HEADER = """
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
+""".strip()
+
 def generate_modules(base_dir, definitions, func_gen=generate_source):
     """
     Generate the module file skeleton given the definitions.
@@ -192,7 +197,9 @@ def generate_modules(base_dir, definitions, func_gen=generate_source):
     :param func_gen: a function that returns a string of generated code
         when given an api_def
     """
-    paths, code_blocks = defaultdict(set), defaultdict(list)
+    paths = defaultdict(set)
+    code_blocks = defaultdict(list)
+    doc_refs = defaultdict(list)
 
     # Gather the paths from the definitions.
     for group, api_defs in definitions.items():
@@ -200,6 +207,9 @@ def generate_modules(base_dir, definitions, func_gen=generate_source):
             family = api_def['family'].split(":")[1]
             paths[group].add(family)
             code_blocks[(group, family)].append(func_gen(api_def))
+            if 'url' in api_def and 'reference_url' in api_def:
+                doc_pair = (api_def['url'], api_def['reference_url'])
+                doc_refs[(group, family)].append(doc_pair)
 
     # Create the skeleton.
     for group, families in paths.items():
@@ -213,9 +223,14 @@ def generate_modules(base_dir, definitions, func_gen=generate_source):
             sub_module = os.path.join(parent_dir, family + ".py")
             with open(sub_module, "w") as fp:
                 fp.write(AUTOGEN_HEADER + "\n\n\n")
-                fp.write("from brittle_wit_core import TwitterRequest, ELIDE\n\n\n")
+                fp.write(IMPORT_HEADER + "\n\n\n")
+
                 for code_block in code_blocks[group, family]:
                     fp.write(code_block + "\n\n\n")
+
+                for url, ref_url in doc_refs[group, family]:
+                    doc_line = "_TwitterRequest.DOC_URLS['{}'] = '{}'\n"
+                    fp.write(doc_line.format(url, ref_url))
 
         import_fmt = "import brittle_wit.{}.{}\n"
         with open(os.path.join(parent_dir, '__init__.py'), "w") as fp:
@@ -255,7 +270,7 @@ def _generate_param_tokens(api_def):
 
     # Optionals are keyword-only to protect fail loudly.
     for param in optional:
-        tokens.append((param['name'], 'ELIDE'))
+        tokens.append((param['name'], '_ELIDE'))
 
     return tokens
 

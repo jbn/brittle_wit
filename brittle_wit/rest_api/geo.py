@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def id_by_place_id(place_id):
@@ -16,15 +17,15 @@ def id_by_place_id(place_id):
     binding = {'place_id': place_id}
     url = 'https://api.twitter.com/1.1/geo/id/{place_id}.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:geo',
-                          'get-geo-id-place-id',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:geo',
+                           'get-geo-id-place-id',
+                           binding)
 
 
-def reverse_code(lat, long, *, accuracy=ELIDE, granularity=ELIDE,
-                 max_results=ELIDE, callback=ELIDE):
+def reverse_code(lat, long, *, accuracy=_ELIDE, granularity=_ELIDE,
+                 max_results=_ELIDE, callback=_ELIDE):
     """
     Given a latitude and a longitude, searches for up to 20 places that can be
     used as a
@@ -64,17 +65,17 @@ def reverse_code(lat, long, *, accuracy=ELIDE, granularity=ELIDE,
     binding = {'lat': lat, 'long': long, 'accuracy': accuracy, 'granularity':
                granularity, 'max_results': max_results, 'callback': callback}
     url = 'https://api.twitter.com/1.1/geo/reverse_geocode.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:geo',
-                          'get-geo-reverse-geocode',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:geo',
+                           'get-geo-reverse-geocode',
+                           binding)
 
 
-def search(*, lat=ELIDE, long=ELIDE, query=ELIDE, ip=ELIDE,
-           granularity=ELIDE, accuracy=ELIDE, max_results=ELIDE,
-           contained_within=ELIDE, attribute_street_address=ELIDE,
-           callback=ELIDE):
+def search(*, lat=_ELIDE, long=_ELIDE, query=_ELIDE, ip=_ELIDE,
+           granularity=_ELIDE, accuracy=_ELIDE, max_results=_ELIDE,
+           contained_within=_ELIDE, attribute_street_address=_ELIDE,
+           callback=_ELIDE):
     """
     Search for places that can be attached to a statuses/update. Given a
     latitude and a longitude pair, an IP address, or a name, this request will
@@ -136,15 +137,15 @@ def search(*, lat=ELIDE, long=ELIDE, query=ELIDE, ip=ELIDE,
                contained_within, 'attribute:street_address':
                attribute_street_address, 'callback': callback}
     url = 'https://api.twitter.com/1.1/geo/search.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:geo',
-                          'get-geo-search',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:geo',
+                           'get-geo-search',
+                           binding)
 
 
 def place(name, contained_within, token, lat, long, *,
-          attribute_street_address=ELIDE, callback=ELIDE):
+          attribute_street_address=_ELIDE, callback=_ELIDE):
     """
     As of December 2nd, 2013, this endpoint
 
@@ -180,10 +181,14 @@ def place(name, contained_within, token, lat, long, *,
                token, 'lat': lat, 'long': long, 'attribute:street_address':
                attribute_street_address, 'callback': callback}
     url = 'https://api.twitter.com/1.1/geo/place.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:geo',
-                          'post-geo-place',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:geo',
+                           'post-geo-place',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/geo/id/{place_id}.json'] = 'https://dev.twitter.com/rest/reference/get/geo/id/place_id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/geo/reverse_geocode.json'] = 'https://dev.twitter.com/rest/reference/get/geo/reverse_geocode'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/geo/search.json'] = 'https://dev.twitter.com/rest/reference/get/geo/search'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/geo/place.json'] = 'https://dev.twitter.com/rest/reference/post/geo/place'

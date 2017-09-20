@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def configuration():
@@ -14,11 +15,11 @@ def configuration():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/help/configuration.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:help',
-                          'get-help-configuration',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:help',
+                           'get-help-configuration',
+                           binding)
 
 
 def languages():
@@ -28,11 +29,11 @@ def languages():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/help/languages.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:help',
-                          'get-help-languages',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:help',
+                           'get-help-languages',
+                           binding)
 
 
 def privacy():
@@ -41,11 +42,11 @@ def privacy():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/help/privacy.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:help',
-                          'get-help-privacy',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:help',
+                           'get-help-privacy',
+                           binding)
 
 
 def tos():
@@ -54,10 +55,14 @@ def tos():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/help/tos.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:help',
-                          'get-help-tos',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:help',
+                           'get-help-tos',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/help/configuration.json'] = 'https://dev.twitter.com/rest/reference/get/help/configuration'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/help/languages.json'] = 'https://dev.twitter.com/rest/reference/get/help/languages'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/help/privacy.json'] = 'https://dev.twitter.com/rest/reference/get/help/privacy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/help/tos.json'] = 'https://dev.twitter.com/rest/reference/get/help/tos'

@@ -3,11 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def filter(*, follow=ELIDE, track=ELIDE, locations=ELIDE, delimited=ELIDE,
-           stall_warnings=ELIDE):
+def filter(*, follow=_ELIDE, track=_ELIDE, locations=_ELIDE,
+           delimited=_ELIDE, stall_warnings=_ELIDE):
     """
     Returns public statuses that match one or more filter predicates. Multiple
     parameters may be specified which allows most clients to use a single
@@ -33,14 +34,14 @@ def filter(*, follow=ELIDE, track=ELIDE, locations=ELIDE, delimited=ELIDE,
     binding = {'follow': follow, 'track': track, 'locations': locations,
                'delimited': delimited, 'stall_warnings': stall_warnings}
     url = 'https://stream.twitter.com/1.1/statuses/filter.json'
-    return TwitterRequest('POST',
-                          url,
-                          'streaming:statuses',
-                          'post-statuses-filter',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'streaming:statuses',
+                           'post-statuses-filter',
+                           binding)
 
 
-def sample(*, delimited=ELIDE, stall_warnings=ELIDE):
+def sample(*, delimited=_ELIDE, stall_warnings=_ELIDE):
     """
     Returns a small random sample of all public statuses. The Tweets returned
     by the default access level are the same, so if two different clients
@@ -54,10 +55,12 @@ def sample(*, delimited=ELIDE, stall_warnings=ELIDE):
     """
     binding = {'delimited': delimited, 'stall_warnings': stall_warnings}
     url = 'https://stream.twitter.com/1.1/statuses/sample.json'
-    return TwitterRequest('GET',
-                          url,
-                          'streaming:statuses',
-                          'get-statuses-sample',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'streaming:statuses',
+                           'get-statuses-sample',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://stream.twitter.com/1.1/statuses/filter.json'] = 'https://dev.twitter.com/streaming/reference/post/statuses/filter'
+_TwitterRequest.DOC_URLS['https://stream.twitter.com/1.1/statuses/sample.json'] = 'https://dev.twitter.com/streaming/reference/get/statuses/sample'

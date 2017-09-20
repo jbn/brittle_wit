@@ -3,12 +3,13 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def tweets(q, *, geocode=ELIDE, lang=ELIDE, locale=ELIDE, result_type=ELIDE,
-           count=ELIDE, until=ELIDE, since_id=ELIDE, max_id=ELIDE,
-           include_entities=ELIDE):
+def tweets(q, *, geocode=_ELIDE, lang=_ELIDE, locale=_ELIDE,
+           result_type=_ELIDE, count=_ELIDE, until=_ELIDE, since_id=_ELIDE,
+           max_id=_ELIDE, include_entities=_ELIDE):
     """
     Returns a collection of relevant
 
@@ -65,10 +66,11 @@ def tweets(q, *, geocode=ELIDE, lang=ELIDE, locale=ELIDE, result_type=ELIDE,
                'since_id': since_id, 'max_id': max_id, 'include_entities':
                include_entities}
     url = 'https://api.twitter.com/1.1/search/tweets.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:search',
-                          'get-search-tweets',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:search',
+                           'get-search-tweets',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/search/tweets.json'] = 'https://dev.twitter.com/rest/reference/get/search/tweets'

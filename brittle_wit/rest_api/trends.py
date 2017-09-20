@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def available():
@@ -12,11 +13,11 @@ def available():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/trends/available.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:trends',
-                          'get-trends-available',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:trends',
+                           'get-trends-available',
+                           binding)
 
 
 def closest(lat, long):
@@ -36,14 +37,14 @@ def closest(lat, long):
     """
     binding = {'lat': lat, 'long': long}
     url = 'https://api.twitter.com/1.1/trends/closest.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:trends',
-                          'get-trends-closest',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:trends',
+                           'get-trends-closest',
+                           binding)
 
 
-def place(id, *, exclude=ELIDE):
+def place(id, *, exclude=_ELIDE):
     """
     Returns the top 50 trending topics for a specific
 
@@ -56,10 +57,13 @@ def place(id, *, exclude=ELIDE):
     """
     binding = {'id': id, 'exclude': exclude}
     url = 'https://api.twitter.com/1.1/trends/place.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:trends',
-                          'get-trends-place',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:trends',
+                           'get-trends-place',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/trends/available.json'] = 'https://dev.twitter.com/rest/reference/get/trends/available'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/trends/closest.json'] = 'https://dev.twitter.com/rest/reference/get/trends/closest'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/trends/place.json'] = 'https://dev.twitter.com/rest/reference/get/trends/place'

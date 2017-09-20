@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def list(*, user_id=ELIDE, screen_name=ELIDE, reverse=ELIDE):
+def list(*, user_id=_ELIDE, screen_name=_ELIDE, reverse=_ELIDE):
     """
     Returns all lists the authenticating or specified user subscribes to,
     including their own. The user is specified using the
@@ -26,16 +27,16 @@ def list(*, user_id=ELIDE, screen_name=ELIDE, reverse=ELIDE):
     binding = {'user_id': user_id, 'screen_name': screen_name, 'reverse':
                reverse}
     url = 'https://api.twitter.com/1.1/lists/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-list',
+                           binding)
 
 
-def members(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
-            count=ELIDE, cursor=ELIDE, include_entities=ELIDE,
-            skip_status=ELIDE):
+def members(list_id, slug, *, owner_screen_name=_ELIDE, owner_id=_ELIDE,
+            count=_ELIDE, cursor=_ELIDE, include_entities=_ELIDE,
+            skip_status=_ELIDE):
     """
     Returns the members of the specified list. Private list members will only
     be shown if the authenticated user owns the specified list.
@@ -73,16 +74,16 @@ def members(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
                'cursor': cursor, 'include_entities': include_entities,
                'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/lists/members.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-members',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-members',
+                           binding)
 
 
 def members_show(list_id, slug, user_id, screen_name, *,
-                 owner_screen_name=ELIDE, owner_id=ELIDE,
-                 include_entities=ELIDE, skip_status=ELIDE):
+                 owner_screen_name=_ELIDE, owner_id=_ELIDE,
+                 include_entities=_ELIDE, skip_status=_ELIDE):
     """
     Check if the specified user is a member of the specified list.
 
@@ -120,15 +121,15 @@ def members_show(list_id, slug, user_id, screen_name, *,
                owner_screen_name, 'owner_id': owner_id, 'include_entities':
                include_entities, 'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/lists/members/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-members-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-members-show',
+                           binding)
 
 
-def memberships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
-                cursor=ELIDE, filter_to_owned_lists=ELIDE):
+def memberships(*, user_id=_ELIDE, screen_name=_ELIDE, count=_ELIDE,
+                cursor=_ELIDE, filter_to_owned_lists=_ELIDE):
     """
     Returns the lists the specified user has been added to. If
 
@@ -156,14 +157,15 @@ def memberships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
                'cursor': cursor, 'filter_to_owned_lists':
                filter_to_owned_lists}
     url = 'https://api.twitter.com/1.1/lists/memberships.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-memberships',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-memberships',
+                           binding)
 
 
-def ownerships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, cursor=ELIDE):
+def ownerships(*, user_id=_ELIDE, screen_name=_ELIDE, count=_ELIDE,
+               cursor=_ELIDE):
     """
     Returns the lists owned by the specified Twitter user. Private lists will
     only be shown if the authenticated user is also the owner of the lists.
@@ -185,14 +187,14 @@ def ownerships(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE, cursor=ELIDE):
     binding = {'user_id': user_id, 'screen_name': screen_name, 'count': count,
                'cursor': cursor}
     url = 'https://api.twitter.com/1.1/lists/ownerships.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-ownerships',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-ownerships',
+                           binding)
 
 
-def show(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
+def show(list_id, slug, *, owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Returns the specified list. Private lists will only be shown if the
     authenticated user owns the specified list.
@@ -212,16 +214,16 @@ def show(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
     binding = {'list_id': list_id, 'slug': slug, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-show',
+                           binding)
 
 
-def statuses(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
-             since_id=ELIDE, max_id=ELIDE, count=ELIDE,
-             include_entities=ELIDE, include_rts=ELIDE):
+def statuses(list_id, slug, *, owner_screen_name=_ELIDE, owner_id=_ELIDE,
+             since_id=_ELIDE, max_id=_ELIDE, count=_ELIDE,
+             include_entities=_ELIDE, include_rts=_ELIDE):
     """
     Returns a timeline of tweets authored by members of the specified list.
     Retweets are included by default. Use the
@@ -265,16 +267,16 @@ def statuses(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
                'max_id': max_id, 'count': count, 'include_entities':
                include_entities, 'include_rts': include_rts}
     url = 'https://api.twitter.com/1.1/lists/statuses.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-statuses',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-statuses',
+                           binding)
 
 
-def subscribers(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
-                count=ELIDE, cursor=ELIDE, include_entities=ELIDE,
-                skip_status=ELIDE):
+def subscribers(list_id, slug, *, owner_screen_name=_ELIDE, owner_id=_ELIDE,
+                count=_ELIDE, cursor=_ELIDE, include_entities=_ELIDE,
+                skip_status=_ELIDE):
     """
     Returns the subscribers of the specified list. Private list subscribers
     will only be shown if the authenticated user owns the specified list.
@@ -315,16 +317,16 @@ def subscribers(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE,
                'cursor': cursor, 'include_entities': include_entities,
                'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/lists/subscribers.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-subscribers',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-subscribers',
+                           binding)
 
 
 def subscribers_show(list_id, slug, user_id, screen_name, *,
-                     owner_screen_name=ELIDE, owner_id=ELIDE,
-                     include_entities=ELIDE, skip_status=ELIDE):
+                     owner_screen_name=_ELIDE, owner_id=_ELIDE,
+                     include_entities=_ELIDE, skip_status=_ELIDE):
     """
     Check if the specified user is a subscriber of the specified list. Returns
     the user if they are subscriber.
@@ -363,15 +365,15 @@ def subscribers_show(list_id, slug, user_id, screen_name, *,
                'screen_name': screen_name, 'include_entities':
                include_entities, 'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/lists/subscribers/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-subscribers-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-subscribers-show',
+                           binding)
 
 
-def subscriptions(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
-                  cursor=ELIDE):
+def subscriptions(*, user_id=_ELIDE, screen_name=_ELIDE, count=_ELIDE,
+                  cursor=_ELIDE):
     """
     Obtain a collection of the lists the specified user is subscribed to, 20
     lists per page by default. Does not include the user’s own lists.
@@ -395,14 +397,14 @@ def subscriptions(*, user_id=ELIDE, screen_name=ELIDE, count=ELIDE,
     binding = {'user_id': user_id, 'screen_name': screen_name, 'count': count,
                'cursor': cursor}
     url = 'https://api.twitter.com/1.1/lists/subscriptions.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:lists',
-                          'get-lists-subscriptions',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:lists',
+                           'get-lists-subscriptions',
+                           binding)
 
 
-def create(name, *, mode=ELIDE, description=ELIDE):
+def create(name, *, mode=_ELIDE, description=_ELIDE):
     """
     Creates a new list for the authenticated user. Note that you can create up
     to 1000 lists per account.
@@ -418,14 +420,14 @@ def create(name, *, mode=ELIDE, description=ELIDE):
     """
     binding = {'name': name, 'mode': mode, 'description': description}
     url = 'https://api.twitter.com/1.1/lists/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-create',
+                           binding)
 
 
-def destroy(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
+def destroy(list_id, slug, *, owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Deletes the specified list. The authenticated user must own the list to be
     able to destroy it.
@@ -445,15 +447,15 @@ def destroy(list_id, slug, *, owner_screen_name=ELIDE, owner_id=ELIDE):
     binding = {'owner_screen_name': owner_screen_name, 'owner_id': owner_id,
                'list_id': list_id, 'slug': slug}
     url = 'https://api.twitter.com/1.1/lists/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-destroy',
+                           binding)
 
 
 def members_create(list_id, slug, user_id, screen_name, *,
-                   owner_screen_name=ELIDE, owner_id=ELIDE):
+                   owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Add a member to a list. The authenticated user must own the list to be able
     to add members to it. Note that lists cannot have more than 5,000 members.
@@ -481,15 +483,15 @@ def members_create(list_id, slug, user_id, screen_name, *,
                'screen_name': screen_name, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/members/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-members-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-members-create',
+                           binding)
 
 
-def members_create_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
-                       owner_screen_name=ELIDE, owner_id=ELIDE):
+def members_create_all(list_id, slug, *, user_id=_ELIDE, screen_name=_ELIDE,
+                       owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Adds multiple members to a list, by specifying a comma-separated list of
     member ids or screen names. The authenticated user must own the list to be
@@ -519,16 +521,16 @@ def members_create_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
                'screen_name': screen_name, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/members/create_all.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-members-create-all',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-members-create-all',
+                           binding)
 
 
-def members_destroy(*, list_id=ELIDE, slug=ELIDE, user_id=ELIDE,
-                    screen_name=ELIDE, owner_screen_name=ELIDE,
-                    owner_id=ELIDE):
+def members_destroy(*, list_id=_ELIDE, slug=_ELIDE, user_id=_ELIDE,
+                    screen_name=_ELIDE, owner_screen_name=_ELIDE,
+                    owner_id=_ELIDE):
     """
     Removes the specified member from the list. The authenticated user must be
     the list’s owner to remove members from the list.
@@ -556,15 +558,15 @@ def members_destroy(*, list_id=ELIDE, slug=ELIDE, user_id=ELIDE,
                'screen_name': screen_name, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/members/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-members-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-members-destroy',
+                           binding)
 
 
-def members_destroy_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
-                        owner_screen_name=ELIDE, owner_id=ELIDE):
+def members_destroy_all(list_id, slug, *, user_id=_ELIDE, screen_name=_ELIDE,
+                        owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Removes multiple members from a list, by specifying a comma-separated list
     of member ids or screen names. The authenticated user must own the list to
@@ -594,15 +596,15 @@ def members_destroy_all(list_id, slug, *, user_id=ELIDE, screen_name=ELIDE,
                'screen_name': screen_name, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/members/destroy_all.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-members-destroy-all',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-members-destroy-all',
+                           binding)
 
 
-def subscribers_create(list_id, slug, *, owner_screen_name=ELIDE,
-                       owner_id=ELIDE):
+def subscribers_create(list_id, slug, *, owner_screen_name=_ELIDE,
+                       owner_id=_ELIDE):
     """
     Subscribes the authenticated user to the specified list.
 
@@ -621,15 +623,15 @@ def subscribers_create(list_id, slug, *, owner_screen_name=ELIDE,
     binding = {'owner_screen_name': owner_screen_name, 'owner_id': owner_id,
                'list_id': list_id, 'slug': slug}
     url = 'https://api.twitter.com/1.1/lists/subscribers/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-subscribers-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-subscribers-create',
+                           binding)
 
 
-def subscribers_destroy(list_id, slug, *, owner_screen_name=ELIDE,
-                        owner_id=ELIDE):
+def subscribers_destroy(list_id, slug, *, owner_screen_name=_ELIDE,
+                        owner_id=_ELIDE):
     """
     Unsubscribes the authenticated user from the specified list.
 
@@ -648,15 +650,15 @@ def subscribers_destroy(list_id, slug, *, owner_screen_name=ELIDE,
     binding = {'list_id': list_id, 'slug': slug, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/subscribers/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-subscribers-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-subscribers-destroy',
+                           binding)
 
 
-def update(list_id, slug, *, name=ELIDE, mode=ELIDE, description=ELIDE,
-           owner_screen_name=ELIDE, owner_id=ELIDE):
+def update(list_id, slug, *, name=_ELIDE, mode=_ELIDE, description=_ELIDE,
+           owner_screen_name=_ELIDE, owner_id=_ELIDE):
     """
     Updates the specified list. The authenticated user must own the list to be
     able to update it.
@@ -684,10 +686,29 @@ def update(list_id, slug, *, name=ELIDE, mode=ELIDE, description=ELIDE,
                'description': description, 'owner_screen_name':
                owner_screen_name, 'owner_id': owner_id}
     url = 'https://api.twitter.com/1.1/lists/update.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:lists',
-                          'post-lists-update',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:lists',
+                           'post-lists-update',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/list.json'] = 'https://dev.twitter.com/rest/reference/get/lists/list'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members.json'] = 'https://dev.twitter.com/rest/reference/get/lists/members'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members/show.json'] = 'https://dev.twitter.com/rest/reference/get/lists/members/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/memberships.json'] = 'https://dev.twitter.com/rest/reference/get/lists/memberships'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/ownerships.json'] = 'https://dev.twitter.com/rest/reference/get/lists/ownerships'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/show.json'] = 'https://dev.twitter.com/rest/reference/get/lists/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/statuses.json'] = 'https://dev.twitter.com/rest/reference/get/lists/statuses'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/subscribers.json'] = 'https://dev.twitter.com/rest/reference/get/lists/subscribers'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/subscribers/show.json'] = 'https://dev.twitter.com/rest/reference/get/lists/subscribers/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/subscriptions.json'] = 'https://dev.twitter.com/rest/reference/get/lists/subscriptions'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/create.json'] = 'https://dev.twitter.com/rest/reference/post/lists/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/lists/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members/create.json'] = 'https://dev.twitter.com/rest/reference/post/lists/members/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members/create_all.json'] = 'https://dev.twitter.com/rest/reference/post/lists/members/create_all'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/lists/members/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/members/destroy_all.json'] = 'https://dev.twitter.com/rest/reference/post/lists/members/destroy_all'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/subscribers/create.json'] = 'https://dev.twitter.com/rest/reference/post/lists/subscribers/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/subscribers/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/lists/subscribers/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/lists/update.json'] = 'https://dev.twitter.com/rest/reference/post/lists/update'

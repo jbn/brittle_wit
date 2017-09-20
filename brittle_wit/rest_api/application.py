@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def rate_limit_status(*, resources=ELIDE):
+def rate_limit_status(*, resources=_ELIDE):
     """
     Returns the current rate limits for methods belonging to the specified
     resource families.
@@ -18,10 +19,11 @@ def rate_limit_status(*, resources=ELIDE):
     """
     binding = {'resources': resources}
     url = 'https://api.twitter.com/1.1/application/rate_limit_status.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:application',
-                          'get-application-rate-limit-status',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:application',
+                           'get-application-rate-limit-status',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/application/rate_limit_status.json'] = 'https://dev.twitter.com/rest/reference/get/application/rate_limit_status'

@@ -3,11 +3,12 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def ids(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE,
-        stringify_ids=ELIDE, count=ELIDE):
+def ids(*, user_id=_ELIDE, screen_name=_ELIDE, cursor=_ELIDE,
+        stringify_ids=_ELIDE, count=_ELIDE):
     """
     Returns a cursored collection of user IDs for every user following the
     specified user.
@@ -40,15 +41,15 @@ def ids(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE,
     binding = {'user_id': user_id, 'screen_name': screen_name, 'cursor':
                cursor, 'stringify_ids': stringify_ids, 'count': count}
     url = 'https://api.twitter.com/1.1/followers/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:followers',
-                          'get-followers-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:followers',
+                           'get-followers-ids',
+                           binding)
 
 
-def list(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE, count=ELIDE,
-         skip_status=ELIDE, include_user_entities=ELIDE):
+def list(*, user_id=_ELIDE, screen_name=_ELIDE, cursor=_ELIDE, count=_ELIDE,
+         skip_status=_ELIDE, include_user_entities=_ELIDE):
     """
     Returns a cursored collection of user objects for users following the
     specified user.
@@ -78,10 +79,12 @@ def list(*, user_id=ELIDE, screen_name=ELIDE, cursor=ELIDE, count=ELIDE,
                cursor, 'count': count, 'skip_status': skip_status,
                'include_user_entities': include_user_entities}
     url = 'https://api.twitter.com/1.1/followers/list.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:followers',
-                          'get-followers-list',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:followers',
+                           'get-followers-list',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/followers/ids.json'] = 'https://dev.twitter.com/rest/reference/get/followers/ids'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/followers/list.json'] = 'https://dev.twitter.com/rest/reference/get/followers/list'

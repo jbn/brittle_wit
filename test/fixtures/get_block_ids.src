@@ -16,8 +16,8 @@ def ids(stringify_ids, cursor):
     """
     binding = {'stringify_ids': stringify_ids, 'cursor': cursor}
     url = 'https://api.twitter.com/1.1/blocks/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:blocks',
-                          'get-blocks-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:blocks',
+                           'get-blocks-ids',
+                           binding)

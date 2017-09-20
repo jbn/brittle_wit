@@ -3,10 +3,11 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def incoming(*, cursor=ELIDE, stringify_ids=ELIDE):
+def incoming(*, cursor=_ELIDE, stringify_ids=_ELIDE):
     """
     Returns a collection of numeric IDs for every user who has a pending
     request to follow the authenticating user.
@@ -26,14 +27,14 @@ def incoming(*, cursor=ELIDE, stringify_ids=ELIDE):
     """
     binding = {'cursor': cursor, 'stringify_ids': stringify_ids}
     url = 'https://api.twitter.com/1.1/friendships/incoming.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:friendships',
-                          'get-friendships-incoming',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:friendships',
+                           'get-friendships-incoming',
+                           binding)
 
 
-def lookup(*, screen_name=ELIDE, user_id=ELIDE):
+def lookup(*, screen_name=_ELIDE, user_id=_ELIDE):
     """
     Returns the relationships of the authenticating user to the comma-separated
     list of up to 100 screen_names or user_ids provided. Values for
@@ -46,14 +47,14 @@ def lookup(*, screen_name=ELIDE, user_id=ELIDE):
     """
     binding = {'screen_name': screen_name, 'user_id': user_id}
     url = 'https://api.twitter.com/1.1/friendships/lookup.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:friendships',
-                          'get-friendships-lookup',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:friendships',
+                           'get-friendships-lookup',
+                           binding)
 
 
-def no_retweets_ids(*, stringify_ids=ELIDE):
+def no_retweets_ids(*, stringify_ids=_ELIDE):
     """
     Returns a collection of user_ids that the currently authenticated user does
     not want to receive retweets from.
@@ -65,14 +66,14 @@ def no_retweets_ids(*, stringify_ids=ELIDE):
     """
     binding = {'stringify_ids': stringify_ids}
     url = 'https://api.twitter.com/1.1/friendships/no_retweets/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:friendships',
-                          'get-friendships-no-retweets-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:friendships',
+                           'get-friendships-no-retweets-ids',
+                           binding)
 
 
-def outgoing(*, cursor=ELIDE, stringify_ids=ELIDE):
+def outgoing(*, cursor=_ELIDE, stringify_ids=_ELIDE):
     """
     Returns a collection of numeric IDs for every protected user for whom the
     authenticating user has a pending follow request.
@@ -92,15 +93,15 @@ def outgoing(*, cursor=ELIDE, stringify_ids=ELIDE):
     """
     binding = {'cursor': cursor, 'stringify_ids': stringify_ids}
     url = 'https://api.twitter.com/1.1/friendships/outgoing.format'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:friendships',
-                          'get-friendships-outgoing',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:friendships',
+                           'get-friendships-outgoing',
+                           binding)
 
 
-def show(*, source_id=ELIDE, source_screen_name=ELIDE, target_id=ELIDE,
-         target_screen_name=ELIDE):
+def show(*, source_id=_ELIDE, source_screen_name=_ELIDE, target_id=_ELIDE,
+         target_screen_name=_ELIDE):
     """
     Returns detailed information about the relationship between two arbitrary
     users.
@@ -117,14 +118,14 @@ def show(*, source_id=ELIDE, source_screen_name=ELIDE, target_id=ELIDE,
                source_screen_name, 'target_id': target_id,
                'target_screen_name': target_screen_name}
     url = 'https://api.twitter.com/1.1/friendships/show.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:friendships',
-                          'get-friendships-show',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:friendships',
+                           'get-friendships-show',
+                           binding)
 
 
-def create(*, screen_name=ELIDE, user_id=ELIDE, follow=ELIDE):
+def create(*, screen_name=_ELIDE, user_id=_ELIDE, follow=_ELIDE):
     """
     Allows the authenticating users to follow the user specified in the ID
     parameter.
@@ -138,14 +139,14 @@ def create(*, screen_name=ELIDE, user_id=ELIDE, follow=ELIDE):
     binding = {'screen_name': screen_name, 'user_id': user_id, 'follow':
                follow}
     url = 'https://api.twitter.com/1.1/friendships/create.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:friendships',
-                          'post-friendships-create',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:friendships',
+                           'post-friendships-create',
+                           binding)
 
 
-def destroy(*, screen_name=ELIDE, user_id=ELIDE):
+def destroy(*, screen_name=_ELIDE, user_id=_ELIDE):
     """
     Allows the authenticating user to unfollow the user specified in the ID
     parameter.
@@ -156,14 +157,15 @@ def destroy(*, screen_name=ELIDE, user_id=ELIDE):
     """
     binding = {'screen_name': screen_name, 'user_id': user_id}
     url = 'https://api.twitter.com/1.1/friendships/destroy.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:friendships',
-                          'post-friendships-destroy',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:friendships',
+                           'post-friendships-destroy',
+                           binding)
 
 
-def update(*, screen_name=ELIDE, user_id=ELIDE, device=ELIDE, retweets=ELIDE):
+def update(*, screen_name=_ELIDE, user_id=_ELIDE, device=_ELIDE,
+           retweets=_ELIDE):
     """
     Allows one to enable or disable retweets and device notifications from the
     specified user.
@@ -179,10 +181,18 @@ def update(*, screen_name=ELIDE, user_id=ELIDE, device=ELIDE, retweets=ELIDE):
     binding = {'screen_name': screen_name, 'user_id': user_id, 'device':
                device, 'retweets': retweets}
     url = 'https://api.twitter.com/1.1/friendships/update.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:friendships',
-                          'post-friendships-update',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:friendships',
+                           'post-friendships-update',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/incoming.json'] = 'https://dev.twitter.com/rest/reference/get/friendships/incoming'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/lookup.json'] = 'https://dev.twitter.com/rest/reference/get/friendships/lookup'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/no_retweets/ids.json'] = 'https://dev.twitter.com/rest/reference/get/friendships/no_retweets/ids'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/outgoing.format'] = 'https://dev.twitter.com/rest/reference/get/friendships/outgoing'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/show.json'] = 'https://dev.twitter.com/rest/reference/get/friendships/show'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/create.json'] = 'https://dev.twitter.com/rest/reference/post/friendships/create'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/destroy.json'] = 'https://dev.twitter.com/rest/reference/post/friendships/destroy'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/friendships/update.json'] = 'https://dev.twitter.com/rest/reference/post/friendships/update'

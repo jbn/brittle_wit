@@ -3,7 +3,8 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
 def settings():
@@ -13,15 +14,15 @@ def settings():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/account/settings.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:account',
-                          'get-account-settings',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:account',
+                           'get-account-settings',
+                           binding)
 
 
-def verify_credentials(*, include_entities=ELIDE, skip_status=ELIDE,
-                       include_email=ELIDE):
+def verify_credentials(*, include_entities=_ELIDE, skip_status=_ELIDE,
+                       include_email=_ELIDE):
     """
     Returns an HTTP 200 OK response code and a representation of the requesting
     user if authentication was successful; returns a 401 status code and an
@@ -42,11 +43,11 @@ def verify_credentials(*, include_entities=ELIDE, skip_status=ELIDE,
     binding = {'include_entities': include_entities, 'skip_status':
                skip_status, 'include_email': include_email}
     url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:account',
-                          'get-account-verify-credentials',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:account',
+                           'get-account-verify-credentials',
+                           binding)
 
 
 def remove_profile_banner():
@@ -56,16 +57,16 @@ def remove_profile_banner():
     """
     binding = {}
     url = 'https://api.twitter.com/1.1/account/remove_profile_banner.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-remove-profile-banner',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-remove-profile-banner',
+                           binding)
 
 
-def settings(*, sleep_time_enabled=ELIDE, start_sleep_time=ELIDE,
-             end_sleep_time=ELIDE, time_zone=ELIDE,
-             trend_location_woeid=ELIDE, lang=ELIDE):
+def settings(*, sleep_time_enabled=_ELIDE, start_sleep_time=_ELIDE,
+             end_sleep_time=_ELIDE, time_zone=_ELIDE,
+             trend_location_woeid=_ELIDE, lang=_ELIDE):
     """
     Updates the authenticating user’s settings.
 
@@ -101,16 +102,16 @@ def settings(*, sleep_time_enabled=ELIDE, start_sleep_time=ELIDE,
                'time_zone': time_zone, 'trend_location_woeid':
                trend_location_woeid, 'lang': lang}
     url = 'https://api.twitter.com/1.1/account/settings.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-settings',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-settings',
+                           binding)
 
 
-def update_profile(*, name=ELIDE, url=ELIDE, location=ELIDE,
-                   description=ELIDE, profile_link_color=ELIDE,
-                   include_entities=ELIDE, skip_status=ELIDE):
+def update_profile(*, name=_ELIDE, url=_ELIDE, location=_ELIDE,
+                   description=_ELIDE, profile_link_color=_ELIDE,
+                   include_entities=_ELIDE, skip_status=_ELIDE):
     """
     Sets some values that users are able to set under the “Account” tab of
     their settings page. Only the parameters specified will be updated.
@@ -145,16 +146,16 @@ def update_profile(*, name=ELIDE, url=ELIDE, location=ELIDE,
                'include_entities': include_entities, 'skip_status':
                skip_status}
     url = 'https://api.twitter.com/1.1/account/update_profile.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-update-profile',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-update-profile',
+                           binding)
 
 
-def update_profile_background_image(*, image=ELIDE, tile=ELIDE,
-                                    include_entities=ELIDE,
-                                    skip_status=ELIDE, media_id=ELIDE):
+def update_profile_background_image(*, image=_ELIDE, tile=_ELIDE,
+                                    include_entities=_ELIDE,
+                                    skip_status=_ELIDE, media_id=_ELIDE):
     """
     Updates the authenticating user’s profile background image. This method can
     also be used to enable or disable the profile background image.
@@ -181,15 +182,15 @@ def update_profile_background_image(*, image=ELIDE, tile=ELIDE,
                include_entities, 'skip_status': skip_status, 'media_id':
                media_id}
     url = 'https://api.twitter.com/1.1/account/update_profile_background_image.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-update-profile-background-image',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-update-profile-background-image',
+                           binding)
 
 
-def update_profile_banner(banner, *, width=ELIDE, height=ELIDE,
-                          offset_left=ELIDE, offset_top=ELIDE):
+def update_profile_banner(banner, *, width=_ELIDE, height=_ELIDE,
+                          offset_left=_ELIDE, offset_top=_ELIDE):
     """
     Uploads a profile banner on behalf of the authenticating user. More
     information about sizing variations can be found in
@@ -216,14 +217,15 @@ def update_profile_banner(banner, *, width=ELIDE, height=ELIDE,
     binding = {'banner': banner, 'width': width, 'height': height,
                'offset_left': offset_left, 'offset_top': offset_top}
     url = 'https://api.twitter.com/1.1/account/update_profile_banner.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-update-profile-banner',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-update-profile-banner',
+                           binding)
 
 
-def update_profile_image(image, *, include_entities=ELIDE, skip_status=ELIDE):
+def update_profile_image(image, *, include_entities=_ELIDE,
+                         skip_status=_ELIDE):
     """
     Updates the authenticating user’s profile image. Note that this method
     expects raw multipart data, not a URL to an image.
@@ -243,10 +245,18 @@ def update_profile_image(image, *, include_entities=ELIDE, skip_status=ELIDE):
     binding = {'image': image, 'include_entities': include_entities,
                'skip_status': skip_status}
     url = 'https://api.twitter.com/1.1/account/update_profile_image.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:account',
-                          'post-account-update-profile-image',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:account',
+                           'post-account-update-profile-image',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/settings.json'] = 'https://dev.twitter.com/rest/reference/get/account/settings'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/verify_credentials.json'] = 'https://dev.twitter.com/rest/reference/get/account/verify_credentials'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/remove_profile_banner.json'] = 'https://dev.twitter.com/rest/reference/post/account/remove_profile_banner'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/settings.json'] = 'https://dev.twitter.com/rest/reference/post/account/settings'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/update_profile.json'] = 'https://dev.twitter.com/rest/reference/post/account/update_profile'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/update_profile_background_image.json'] = 'https://dev.twitter.com/rest/reference/post/account/update_profile_background_image'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/update_profile_banner.json'] = 'https://dev.twitter.com/rest/reference/post/account/update_profile_banner'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/account/update_profile_image.json'] = 'https://dev.twitter.com/rest/reference/post/account/update_profile_image'

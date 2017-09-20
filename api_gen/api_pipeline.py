@@ -370,7 +370,7 @@ VALIDATION_SPEC = {
     'desc': (None, None),
     'family': (VALID_FAMILES, None),
     'group': (VALID_GROUPS, None),
-    'method': ({'GET', 'POST', 'DELETE'}, 'GET'),
+    'method': ({'GET', 'POST', 'DELETE', 'PUT'}, 'GET'),
     'resp_format': ({'JSON', None}, 'JSON'),
     'rate_limited': ({True, False}, True),
     'path': (None, None),

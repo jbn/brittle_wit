@@ -3,12 +3,13 @@
 ###############################################################################
 
 
-from brittle_wit_core import TwitterRequest, ELIDE
+from brittle_wit_core import TwitterRequest as _TwitterRequest
+from brittle_wit_core import ELIDE as _ELIDE
 
 
-def home_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
-                  trim_user=ELIDE, exclude_replies=ELIDE,
-                  include_entities=ELIDE):
+def home_timeline(*, count=_ELIDE, since_id=_ELIDE, max_id=_ELIDE,
+                  trim_user=_ELIDE, exclude_replies=_ELIDE,
+                  include_entities=_ELIDE):
     """
     Returns a collection of the most recent
 
@@ -44,15 +45,15 @@ def home_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
                'trim_user': trim_user, 'exclude_replies': exclude_replies,
                'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/statuses/home_timeline.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-home-timeline',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-home-timeline',
+                           binding)
 
 
-def lookup(id, *, include_entities=ELIDE, trim_user=ELIDE, map=ELIDE,
-           include_ext_alt_text=ELIDE):
+def lookup(id, *, include_entities=_ELIDE, trim_user=_ELIDE, map=_ELIDE,
+           include_ext_alt_text=_ELIDE):
     """
     Returns fully-hydrated
 
@@ -79,15 +80,15 @@ def lookup(id, *, include_entities=ELIDE, trim_user=ELIDE, map=ELIDE,
                trim_user, 'map': map, 'include_ext_alt_text':
                include_ext_alt_text}
     url = 'https://api.twitter.com/1.1/statuses/lookup.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-lookup',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-lookup',
+                           binding)
 
 
-def mentions_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
-                      trim_user=ELIDE, include_entities=ELIDE):
+def mentions_timeline(*, count=_ELIDE, since_id=_ELIDE, max_id=_ELIDE,
+                      trim_user=_ELIDE, include_entities=_ELIDE):
     """
     Returns the 20 most recent mentions (Tweets containing a users’s
     @screen_name) for the authenticating user.
@@ -118,16 +119,16 @@ def mentions_timeline(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
     binding = {'count': count, 'since_id': since_id, 'max_id': max_id,
                'trim_user': trim_user, 'include_entities': include_entities}
     url = 'https://api.twitter.com/1.1/statuses/mentions_timeline.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-mentions-timeline',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-mentions-timeline',
+                           binding)
 
 
-def oembed(url, *, maxwidth=ELIDE, hide_media=ELIDE, hide_thread=ELIDE,
-           omit_script=ELIDE, align=ELIDE, related=ELIDE, lang=ELIDE,
-           theme=ELIDE, link_color=ELIDE, widget_type=ELIDE, dnt=ELIDE):
+def oembed(url, *, maxwidth=_ELIDE, hide_media=_ELIDE, hide_thread=_ELIDE,
+           omit_script=_ELIDE, align=_ELIDE, related=_ELIDE, lang=_ELIDE,
+           theme=_ELIDE, link_color=_ELIDE, widget_type=_ELIDE, dnt=_ELIDE):
     """
     Returns a single Tweet, specified by either a Tweet web URL or the Tweet
     ID, in an
@@ -187,14 +188,14 @@ def oembed(url, *, maxwidth=ELIDE, hide_media=ELIDE, hide_thread=ELIDE,
                theme, 'link_color': link_color, 'widget_type': widget_type,
                'dnt': dnt}
     url = 'https://publish.twitter.com/oembed'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-oembed',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-oembed',
+                           binding)
 
 
-def retweeters_ids(id, *, cursor=ELIDE, stringify_ids=ELIDE):
+def retweeters_ids(id, *, cursor=_ELIDE, stringify_ids=_ELIDE):
     """
     Returns a collection of up to 100 user IDs belonging to users who have
     retweeted the Tweet specified by the
@@ -218,14 +219,14 @@ def retweeters_ids(id, *, cursor=ELIDE, stringify_ids=ELIDE):
     """
     binding = {'id': id, 'cursor': cursor, 'stringify_ids': stringify_ids}
     url = 'https://api.twitter.com/1.1/statuses/retweeters/ids.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-retweeters-ids',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-retweeters-ids',
+                           binding)
 
 
-def retweets_by_id(id, *, count=ELIDE, trim_user=ELIDE):
+def retweets_by_id(id, *, count=_ELIDE, trim_user=_ELIDE):
     """
     Returns a collection of the 100 most recent retweets of the Tweet specified
     by the
@@ -242,16 +243,16 @@ def retweets_by_id(id, *, count=ELIDE, trim_user=ELIDE):
     binding = {'id': id, 'count': count, 'trim_user': trim_user}
     url = 'https://api.twitter.com/1.1/statuses/retweets/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-retweets-id',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-retweets-id',
+                           binding)
 
 
-def retweets_of_me(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
-                   trim_user=ELIDE, include_entities=ELIDE,
-                   include_user_entities=ELIDE):
+def retweets_of_me(*, count=_ELIDE, since_id=_ELIDE, max_id=_ELIDE,
+                   trim_user=_ELIDE, include_entities=_ELIDE,
+                   include_user_entities=_ELIDE):
     """
     Returns the most recent Tweets authored by the authenticating user that
     have been retweeted by others. This timeline is a subset of the user’s
@@ -282,15 +283,15 @@ def retweets_of_me(*, count=ELIDE, since_id=ELIDE, max_id=ELIDE,
                'trim_user': trim_user, 'include_entities': include_entities,
                'include_user_entities': include_user_entities}
     url = 'https://api.twitter.com/1.1/statuses/retweets_of_me.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-retweets-of-me',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-retweets-of-me',
+                           binding)
 
 
-def show_by_id(id, *, trim_user=ELIDE, include_my_retweet=ELIDE,
-               include_entities=ELIDE, include_ext_alt_text=ELIDE):
+def show_by_id(id, *, trim_user=_ELIDE, include_my_retweet=_ELIDE,
+               include_entities=_ELIDE, include_ext_alt_text=_ELIDE):
     """
     Returns a single
 
@@ -318,16 +319,16 @@ def show_by_id(id, *, trim_user=ELIDE, include_my_retweet=ELIDE,
                'include_ext_alt_text': include_ext_alt_text}
     url = 'https://api.twitter.com/1.1/statuses/show.json'
     url = url.format(**binding)
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-show-id',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-show-id',
+                           binding)
 
 
-def user_timeline(*, user_id=ELIDE, screen_name=ELIDE, since_id=ELIDE,
-                  count=ELIDE, max_id=ELIDE, trim_user=ELIDE,
-                  exclude_replies=ELIDE, include_rts=ELIDE):
+def user_timeline(*, user_id=_ELIDE, screen_name=_ELIDE, since_id=_ELIDE,
+                  count=_ELIDE, max_id=_ELIDE, trim_user=_ELIDE,
+                  exclude_replies=_ELIDE, include_rts=_ELIDE):
     """
     Returns a collection of the most recent
 
@@ -372,14 +373,14 @@ def user_timeline(*, user_id=ELIDE, screen_name=ELIDE, since_id=ELIDE,
                trim_user, 'exclude_replies': exclude_replies, 'include_rts':
                include_rts}
     url = 'https://api.twitter.com/1.1/statuses/user_timeline.json'
-    return TwitterRequest('GET',
-                          url,
-                          'rest:statuses',
-                          'get-statuses-user-timeline',
-                          binding)
+    return _TwitterRequest('GET',
+                           url,
+                           'rest:statuses',
+                           'get-statuses-user-timeline',
+                           binding)
 
 
-def destroy_by_id(id, *, trim_user=ELIDE):
+def destroy_by_id(id, *, trim_user=_ELIDE):
     """
     Destroys the status specified by the required ID parameter. The
     authenticating user must be the author of the specified status. Returns the
@@ -394,14 +395,14 @@ def destroy_by_id(id, *, trim_user=ELIDE):
     binding = {'id': id, 'trim_user': trim_user}
     url = 'https://api.twitter.com/1.1/statuses/destroy/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'rest:statuses',
-                          'post-statuses-destroy-id',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:statuses',
+                           'post-statuses-destroy-id',
+                           binding)
 
 
-def retweet_by_id(id, *, trim_user=ELIDE):
+def retweet_by_id(id, *, trim_user=_ELIDE):
     """
     Retweets a tweet. Returns the
 
@@ -414,14 +415,14 @@ def retweet_by_id(id, *, trim_user=ELIDE):
     binding = {'id': id, 'trim_user': trim_user}
     url = 'https://api.twitter.com/1.1/statuses/retweet/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'rest:statuses',
-                          'post-statuses-retweet-id',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:statuses',
+                           'post-statuses-retweet-id',
+                           binding)
 
 
-def unretweet_by_id(id, *, trim_user=ELIDE):
+def unretweet_by_id(id, *, trim_user=_ELIDE):
     """
     Untweets a retweeted status. Returns the
 
@@ -434,17 +435,18 @@ def unretweet_by_id(id, *, trim_user=ELIDE):
     binding = {'id': id, 'trim_user': trim_user}
     url = 'https://api.twitter.com/1.1/statuses/unretweet/{id}.json'
     url = url.format(**binding)
-    return TwitterRequest('POST',
-                          url,
-                          'rest:statuses',
-                          'post-statuses-unretweet-id',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:statuses',
+                           'post-statuses-unretweet-id',
+                           binding)
 
 
-def update(status, *, in_reply_to_status_id=ELIDE, possibly_sensitive=ELIDE,
-           lat=ELIDE, long=ELIDE, place_id=ELIDE, display_coordinates=ELIDE,
-           trim_user=ELIDE, media_ids=ELIDE, enable_dm_commands=ELIDE,
-           fail_dm_commands=ELIDE):
+def update(status, *, in_reply_to_status_id=_ELIDE,
+           possibly_sensitive=_ELIDE, lat=_ELIDE, long=_ELIDE,
+           place_id=_ELIDE, display_coordinates=_ELIDE, trim_user=_ELIDE,
+           media_ids=_ELIDE, enable_dm_commands=_ELIDE,
+           fail_dm_commands=_ELIDE):
     """
     Updates the authenticating user’s current status, also known as Tweeting.
 
@@ -510,19 +512,19 @@ def update(status, *, in_reply_to_status_id=ELIDE, possibly_sensitive=ELIDE,
                'enable_dm_commands': enable_dm_commands, 'fail_dm_commands':
                fail_dm_commands}
     url = 'https://api.twitter.com/1.1/statuses/update.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:statuses',
-                          'post-statuses-update',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:statuses',
+                           'post-statuses-update',
+                           binding)
 
 
-def update_with_mediadeprecated(status, media, *, possibly_sensitive=ELIDE,
-                                in_reply_to_status_id=ELIDE, lat=ELIDE,
-                                long=ELIDE, place_id=ELIDE,
-                                display_coordinates=ELIDE,
-                                enable_dm_commands=ELIDE,
-                                fail_dm_commands=ELIDE):
+def update_with_mediadeprecated(status, media, *, possibly_sensitive=_ELIDE,
+                                in_reply_to_status_id=_ELIDE, lat=_ELIDE,
+                                long=_ELIDE, place_id=_ELIDE,
+                                display_coordinates=_ELIDE,
+                                enable_dm_commands=_ELIDE,
+                                fail_dm_commands=_ELIDE):
     """
 
 
@@ -583,10 +585,24 @@ def update_with_mediadeprecated(status, media, *, possibly_sensitive=ELIDE,
                'enable_dm_commands': enable_dm_commands, 'fail_dm_commands':
                fail_dm_commands}
     url = 'https://api.twitter.com/1.1/statuses/update_with_media.json'
-    return TwitterRequest('POST',
-                          url,
-                          'rest:statuses',
-                          'post-statuses-update-with-media-deprecated',
-                          binding)
+    return _TwitterRequest('POST',
+                           url,
+                           'rest:statuses',
+                           'post-statuses-update-with-media-deprecated',
+                           binding)
 
 
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/home_timeline.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/home_timeline'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/lookup.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/lookup'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/mentions_timeline.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/mentions_timeline'
+_TwitterRequest.DOC_URLS['https://publish.twitter.com/oembed'] = 'https://dev.twitter.com/rest/reference/get/statuses/oembed'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/retweeters/ids.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/retweeters/ids'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/retweets/{id}.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/retweets/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/retweets_of_me.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/retweets_of_me'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/show.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/show/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/user_timeline.json'] = 'https://dev.twitter.com/rest/reference/get/statuses/user_timeline'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/destroy/{id}.json'] = 'https://dev.twitter.com/rest/reference/post/statuses/destroy/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/retweet/{id}.json'] = 'https://dev.twitter.com/rest/reference/post/statuses/retweet/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/unretweet/{id}.json'] = 'https://dev.twitter.com/rest/reference/post/statuses/unretweet/id'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/update.json'] = 'https://dev.twitter.com/rest/reference/post/statuses/update'
+_TwitterRequest.DOC_URLS['https://api.twitter.com/1.1/statuses/update_with_media.json'] = 'https://dev.twitter.com/rest/reference/post/statuses/update_with_media'
