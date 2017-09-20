@@ -43,10 +43,13 @@ tweet.
     import brittle_wit as bw
     from brittle_wit.executors import debug_blocking_request
     from brittle_wit import rest_api
+
+
     APP_CRED = bw.AppCredentials.load_from_env()
     CLIENT_CRED = bw.ClientCredentials.load_from_env()
     req = rest_api.statuses.lookup(id=20)
     resp = debug_blocking_request(APP_CRED, CLIENT_CRED, req)
     jacks_first_tweet = resp.json()
+
     print(jacks_first_tweet)
 
