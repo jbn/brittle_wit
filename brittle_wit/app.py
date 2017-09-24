@@ -141,8 +141,8 @@ class App:
 
             # Add all initial tasks ------------------------------------------
 
-            for coro in self._initial_coros:
-                loop.create_task(coro)
+            while self._initial_coros:
+                loop.create_task(self._initial_coros.pop(0))
 
             for coro in self._maintenance_coros:
                 loop.create_task(coro)
