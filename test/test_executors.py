@@ -318,7 +318,7 @@ class TestManagedClientRequestProcessors(AsyncSafeTestCase):
         self.assertEqual(self.manager[ANY_CREDENTIALS], self.bob)
 
     def test__maintain(self):
-        self.manager.add_all([self.alice, self.bob])
+        self.manager.add_all([self.alice, self.bob], False)
 
         now = time.time()
         self.manager[self.alice]._rate_limits['future'] = RateLimit(1, 1, now + 100)
@@ -331,6 +331,15 @@ class TestManagedClientRequestProcessors(AsyncSafeTestCase):
 
         self.assertTrue(self.manager.is_managed(self.alice))
         self.assertFalse(self.manager.is_managed(self.bob))
+
+    def test__maintain_with_any_cred(self):
+        self.manager.add_all([self.alice], True)
+        now = time.time()
+        self.manager[self.alice]._rate_limits['passed'] = RateLimit(1, 1, now - 100)
+        self.assertTrue(self.manager.is_managed(self.alice))
+
+        self.manager._maintain()
+        self.assertTrue(self.manager.is_managed(self.alice))
 
     async def test_maintain_reraise_keyboard_interrupt(self):
         path = 'brittle_wit.executors.ManagedClientRequestProcessors._maintain'

@@ -1,7 +1,11 @@
 import asyncio
+import logging
 from collections import OrderedDict
 from datetime import datetime
 from brittle_wit_core import TwitterRequest, WrappedException
+
+
+LOGGER = logging.getLogger('brittle_wit')
 
 
 def parse_datetime(s):
@@ -26,6 +30,7 @@ async def retrying(make_coro, n_tries, strategy=linear_backoff, sleep_time=60):
         try:
             return await make_coro()
         except Exception as e:
+            LOGGER.error("Error %s", e)
             wrapped = WrappedException.wrap_if_nessessary(e)
             if not wrapped.is_retryable or attempt == n_tries:
                 raise wrapped
@@ -98,3 +103,47 @@ def running_task_names():
     """
     tasks = asyncio.Task.all_tasks()
     return [t._coro.__qualname__ for t in tasks if not t.done()]
+
+
+class CircularQueue:
+    """
+    A Circular Queue with Fast Membership Testing.
+    """
+
+    def __init__(self):
+        self._queue, self._members = [], set()
+
+    def __contains__(self, item):
+        return item in self._members
+
+    def __bool__(self):
+        return bool(self._queue)
+
+    def __delitem__(self, item):
+        self._members.remove(item)
+        self._queue.remove(item)
+
+    def add(self, item):
+        """
+        Adds an item to the FIRST slot in the queue.
+
+        :raises: a ValueError if the item is already enqueued.
+        :param item: the item to add.
+        """
+        if item in self._members:
+            raise ValueError("Item {} already in queue".format(item))
+
+        self._queue.insert(0, item)
+        self._members.add(item)
+
+    def pop_and_rotate(self):
+        """
+        :return: the next item on the queue while maintaining
+            the circular buffer.
+        """
+        if not self._queue:
+            return None
+
+        item = self._queue.pop(0)
+        self._queue.append(item)
+        return item

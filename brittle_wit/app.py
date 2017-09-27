@@ -22,7 +22,7 @@ class ClientContext:
         self._app = app
         self._client_cred = client_cred
 
-    async def execute(self, req):
+    async def execute(self, req, timeout=120, n_retries=5, sleep_time=60):
         """
         Execute the given request in the context of the associated client.
 
@@ -32,8 +32,12 @@ class ClientContext:
         # Client credentials may change -- they are just oauth key-pairs.
         processor = self._app.manager[self._client_cred]
 
-        return await processor.execute(self._app.session, self._app.app_cred,
-                                       req)
+        return await processor.execute(self._app.session,
+                                       self._app.app_cred,
+                                       req,
+                                       timeout=timeout,
+                                       n_retries=n_retries,
+                                       sleep_time=sleep_time)
 
 
 class App:

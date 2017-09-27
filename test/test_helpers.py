@@ -6,7 +6,7 @@ from test.helpers import load_fixture_txt, AsyncSafeTestCase
 from brittle_wit_core import TwitterError
 from brittle_wit.helpers import (parse_datetime, grouping, running_task_names,
                                  linear_backoff, expon_backoff, retrying,
-                                 _twitter_request_html_repr)
+                                 _twitter_request_html_repr, CircularQueue)
 
 
 def failure_script(ret_val, *failure_schedule):
@@ -84,3 +84,46 @@ class TestIPythonHelpers(unittest.TestCase):
         req = rest_api.direct_messages.new("hello world")
         self.assertEqual(_twitter_request_html_repr(req).strip(),
                          expected.strip())
+
+
+class TestCircularQueue(unittest.TestCase):
+
+    def test_contains(self):
+        q = CircularQueue()
+        self.assertNotIn('a', q)
+        q.add('a')
+        self.assertIn('a', q)
+
+    def test_bool(self):
+        q = CircularQueue()
+        self.assertFalse(q)
+        q.add('a')
+        self.assertTrue(q)
+
+    def test_add_raises_exception_on_already_contained(self):
+        q = CircularQueue()
+        q.add('a')
+        with self.assertRaisesRegexp(ValueError, "already in queue"):
+            q.add('a')
+
+    def test_del(self):
+        q = CircularQueue()
+        q.add('a')
+        self.assertIn('a', q)
+        del q['a']
+        self.assertNotIn('a', q)
+
+    def test_del_raises_key_error(self):
+        q = CircularQueue()
+        q.add('a')
+        self.assertIn('a', q)
+        del q['a']
+        with self.assertRaises(KeyError):
+            del q['a']
+
+    def test_pop_and_rotate(self):
+        q = CircularQueue()
+        q.add('a')
+        q.add('b')
+        items = [q.pop_and_rotate() for _ in range(5)]
+        self.assertEqual(items, list('babab'))

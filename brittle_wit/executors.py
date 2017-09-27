@@ -10,7 +10,7 @@ from brittle_wit_core import (generate_req_headers,
                               TwitterError,
                               BrittleWitError,
                               WrappedException)
-from brittle_wit.helpers import retrying
+from brittle_wit.helpers import retrying, CircularQueue
 from brittle_wit.rate_limit import RateLimit, FIFTEEN_MINUTES
 from brittle_wit.ticketing import TicketMaster
 
@@ -245,7 +245,7 @@ class ManagedClientRequestProcessors:
     """
 
     def __init__(self):
-        self._credentials, self._any_cred_queue = {}, []
+        self._credentials, self._any_cred_queue = {}, CircularQueue()
 
     def is_managed(self, cred):
         return cred in self._credentials
@@ -269,7 +269,7 @@ class ManagedClientRequestProcessors:
         self._credentials[cred] = client_req_processor
 
         if any_cred_eligible:
-            self._any_cred_queue.insert(0, cred)
+            self._any_cred_queue.add(cred)
 
     def add_all(self, bulk_credentials, any_cred_eligible=True):
         """
@@ -284,8 +284,8 @@ class ManagedClientRequestProcessors:
         """
         del self._credentials[cred]
         try:
-            self._any_cred_queue.remove(cred)
-        except ValueError:
+            del self._any_cred_queue[cred]
+        except KeyError:
             pass  # Was added with any_cred_eligible=False
 
     def __getitem__(self, cred):
@@ -304,9 +304,7 @@ class ManagedClientRequestProcessors:
         """
         if cred is ANY_CREDENTIALS:
             if self._any_cred_queue:
-                credentials = self._any_cred_queue.pop(0)
-                self._any_cred_queue.append(credentials)
-                return self[credentials]
+                return self[self._any_cred_queue.pop_and_rotate()]
             else:
                 return None
         else:
@@ -353,7 +351,8 @@ class ManagedClientRequestProcessors:
 
         # Remove all those processors not in use or rate limited.
         for k in removal_keys:
-            self.remove(k)
+            if k not in self._any_cred_queue:
+                self.remove(k)
 
 
 def debug_blocking_request(app_cred, client_cred, twitter_req):
