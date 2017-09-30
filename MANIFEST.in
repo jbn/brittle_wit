@@ -1,4 +1,4 @@
-include README.md
+include README.rst
 include requirements.txt
 include LICENSE
 include brittle_wit/rest_api.json
