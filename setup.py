@@ -25,7 +25,7 @@ CLASSIFIERS = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
-INSTALL_REQUIRES = ['aiohttp', 'brittle_wit_core']
+INSTALL_REQUIRES = ['aiohttp', 'brittle_wit_core', 'lockchain']
 
 ###############################################################################
 

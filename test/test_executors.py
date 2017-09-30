@@ -80,9 +80,9 @@ class TestClientRequestProcessor(unittest.TestCase):
         self.assertTrue(self.processor.is_removable())
 
     def test_is_removable_when_processing(self):
-        tm = MagicMock()
-        tm.all_lines_empty = lambda: False
-        self.processor._ticket_master = tm
+        mgr = MagicMock()
+        mgr.all_chains_empty = lambda: False
+        self.processor._chain_manager = mgr
 
         # It's waiting for a ticket to make a request.
         self.assertFalse(self.processor.is_removable())
@@ -94,10 +94,10 @@ class TestClientRequestProcessor(unittest.TestCase):
     def test_is_not_processing_on_init(self):
         self.assertTrue(self.processor.is_not_processing())
 
-    def test_is_processing_when_waiting_for_ticket(self):
-        tm = MagicMock()
-        tm.all_lines_empty = lambda: False
-        self.processor._ticket_master = tm
+    def test_is_processing_when_waiting_for_crit_region(self):
+        mgr = MagicMock()
+        mgr.all_chains_empty = lambda: False
+        self.processor._chain_manager = mgr
 
         # It's waiting for a ticket to make a request.
         self.assertFalse(self.processor.is_not_processing())
@@ -106,9 +106,9 @@ class TestClientRequestProcessor(unittest.TestCase):
         self.assertTrue(self.processor.is_immediately_available_for('svc'))
 
     def test_is_immediately_available_for_when_currently_on_line(self):
-        tm = MagicMock()
-        tm.is_line_empty = lambda _: False
-        self.processor._ticket_master = tm
+        mgr = MagicMock()
+        mgr.is_chain_empty = lambda _: False
+        self.processor._chain_manager = mgr
 
         self.assertFalse(self.processor.is_immediately_available_for('svc'))
 

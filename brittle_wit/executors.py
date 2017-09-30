@@ -12,7 +12,7 @@ from brittle_wit_core import (generate_req_headers,
                               WrappedException)
 from brittle_wit.helpers import retrying, CircularQueue
 from brittle_wit.rate_limit import RateLimit, FIFTEEN_MINUTES
-from brittle_wit.ticketing import TicketMaster
+from lockchain import ChainManager
 
 
 LOGGER = logging.getLogger('brittle_wit')
@@ -99,7 +99,7 @@ class ClientRequestProcessor:
         :param client_cred: the ClientCredentials to manage
         """
         self._client_cred = client_cred
-        self._ticket_master = TicketMaster()
+        self._chain_manager = ChainManager()
         self._rate_limits = {}
 
     @property
@@ -118,7 +118,7 @@ class ClientRequestProcessor:
         :return: True if no caller is using this processors' credentials for
             any endpoint otherwise True
         """
-        return self._ticket_master.all_lines_empty()
+        return self._chain_manager.all_chains_empty()
 
     def is_immediately_available_for(self, service):
         """
@@ -126,7 +126,7 @@ class ClientRequestProcessor:
         :return: True if no caller is using this objects associated credentials
             for the given service AND that service is not rate limited
         """
-        if self._ticket_master.is_line_empty(service):
+        if self._chain_manager.is_chain_empty(service):
             if service not in self._rate_limits:
                 return True
             else:
@@ -187,7 +187,7 @@ class ClientRequestProcessor:
         # This thows after some amount of time, even if it's still reading!
         async with async_timeout.timeout(timeout):
 
-            async with self._ticket_master.take_ticket(service):
+            async with self._chain_manager.chain_on(service):
                 # The caller is now in charge of this service.
                 rate_limit = self._rate_limit_for(service)
 
