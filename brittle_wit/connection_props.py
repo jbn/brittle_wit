@@ -59,4 +59,4 @@ SESSION_OPTS['cookie_jar'] = aiohttp.helpers.DummyCookieJar()
 # > to prevent spurious reconnects in the event of network congestion,
 # > local CPU starvation, local GC pauses, etc.
 SESSION_OPTS['conn_timeout'] = 90
-SESSION_OPTS['read_timeout'] = 90
+SESSION_OPTS['read_timeout'] = None

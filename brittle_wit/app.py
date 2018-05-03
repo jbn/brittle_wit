@@ -1,6 +1,7 @@
 import asyncio
 import aiohttp
 import os
+from collections import deque
 from contextlib import contextmanager
 from brittle_wit_core import AppCredentials, ClientCredentials
 from brittle_wit.executors import ManagedClientRequestProcessors
@@ -12,7 +13,7 @@ class ClientContext:
     """
     Safely-encapsulates ``App``-associated ``ClientCredentials``.
     """
-    __slots__ = ('_app', '_client_cred')
+    __slots__ = ('_app', '_client_cred', '__weakref__')
 
     def __init__(self, app, client_cred):
         """
@@ -30,6 +31,9 @@ class ClientContext:
         :return: A ``TwitterResponse``
         """
         # Client credentials may change -- they are just oauth key-pairs.
+        # XXX: This violates the hash pattern so I thin the API needs a change.
+        # I.E "REFRESH".
+        # XXX: Figure out weakref pattern.
         processor = self._app.manager[self._client_cred]
 
         return await processor.execute(self._app.session,
@@ -40,14 +44,19 @@ class ClientContext:
                                        sleep_time=sleep_time)
 
 
+PRESTINE = 'prestine'
+RUNNING = 'running'
+FINISHED = 'finished'
+
+
 class App:
     """
     A simple interface for building a Twitter App.
     """
 
-    def __init__(self, app_cred, loop=None,
-                 session_overrides=None,
-                 tcp_conn_overrides=None):
+    @classmethod
+    def with_defaults(cls, app_cred, loop=None, session_overrides=None,
+                      tcp_conn_overrides=None):
         """
         Create an application with sensible defaults for transports.
 
@@ -58,20 +67,31 @@ class App:
         :param tcp_conn_overrides``: overrides for ``aiohttp.TCPConnector``
             instantiation.
         """
-        self._app_cred = app_cred
-        self._manager = ManagedClientRequestProcessors()
+        tcp_opts = {**DEFAULTS.TCP_CONN_REST, **(tcp_conn_overrides or {})}
+        tcp_opts['loop'] = loop
+        tcp_connector = aiohttp.TCPConnector(**tcp_opts)
 
-        tcp_conn_opts = {**DEFAULTS.TCP_CONN_REST,
-                         **(tcp_conn_overrides or {})}
-        tcp_conn_opts['loop'] = loop
         session_opts = {**DEFAULTS.SESSION_OPTS, **(session_overrides or {})}
-        session_opts['connector'] = aiohttp.TCPConnector(**tcp_conn_opts)
+        session_opts['connector'] = tcp_connector
         session_opts['loop'] = loop
-        self._session = aiohttp.ClientSession(**session_opts)
 
-        self._initial_coros = []
+        session = aiohttp.ClientSession(**session_opts)
+        return App(app_cred, session)
+
+    def __init__(self, app_cred, client_session):
+        """
+        Create a twitter app.
+
+        :param app_cred: an `AppCredentials` object
+        :param client_session: a aiohttp ClientSession
+        """
+        self._app_cred = app_cred
+        self._session = client_session
+
+        self._manager = ManagedClientRequestProcessors()
+        self._initial_coros = deque()
         self._maintenance_coros = {}
-        self._state = 'prestine'
+        self._state = PRESTINE
 
     @property
     def app_cred(self):
@@ -104,9 +124,9 @@ class App:
             is no longer running, it is an error.
         :return: the task if and only if the app is running, otherwise None
         """
-        if self._state == 'running':
+        if self._state == RUNNING:
             return asyncio.get_event_loop().create_task(coro)
-        elif self._state == 'prestine':
+        elif self._state == PRESTINE:
             self._initial_coros.append(coro)
         else:
             raise RuntimeError("Scheduled in state {}".format(self._state))
@@ -116,6 +136,7 @@ class App:
         Add a coroutine to the loop that does maintenance.
 
         An app with only maintance functions running may exit.
+
         :param coro: A coroutine that does maintenance.
         :param send_cancel: if True, the App will cancel this coro
             if it's still running when only maintenance tasks are running
@@ -123,20 +144,23 @@ class App:
         """
         self._maintenance_coros[coro] = send_cancel
 
-        if self._state == 'running':
+        if self._state == RUNNING:
             return asyncio.get_event_loop().create_task(coro)
-        elif self._state == 'prestine':
+        elif self._state == PRESTINE:
             pass  # Only need it in maintenance funcs.
         else:
             raise RuntimeError("Scheduled in state {}".format(self._state))
 
-    async def run_async(self):
-        if self._state == 'finished':
+    def _prepare_for_run(self):
+        if self._state == FINISHED:
             raise RuntimeError("This app has already finished! Can't rerun!")
-        elif self._state == 'running':
+        elif self._state == RUNNING:
             raise RuntimeError("This app is already running!")
         else:
-            self._state = 'running'
+            self._state = RUNNING  # XXX: WAIT WHAT?
+
+    async def run_async(self):
+        self._prepare_for_run()
 
         loop = asyncio.get_event_loop()
         self._maintenance_coros[self._manager.maintain()] = True
@@ -146,7 +170,7 @@ class App:
             # Add all initial tasks ------------------------------------------
 
             while self._initial_coros:
-                loop.create_task(self._initial_coros.pop(0))
+                loop.create_task(self._initial_coros.popleft())
 
             for coro in self._maintenance_coros:
                 loop.create_task(coro)
@@ -179,8 +203,8 @@ class App:
 
         tasks_to_cancel = [task for task in asyncio.Task.all_tasks()
                            if not task.done() and
-                              task._coro.__qualname__ != 'App.run_async' and
-                              self._maintenance_coros.get(task._coro)]
+                           task._coro.__qualname__ != 'App.run_async' and
+                           self._maintenance_coros.get(task._coro)]
 
         for task in tasks_to_cancel:
             task.cancel()

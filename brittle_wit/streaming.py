@@ -1,10 +1,12 @@
-import asyncio
-import json
 import aiohttp
+import asyncio
 import bz2
+import json
+import time
 
 from aiohttp import web
 from brittle_wit.rate_limit import RateLimit
+from brittle_wit.helpers import LOGGER
 from brittle_wit_core import TwitterError, BrittleWitError
 from brittle_wit.executors import twitter_req_to_http_req, LOGGER
 import brittle_wit.connection_props as DEFAULTS
@@ -107,7 +109,8 @@ def json_entry_parser(entry):
 class TwitterStream:
 
     def __init__(self, session, app_cred, client_cred, twitter_req,
-                 parser=noop_entry_parser, chunk_size=4096):
+                 parser=noop_entry_parser, chunk_size=4096,
+                 read_hang_timeout=60):
         """
         Initialize a Twitter stream.
 
@@ -122,6 +125,8 @@ class TwitterStream:
             into a message.
         :param chunk_size: the number of bytes to asynchronously read from
             Twitter for each receive
+        :param read_hang_timeout: the number of seconds to wait while waiting
+            for the *next* read before raising a Timeout
         """
         self._session = session
         self._app_cred = app_cred
@@ -129,6 +134,7 @@ class TwitterStream:
         self._twitter_req = twitter_req
         self._parser = parser
         self._chunk_size = chunk_size
+        self._read_hang_timeout = read_hang_timeout
 
         self._entry_processor = EntryProcessor()
         self._http_req = None
@@ -138,29 +144,42 @@ class TwitterStream:
         """
         :return: True if their is an active connection to Twitter's servers.
         """
-        return (self._http_req is not None and
+        return (self._http_req is not None and self._resp is not None and
                 self._resp.connection and not self._resp.connection.closed)
 
     def _connect(self):
         """
         Connect to Twitter's servers.
         """
+        LOGGER.info("Connecting to twitter.")
+
+        # =====================================================================
         # There may only be one set of credentials connected to a streaming
         # endpoint at a time. Preempting an existing connection is
         # error-prone. Complain loudly when a connection already exists.
+        # =====================================================================
         if self.is_open():
+            LOGGER.critical("Trying to connect an already open stream!")
             raise RuntimeError("Already connected. Call close() first!")
 
+        # =====================================================================
+        # Twitter streams should not read timeout since they poll forever.
+        # aiohttp implements it such that reads time is cumulative, not
+        # episodic, which is wrong for long-polling semantics. Instead, the
+        # read_hang_timeout constructor arg controls the amount of time
+        # to wait *between* reads.
+        # =====================================================================
         self._http_req = twitter_req_to_http_req(self._session,
                                                  self._app_cred,
                                                  self._client_cred,
-                                                 self._twitter_req,
-                                                 timeout=None)
+                                                 self._twitter_req)
 
     def disconnect(self):
         """
         Disconnect the stream from Twitter's servers.
         """
+        LOGGER.info("Disconnecting stream from twitter's server")
+
         if self._http_req is not None:
             self._http_req.close()
             self._http_req = None
@@ -176,12 +195,11 @@ class TwitterStream:
             waiting for consumption on the internal EntryProcessor from the
             prior connection
         """
+        LOGGER.info("Reconnecting stream.")
+
         # Twitter wants one IP per connection.
-        if self.is_open():
-            if force_close_if_open:
-                self.disconnect()
-            else:
-                raise RuntimeError("Trying to reconnect on open stream.")
+        if self.is_open() and force_close_if_open:
+            self.disconnect()
 
         # The initiating request does not change between connection resets,
         # so old messages are consumable.
@@ -199,19 +217,26 @@ class TwitterStream:
         """
         Commence streaming, returning this object as an iterator.
         """
+        LOGGER.info("Creating async iterator.")
+
         if not self.is_open():
             self._connect()
         elif self._resp is not None:
+            LOGGER.info("Returning old response.")
             return self  # Stream processor depends on this behavior.
 
         # XXX. I hate the next line. Is there a decontextualize pattern?
+        LOGGER.info("Creating new response.")
         self._resp = await self._http_req.__aenter__()
 
         if self._resp.status != 200:
+            resp = self._resp
+            self._resp = None  # XXX
+            LOGGER.error("Response error: {}".format(resp))
             raise TwitterError(self._client_cred,
                                self._twitter_req,
-                               self._resp,
-                               await self._resp.text())
+                               resp,
+                               await resp.text())
 
         return self
 
@@ -221,11 +246,12 @@ class TwitterStream:
         """
         # If there are no messages ready, read from the stream.
         while not self._entry_processor:
-            chunk = await self._resp.content.read(self._chunk_size)
-            if not chunk:
-                LOGGER.error("Read zero bytes on a stream.")
-                break
-            self._entry_processor.process(chunk)
+            with aiohttp.Timeout(self._read_hang_timeout):
+                chunk = await self._resp.content.read(self._chunk_size)
+                if not chunk:
+                    LOGGER.error("Read zero bytes on a stream.")
+                    break
+                self._entry_processor.process(chunk)
 
         # If there are no messages ready, the stream closed!
         # XXX: TODO: When does this occur. StopAsycIteration is scary.
@@ -240,6 +266,9 @@ class TwitterStream:
 class StreamReceiver:
 
     def close(self):
+        # Raising NotImplemented has bad semantics. Some derived classes
+        # may do things that don't require a proper close (e.g. logging to
+        # stdout).
         pass
 
 
@@ -249,7 +278,8 @@ class FeedSerializer(StreamReceiver):
 
     """
 
-    def __init__(self, output_file, overwrite_existing=False, as_bz2=False):
+    def __init__(self, output_file, overwrite_existing=False, as_bz2=False,
+                 recv_json=True):
         """
         :param as_bz2: if true, saves the file with BZ2 copression.
             BZ2 is useful for Spark/Hadoop analytics as it's splittable and
@@ -262,12 +292,49 @@ class FeedSerializer(StreamReceiver):
 
         open_file = bz2.open if as_bz2 else open
         self._output_stream = open_file(output_file, mode)
+        self._recv_json = recv_json
 
     def send(self, message):
-        self._output_stream.write(json.dumps(message).encode() + b"\n")
+        if self._recv_json:
+            self._output_stream.write(json.dumps(message).encode() + b"\n")
+        else:
+            self._output_stream.write(message + b"\n")
 
     def close(self):
         self._output_stream.close()
+
+
+class PartitioningFeedSerializer(StreamReceiver):
+
+    def __init__(self, n_per_file, output_path, overwrite_existing=False,
+                 as_bz2=False, recv_json=True):
+        self._n = 0
+        self._n_per_file = n_per_file
+        self._output_path = output_path
+        self._overwrite_existing = overwrite_existing
+        self._as_bz2 = as_bz2
+        self._recv_json = recv_json
+
+        new_path = self._output_path.format(time.time())
+        self._serializer = FeedSerializer(new_path,
+                                          self._overwrite_existing,
+                                          self._as_bz2,
+                                          self._recv_json)
+
+    def send(self, msg):
+        self._serializer.send(msg)
+
+        self._n += 1
+
+        if self._n >= self._n_per_file:
+            self._n = 0
+            self._serializer.close()
+
+            new_path = self._output_path.format(time.time())
+            self._serializer = FeedSerializer(new_path,
+                                              self._overwrite_existing,
+                                              self._as_bz2,
+                                              self._recv_json)
 
 
 class LambdaStreamHandler(StreamReceiver):
@@ -306,7 +373,7 @@ class StreamingHTTPPipe(StreamReceiver):
         # pair of (StreamResponse, Event).
         self._clients = {}
 
-        self._headers = {**StreamingHTTPPipe.DEFAULT_HEADERS, **resp_headers}
+        self._headers = {**self.DEFAULT_HEADERS, **resp_headers}
 
     async def handle(self, req):
         caller_id = id(req)
@@ -316,7 +383,7 @@ class StreamingHTTPPipe(StreamReceiver):
             # Start the FSM.
             await resp.prepare(req)
 
-            # The send method signals handle when it processing finishes.
+            # The send method signals handle when its processing finishes.
             finished_flag = asyncio.Event()
             self._clients[caller_id] = (resp, finished_flag)
             await finished_flag.wait()
@@ -357,6 +424,10 @@ class StreamProcessor:
         self._subscribers = {}
         self._requires_json = False
         self._n_failures = False
+
+    @property
+    def requires_json(self):
+        return self._requires_json
 
     def subscribe(self, receiver, as_json=False):
         """
@@ -413,12 +484,16 @@ class StreamProcessor:
             subscriber.send(json_message if as_json else message)
 
     async def _stream_to_subscribers(self):
+        LOGGER.info("Taking one for reset failures.")
+
         # Take one. If it's successful, this lets us reset the failure count.
         # One assignment for each send is a waste of cycles!
         async for message in self._twitter_stream:
             self._send_to_all(message)
             self._n_failures = 0
             break
+
+        LOGGER.info("Streaming to subscribers.")
 
         async for message in self._twitter_stream:
             self._send_to_all(message)
@@ -432,6 +507,7 @@ class StreamProcessor:
         sleep_time = 0
 
         while True:
+            LOGGER.info("Running StreamProcessor.")
             try:
                 await self._stream_to_subscribers()
             except KeyboardInterrupt:
@@ -451,6 +527,7 @@ class StreamProcessor:
                     # > reconnecting would be appropriate. Start with a 5
                     # > second wait, doubling each attempt, up to 320 seconds.
                     sleep_time = min(2**self._n_failures * 5, 320)
+
                 msg = "Stream %s'd waiting a %d seconds (failure #%d)"
                 LOGGER.error(msg, e, sleep_time, self._n_failures)
             except (aiohttp.ClientError, asyncio.TimeoutError) as e:
@@ -458,15 +535,16 @@ class StreamProcessor:
                 # > quickly. Increase the delay in reconnects by 250ms each
                 # > attempt, up to 16 seconds.
                 sleep_time = min(0.25 * (self._n_failures + 1), 16.0)
+
                 msg = "Stream %s'd waiting a %d seconds (failure #%d)"
                 LOGGER.error(msg, e, sleep_time, self._n_failures)
             except Exception as e:
                 LOGGER.error("Aborting on %s", e)
                 raise
 
-            self._n_failures += 1
             # You have to completely disconnect!
             self._twitter_stream.disconnect()
+            self._n_failures += 1
             await asyncio.sleep(sleep_time)
 
 

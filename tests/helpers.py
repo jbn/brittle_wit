@@ -18,6 +18,7 @@ SERIALIZATION_DIR = os.path.join(SELF_DIR, "tmp")
 
 
 def load_fixture_txt(file_name):
+    print(FIXTURES_DIR)
     with open(os.path.join(FIXTURES_DIR, file_name)) as fp:
         return fp.read()
 
@@ -77,10 +78,12 @@ def ensure_deleted(file_path):
         pass
 
 
-def mock_content_reader(messages):
+def mock_content_reader(messages, delay=0):
     messages = messages[:]
 
     async def read(n):
+        if delay != 0:
+            await asyncio.sleep(delay)
         return messages.pop(0) if messages else ''
 
     resp = Mock()

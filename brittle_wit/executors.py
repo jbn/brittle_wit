@@ -34,8 +34,7 @@ def twitter_req_to_http_req(session, app_cred, client_cred, twitter_req, **overr
     """
     headers = generate_req_headers(twitter_req, app_cred, client_cred)
     payload_k = 'data' if twitter_req.method == 'POST' else 'params'
-    kwargs = {payload_k: twitter_req.params,
-              'headers': headers}
+    kwargs = {payload_k: twitter_req.params, 'headers': headers}
     kwargs.update(overrides)
 
     return session.request(twitter_req.method, twitter_req.url, **kwargs)
@@ -88,7 +87,7 @@ class ClientRequestProcessor:
 
     There should only be one ClientRequestProcessor per set of credentials!
 
-    Perioditically call ``#cleanup()``. When `#is_removable()` is true, there
+    Periodically call ``#cleanup()``. When `#is_removable()` is true, there
     is no useful state information in the processor, and you can let Python
     garbage collect the object. This allows for stochastic reclaimation of
     memory.

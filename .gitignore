@@ -1,4 +1,6 @@
 *.pyc
+.pytest_cache
+.cache
 .ipynb_checkpoints
 _*.ipynb
 api_gen/scratch.ipynb

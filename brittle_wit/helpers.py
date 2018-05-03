@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from datetime import datetime
 from brittle_wit_core import TwitterRequest, WrappedException
 
@@ -111,7 +111,7 @@ class CircularQueue:
     """
 
     def __init__(self):
-        self._queue, self._members = [], set()
+        self._queue, self._members = deque(), set()
 
     def __contains__(self, item):
         return item in self._members
@@ -133,7 +133,7 @@ class CircularQueue:
         if item in self._members:
             raise ValueError("Item {} already in queue".format(item))
 
-        self._queue.insert(0, item)
+        self._queue.appendleft(item)
         self._members.add(item)
 
     def pop_and_rotate(self):
@@ -144,6 +144,6 @@ class CircularQueue:
         if not self._queue:
             return None
 
-        item = self._queue.pop(0)
+        item = self._queue.popleft()
         self._queue.append(item)
         return item

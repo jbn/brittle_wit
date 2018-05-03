@@ -1,10 +1,10 @@
-import unittest
 import inspect
 from importlib import import_module
 from brittle_wit_core import TwitterRequest
 from brittle_wit import ads_api, rest_api, streaming_api, webhooks_api
 
 
+# inspect has these methods: XXX
 def submodules_of(module):
     parent_name, modules = module.__name__, []
 
@@ -36,17 +36,16 @@ def api_calls_in(module):
     return api_calls
 
 
-class TestGeneratedAPI(unittest.TestCase):
-    """
-    Eventually this needs to be replaced with something more robust. For now,
-    it just checks that everything works as in "doesn't err."
-    """
+# =============================================================================
+# Eventually this needs to be replaced with something more robust. For now,
+# it just checks that everything works as in "doesn't err." XXX
+# =============================================================================
 
-    def test_return_types(self):
-        numbers = list(str(i) for i in range(10))
-        for package in [ads_api, rest_api, streaming_api, webhooks_api]:
-            for module in submodules_of(package):
-                for api_call in api_calls_in(module):
-                    arg_names = inspect.getargs(api_call.__code__).args
-                    args = dict(zip(arg_names, numbers[:len(arg_names)]))
-                    self.assertTrue(isinstance(api_call(**args), TwitterRequest))
+def test_return_types():
+    numbers = list(str(i) for i in range(10))
+    for package in [ads_api, rest_api, streaming_api, webhooks_api]:
+        for module in submodules_of(package):
+            for api_call in api_calls_in(module):
+                arg_names = inspect.getargs(api_call.__code__).args
+                args = dict(zip(arg_names, numbers[:len(arg_names)]))
+                assert isinstance(api_call(**args), TwitterRequest)
