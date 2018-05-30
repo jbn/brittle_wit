@@ -53,12 +53,12 @@ def test_purge_streaming(ep):
     ep.process(b"corrupt_buffer...")
     ep.purge_buffer()
     ep.process(b"good buffer\r\n")
-    assert ep.take_one() == b"good buffer"
+    assert ep.pop() == b"good buffer"
 
 
-def test_take_one(ep):
+def test_pop(ep):
     ep.process(b"hello\r\nworld")
-    assert ep.take_one() == b"hello"
+    assert ep.pop() == b"hello"
     assert not ep
 
 
