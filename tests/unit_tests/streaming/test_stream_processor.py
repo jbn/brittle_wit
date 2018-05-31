@@ -6,7 +6,7 @@ from brittle_wit_core import AppCredentials, ClientCredentials, TwitterRequest
 from brittle_wit_core import TwitterError
 from brittle_wit.streaming import (StreamReceiver,
                                    FeedSerializer,
-                                   LambdaStreamHandler,
+                                   CallableStreamHandler,
                                    StreamProcessor,
                                    StreamingHTTPPipe,
                                    basic_streamer)
@@ -16,7 +16,7 @@ from tests.helpers import mock_stream, async_ignore_sleep, MockHTTPResp
 def test_subscribe_raw():
     sp = StreamProcessor(None)
 
-    sp.subscribe(LambdaStreamHandler(lambda m: -1), as_json=False)
+    sp.subscribe(CallableStreamHandler(lambda m: -1), as_json=False)
 
     assert not sp.requires_json
 
@@ -24,7 +24,7 @@ def test_subscribe_raw():
 def test_subscribe_json():
     sp = StreamProcessor(None)
 
-    sp.subscribe(LambdaStreamHandler(lambda m: -1), as_json=True)
+    sp.subscribe(CallableStreamHandler(lambda m: -1), as_json=True)
 
     assert sp.requires_json
 
@@ -37,7 +37,7 @@ def test_subscribe_receiver_must_implement_send():
 
 def test_no_duplicate_subscriptions():
     sp = StreamProcessor(None)
-    handler = LambdaStreamHandler(lambda m: -1)
+    handler = CallableStreamHandler(lambda m: -1)
 
     sp.subscribe(handler, True)
     with pytest.raises(RuntimeError):
@@ -47,8 +47,8 @@ def test_no_duplicate_subscriptions():
 def test_unsubscribe_tracks_need_for_json():
     sp = StreamProcessor(None)
 
-    json_handler = LambdaStreamHandler(lambda m: -1)
-    byte_handler = LambdaStreamHandler(lambda m: -1)
+    json_handler = CallableStreamHandler(lambda m: -1)
+    byte_handler = CallableStreamHandler(lambda m: -1)
 
     sp.subscribe(json_handler, True)
     sp.subscribe(byte_handler, False)
@@ -61,8 +61,8 @@ def test_unsubscribe_tracks_need_for_json():
 def test_no_unsubscribe_twice():
     sp = StreamProcessor(None)
 
-    json_handler = LambdaStreamHandler(lambda m: -1)
-    byte_handler = LambdaStreamHandler(lambda m: -1)
+    json_handler = CallableStreamHandler(lambda m: -1)
+    byte_handler = CallableStreamHandler(lambda m: -1)
 
     sp.subscribe(json_handler, True)
     sp.unsubscribe(json_handler)
@@ -75,8 +75,8 @@ def test_receiving_multi():
     sp = StreamProcessor(None)
 
     byte_msgs, json_msgs = [], []
-    json_handler = LambdaStreamHandler(lambda m: json_msgs.append(m))
-    byte_handler = LambdaStreamHandler(lambda m: byte_msgs.append(m))
+    json_handler = CallableStreamHandler(lambda m: json_msgs.append(m))
+    byte_handler = CallableStreamHandler(lambda m: byte_msgs.append(m))
     sp.subscribe(byte_handler, False)
     sp.subscribe(json_handler, True)
 
@@ -94,7 +94,7 @@ async def test_stream_to_subscribers():
 
     sp = StreamProcessor(None)
     byte_msgs = []
-    byte_handler = LambdaStreamHandler(lambda m: byte_msgs.append(m))
+    byte_handler = CallableStreamHandler(lambda m: byte_msgs.append(m))
     sp._twitter_stream = mock_stream(expected)
     sp.subscribe(byte_handler, False)
     await sp._stream_to_subscribers()

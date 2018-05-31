@@ -15,6 +15,10 @@ import brittle_wit.connection_props as DEFAULTS
 from brittle_wit.streaming.entry_processor import (EntryProcessor,
                                                    noop_entry_parser,
                                                    json_entry_parser)
+from brittle_wit.streaming.receivers import (StreamReceiver,
+                                             FeedSerializer,
+                                             CallableStreamHandler,
+                                             PartitioningFeedSerializer)
 
 
 class TwitterStream:
@@ -172,96 +176,6 @@ class TwitterStream:
 
         # Take one message.
         return self._parser(self._entry_processor.pop())
-
-
-class StreamReceiver:
-
-    def close(self):
-        # Raising NotImplemented has bad semantics. Some derived classes
-        # may do things that don't require a proper close (e.g. logging to
-        # stdout).
-        pass
-
-
-class FeedSerializer(StreamReceiver):
-    """
-    Write each message to a bz2 file, *syncronously*.
-
-    """
-
-    def __init__(self, output_file, overwrite_existing=False, as_bz2=False,
-                 recv_json=True):
-        """
-        :param as_bz2: if true, saves the file with BZ2 copression.
-            BZ2 is useful for Spark/Hadoop analytics as it's splittable and
-            compression rate is high. However, it's CPU intensive, which could
-            be a problem.
-        """
-        mode = 'a' if overwrite_existing else 'w'
-        if not as_bz2:
-            mode += 'b'
-
-        open_file = bz2.open if as_bz2 else open
-        self._output_stream = open_file(output_file, mode)
-        self._recv_json = recv_json
-
-    def send(self, message):
-        if self._recv_json:
-            self._output_stream.write(json.dumps(message).encode() + b"\n")
-        else:
-            self._output_stream.write(message + b"\n")
-
-    def close(self):
-        self._output_stream.close()
-
-
-class PartitioningFeedSerializer(StreamReceiver):
-
-    def __init__(self, n_per_file, output_path, overwrite_existing=False,
-                 as_bz2=False, recv_json=True):
-        self._n = 0
-        self._n_per_file = n_per_file
-        self._output_path = output_path
-        self._overwrite_existing = overwrite_existing
-        self._as_bz2 = as_bz2
-        self._recv_json = recv_json
-
-        new_path = self._output_path.format(time.time())
-        self._serializer = FeedSerializer(new_path,
-                                          self._overwrite_existing,
-                                          self._as_bz2,
-                                          self._recv_json)
-
-    def send(self, msg):
-        self._serializer.send(msg)
-
-        self._n += 1
-
-        if self._n >= self._n_per_file:
-            self._n = 0
-            self._serializer.close()
-
-            new_path = self._output_path.format(time.time())
-            self._serializer = FeedSerializer(new_path,
-                                              self._overwrite_existing,
-                                              self._as_bz2,
-                                              self._recv_json)
-
-
-class LambdaStreamHandler(StreamReceiver):
-    """
-    Stream receiver that wraps a lambda (mostly for testing)
-    """
-
-    def __init__(self, underlying_func):
-        """
-        :param underlying_func: function to invoke for each message received
-            by ``#send(msg)``
-        """
-        self._underlying_func = underlying_func
-
-    def send(self, msg):
-        return self._underlying_func(msg)
 
 
 class StreamingHTTPPipe(StreamReceiver):
@@ -470,7 +384,7 @@ async def basic_streamer(app_cred, client_cred, twitter_req, callback,
     :param callback: a callback in the form of ``f(tweet_obj)``
     :param as_json: if True (default) parse each message as json
     """
-    handler = LambdaStreamHandler(callback)
+    handler = CallableStreamHandler(callback)
 
     opts = DEFAULTS.SESSION_OPTS.copy()
     opts['connector'] = aiohttp.TCPConnector(**DEFAULTS.TCP_CONN_STREAMING)
