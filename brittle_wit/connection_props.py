@@ -46,7 +46,7 @@ TCP_CONN_STREAMING['force_close'] = True
 SESSION_OPTS = {}
 
 # Twitter does not need any cookie processing for it's API.
-SESSION_OPTS['cookie_jar'] = aiohttp.helpers.DummyCookieJar()
+SESSION_OPTS['cookie_jar'] = aiohttp.DummyCookieJar()
 
 # From: https://dev.twitter.com/streaming/overview/connecting
 # > Set a timer, either a 90 second TCP level socket timeout, or a
