@@ -1,9 +1,9 @@
 import pytest
-
+from asyncio import TimeoutError
 from brittle_wit_core import (AppCredentials,
                               ClientCredentials, TwitterRequest,
                               TwitterError)
-from brittle_wit.streaming import TwitterStream
+from brittle_wit.streaming.twitter_stream import TwitterStream
 from tests.helpers import mock_http_req, mock_content_reader
 
 
@@ -20,15 +20,12 @@ def stream(mocker):
                          mocker.MagicMock())
 
 
-async def test_is_not_open_by_default(stream, mocker):
+async def test_is_not_open_after_instantiation(stream, mocker):
     assert not stream.is_open()
 
 
 async def test_no_double_connecting(stream, mocker):
-    to_http_req = mocker.patch('brittle_wit.streaming.TwitterStream.is_open',
-                               return_value=True)
-    stream = TwitterStream(mocker.MagicMock(), app_cred, client_cred,
-                           mocker.MagicMock())
+    mocker.patch.object(stream, 'is_open', return_value=True)
     with pytest.raises(RuntimeError):
         stream._connect()
 
@@ -36,12 +33,13 @@ async def test_no_double_connecting(stream, mocker):
 async def test_disconnect_closes_underlying_http_req(stream, mocker):
     http_req = mocker.MagicMock()
     stream._http_req = http_req
-    stream._resp = mocker.MagicMock()
+    stream._resp = 42
 
     stream.disconnect()
 
     assert http_req.close.called
     assert stream._http_req is None
+    assert stream._resp is None
 
 
 async def test_reconnect_purges_buffer_and_mailbox(stream, mocker):
@@ -66,30 +64,21 @@ async def test_reconnect_forces_closure(stream, mocker):
 
     assert http_req.close.called
     assert stream._http_req is None
+    assert stream._resp is None
+
     connect.assert_called_once_with()
 
 
 async def test_reconnect_errs_if_open(stream, mocker):
-    stream._http_req = mocker.MagicMock()
-    stream._resp = mocker.MagicMock()
-    stream._resp.connection.closed = False
-    assert stream.is_open()
+    connect = mocker.patch.object(stream, 'is_open', return_value=True)
 
     with pytest.raises(RuntimeError) as e:
         stream.reconnect(force_close_if_open=False)
+
     assert 'Already connected' in str(e)
 
 
-async def test__aiter__200_status(stream, mocker):
-    stream._resp = mocker.MagicMock()
-    stream._resp.connection.closed = False
-    stream._connect = mocker.MagicMock()
-    stream._http_req = mock_http_req(200, False)
-
-    assert await stream.__aiter__() is stream
-
-
-async def test__aiter__auto_connect(stream, mocker):
+async def test__aiter__connects_if_closed(stream, mocker):
     stream._resp = mocker.MagicMock()
     stream._resp.connection.closed = True
     stream._connect = mocker.MagicMock()
@@ -97,6 +86,20 @@ async def test__aiter__auto_connect(stream, mocker):
 
     await stream.__aiter__()
     stream._connect.assert_called_once_with()
+
+
+async def test__aiter__gets_resp_if_none(stream, mocker):
+    stream._resp = mocker.MagicMock()
+    stream._resp.connection.closed = True
+    stream._connect = mocker.MagicMock()
+    stream._http_req = mock_http_req(200, False)
+
+    await stream.__aiter__()
+    stream._connect.assert_called_once_with()
+
+    stream._resp = None
+    assert await stream.__aiter__() is stream
+    assert stream._resp is not None
 
 
 async def test__aiter__300_status(stream, mocker):
@@ -124,6 +127,10 @@ async def test__anext__(stream, mocker):
         msg = await stream.__anext__()
 
 
-@pytest.mark.skip
-def test_reconnect_on_read_hang():
-    pass
+async def test_read_hang_timeout_for__anext__(stream):
+    stream._read_hang_timeout = 0.001
+    messages = [b"this is a message\r\nthis is another\r\n"]
+
+    stream._resp = mock_content_reader(messages, delay=0.05)
+    with pytest.raises(TimeoutError):
+        msg = await stream.__anext__()
