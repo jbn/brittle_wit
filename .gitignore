@@ -10,3 +10,5 @@ build/
 brittle_wit.egg-info
 setup_me.sh
 .DS_Store
+.tox/
+dist

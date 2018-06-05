@@ -1,4 +1,5 @@
 import pytest
+import asyncio
 
 from brittle_wit.app import App
 from brittle_wit import AppCredentials, ClientCredentials
@@ -18,4 +19,4 @@ def client_cred():
 def app(app_cred):
     app = App.with_defaults(app_cred)
     yield app
-    app._session.close()
+    asyncio.get_event_loop().run_until_complete(app._session.close())

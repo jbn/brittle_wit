@@ -5,6 +5,7 @@ import json
 import time
 
 from aiohttp import web
+from itertools import compress
 from brittle_wit.rate_limit import RateLimit
 from brittle_wit.helpers import LOGGER
 from brittle_wit_core import TwitterError, BrittleWitError
@@ -64,24 +65,31 @@ class StreamingHTTPPipe(StreamReceiver):
 
         return resp
 
+    async def _send_to(self, message, caller_id, resp, finished_flag):
+        try:
+            await resp.write(message)
+        except Exception as e:
+            # This is a sloppy catch all for now. I'm not sure if
+            # asyncio guarantees a cancel to handle prior to a
+            # possible write. But, I do know it would be quite
+            # wrong for a write to one client to cause failures
+            # in other clients.
+            finished_flag.set()
+            return True
+        return False
+
+    async def send_to_all(self, message):
+        tasks = [self._send_to(message, caller_id, resp, finished_flag)
+                 for caller_id, (resp, finished_flag) in self._clients.items()]
+
+        finished = await asyncio.gather(*tasks)
+
+        for client in compress(self._clients.keys(), finished):
+            del self._clients[client]
+
     def send(self, message):
-        removal_set = []
-
-        for caller_id, (resp, finished_flag) in self._clients.items():
-            try:
-                resp.write(message)
-            except Exception as e:
-                # This is a sloppy catch all for now. I'm not sure if
-                # asyncio guarantees a cancel to handle prior to a
-                # possible write. But, I do know it would be quite
-                # wrong for a write to one client to cause failures
-                # in other clients.
-                finished_flag.set()
-                removal_set.append(caller_id)
-
-        for k in removal_set:
-            del self._clients[k]
-
+        # XXX: Sloppy refactoring
+        asyncio.ensure_future(self.send_to_all(message))
 
 class StreamProcessor:
     """
