@@ -1,4 +1,4 @@
-from aiohttp import Timeout
+import async_timeout
 from brittle_wit_core import TwitterError
 from brittle_wit.executors import twitter_req_to_http_req
 from brittle_wit.helpers import LOGGER
@@ -141,7 +141,7 @@ class TwitterStream:
         """
         # If there are no messages ready, read from the stream.
         while not self._entry_processor:
-            with Timeout(self._read_hang_timeout):
+            async with async_timeout.timeout(self._read_hang_timeout):
                 chunk = await self._resp.content.read(self._chunk_size)
                 if not chunk:
                     LOGGER.error("Read zero bytes on a stream.")

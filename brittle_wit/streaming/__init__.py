@@ -22,7 +22,6 @@ from brittle_wit.streaming.receivers import (StreamReceiver,
 from brittle_wit.streaming.twitter_stream import TwitterStream
 
 
-
 class StreamingHTTPPipe(StreamReceiver):
     """
     Utility StreamReceiver which pipes messages to streaming HTTP clients.
@@ -70,7 +69,7 @@ class StreamingHTTPPipe(StreamReceiver):
 
         for caller_id, (resp, finished_flag) in self._clients.items():
             try:
-                resp.write(message)  # I don't think draining is nessessary.
+                resp.write(message)
             except Exception as e:
                 # This is a sloppy catch all for now. I'm not sure if
                 # asyncio guarantees a cancel to handle prior to a
@@ -234,7 +233,7 @@ async def basic_streamer(app_cred, client_cred, twitter_req, callback,
     opts = DEFAULTS.SESSION_OPTS.copy()
     opts['connector'] = aiohttp.TCPConnector(**DEFAULTS.TCP_CONN_STREAMING)
 
-    with aiohttp.ClientSession(**opts) as sess:
+    async with aiohttp.ClientSession(**opts) as sess:
         stream = TwitterStream(sess, app_cred, client_cred, twitter_req)
         processor = StreamProcessor(stream)
         processor.subscribe(handler, as_json)

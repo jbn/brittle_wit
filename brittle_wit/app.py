@@ -165,7 +165,7 @@ class App:
         loop = asyncio.get_event_loop()
         self._maintenance_coros[self._manager.maintain()] = True
 
-        with self._session as session:
+        async with self._session as session:
 
             # Add all initial tasks ------------------------------------------
 
