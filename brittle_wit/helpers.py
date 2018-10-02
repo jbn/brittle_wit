@@ -30,7 +30,7 @@ async def retrying(make_coro, n_tries, strategy=linear_backoff, sleep_time=60):
         try:
             return await make_coro()
         except Exception as e:
-            LOGGER.error("Error %s", e)
+            LOGGER.error("Error %s %s %s", e, make_coro, attempt)
             wrapped = WrappedException.wrap_if_nessessary(e)
             if not wrapped.is_retryable or attempt == n_tries:
                 raise wrapped
