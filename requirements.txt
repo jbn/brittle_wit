@@ -2,3 +2,4 @@ aiohttp
 async_timeout
 brittle_wit_core
 lockchain
+pytest-asyncio
